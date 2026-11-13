@@ -74,7 +74,7 @@
 
 <script type="module">
 import * as THREE from 'three';
-import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/FBXLoader.js';
 
 // ---------- কনফিগ ----------
 const MAP = 200, SPACING = 40, ROAD_W = 10, PR = 0.45;
@@ -513,15 +513,15 @@ function animateWorld(t, dt) {
 }
 
 // ---------- চরিত্র ----------
-const gltfLoader = new GLTFLoader();
-const loadGLTF = url => gltfLoader.loadAsync(url).catch(() => null);
+const fbxLoader = new FBXLoader();
+const loadGLTF = url => fbxLoader.loadAsync(url).catch(() => null);
 
 // Mixamo মডেল লোড (models/boy.glb, models/girl.glb, models/idle.glb, walk.glb, run.glb)
 async function buildCharacter(gender) {
-  const gltf = await loadGLTF(`models/${gender}.glb`);
+  const gltf = await loadGLTF(`models/${gender}.fbx`);
   if (!gltf) return makePrimitive(gender);
 
-  const model = gltf.scene;
+  const model = gltf;
   model.rotation.y = MODEL_YAW;
   let box = new THREE.Box3().setFromObject(model);
   const s = CHAR_HEIGHT / (box.max.y - box.min.y);
@@ -535,8 +535,8 @@ async function buildCharacter(gender) {
 
   const mixer = new THREE.AnimationMixer(model);
   const actions = {};
-  for (const n of ['idle', 'walk', 'run']) {
-    const a = await loadGLTF(`models/${n}.glb`);
+  for (const [n, f] of [['idle', 'Idle'], ['walk', 'Walk'], ['run', 'Run']]) {
+    const a = await loadGLTF(`models/${f}.fbx`);
     if (a && a.animations.length) actions[n] = mixer.clipAction(a.animations[0], model);
   }
   return { group, mixer, actions, current: null, state: null };
