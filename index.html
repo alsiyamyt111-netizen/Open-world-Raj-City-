@@ -41,6 +41,19 @@
   #eye::after { content: '৩য় চোখ · টেনে ঘোরান'; position: absolute; left: 4px; top: 2px; font-size: 10px; color: #fff; text-shadow: 0 1px 2px #000; pointer-events: none; }
   #run.on { background: rgba(255,214,0,.85); color: #222; border-color: #ffd400; }
   #joy { touch-action: none; z-index: 5; }
+  #rot { position: fixed; inset: 0; background: #000; color: #fff; display: none; align-items: center; justify-content: center; text-align: center; z-index: 50; font-size: 18px; }
+  @media (orientation: portrait) { #rot { display: flex; } }
+  .scr { position: fixed; inset: 0; z-index: 30; display: none; color: #fff; font-family: sans-serif; }
+  #loading { background: #0b1220; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+  #loading .t { font-size: 28px; letter-spacing: 1px; animation: glow 1.6s ease-in-out infinite alternate; }
+  #bar { width: 60vw; max-width: 320px; height: 8px; background: #243047; border-radius: 6px; overflow: hidden; }
+  #barfill { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #1f7ae0, #ffd400); }
+  @keyframes glow { from { text-shadow: 0 0 4px #1f7ae0; } to { text-shadow: 0 0 18px #ffd400; } }
+  #intro { background: radial-gradient(#2a4a6b, #0b1220); overflow: hidden; }
+  #intro .hud-el { position: absolute; opacity: 0; transform: translateY(-16px) scale(.85); transition: opacity .6s, transform .6s; }
+  #intro.go .hud-el { opacity: 1; transform: none; }
+  #intro .ttl { position: absolute; left: 0; right: 0; top: 42%; text-align: center; font-size: 22px; opacity: 0; transition: opacity .8s; }
+  #intro.go .ttl { opacity: 1; }
 </style>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
@@ -48,7 +61,19 @@
 </head>
 <body>
 
-<div id="start">
+<div id="loading" class="scr"><div class="t">Working Title</div><div id="bar"><i id="barfill"></i></div><div id="pct">0%</div></div>
+<div id="intro" class="scr">
+  <div class="ttl">শহরে প্রবেশ করছেন...</div>
+  <div class="hud-el" style="left:14px;top:14px;width:100px;height:100px;border-radius:50%;border:3px solid #fff;background:#8fcf6a;transition-delay:.2s"></div>
+  <div class="hud-el" style="right:14px;top:14px;padding:8px 14px;background:rgba(0,0,0,.5);border-radius:10px;transition-delay:.4s">💵 ৳50000</div>
+  <div class="hud-el" style="left:14px;bottom:20px;width:200px;height:12px;background:#e74c3c;border-radius:6px;transition-delay:.6s"></div>
+  <div class="hud-el" style="right:20px;bottom:20px;width:70px;height:70px;border-radius:50%;border:2px solid #fff;background:rgba(255,255,255,.25);transition-delay:.8s"></div>
+</div>
+<div id="story" class="scr" style="background:#06090f;flex-direction:column;justify-content:flex-end;align-items:center;padding:24px;box-sizing:border-box;gap:18px;">
+  <p id="storytxt" style="font-size:19px;line-height:1.6;max-width:600px;min-height:90px;text-align:center;"></p>
+  <button id="storybtn" style="padding:12px 26px;font-size:16px;border:0;border-radius:10px;background:#1f7ae0;color:#fff;">...</button>
+</div>
+<div id="start" class="scr" style="display:none">
   <h2>শহরে স্বাগতম</h2>
   <p>চরিত্র বেছে নিন</p>
   <button id="boy">ছেলে</button>
@@ -71,6 +96,8 @@
 <button id="gear" class="act">⚙</button>
 <div id="editbar"><div id="edtxt">টেনে সরান · ট্যাপ করে বাছুন</div><div class="row"><label>সাইজ <input id="szr" type="range" min="0.5" max="2" step="0.05" value="1"></label><label>স্বচ্ছতা <input id="opr" type="range" min="0.3" max="1" step="0.05" value="1"></label></div><div class="row"><button id="edflip">⇅ উপর/নিচ</button><button id="edreset" style="background:#e67e22;color:#fff">রিসেট</button><button id="edsave" style="background:#2ecc71;color:#fff">✔ সেভ</button></div></div>
 <div id="bigmap"><canvas id="bm"></canvas><div id="bmbar"><span id="bmtxt">ম্যাপে ট্যাপ করে গন্তব্য মার্ক করুন</span><button id="bmclear" style="background:#e67e22;color:#fff">মার্ক মুছুন</button><button id="bmclose" style="background:#fff">বন্ধ</button></div></div>
+
+<div id="rot">📱 এই গেমটি শুধু পাশে (landscape) খেলা যাবে<br>ফোনটি পাশে ঘোরান</div>
 
 <script type="module">
 import * as THREE from 'three';
@@ -1373,6 +1400,9 @@ async function startGame(gender) {
   started = true;
 
   document.getElementById('start').style.display = 'none';
+  document.body.classList.add('playing');
+  try { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(() => {}); } catch (e) {}
+  try { screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => {}); } catch (e) {}
   document.getElementById('hud').style.display = 'block';
   document.getElementById('mini').style.display = 'block';
   document.getElementById('joy').style.display = 'block';
@@ -1387,6 +1417,63 @@ addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
 });
+
+// ---------- শুরুর ক্রম: লোডিং → ইন্টারফেস → গল্প → চরিত্র ----------
+const gid = id => document.getElementById(id);
+const pause = ms => new Promise(r => setTimeout(r, ms));
+function showScr(id) {
+  document.querySelectorAll('.scr').forEach(e => e.style.display = 'none');
+  gid(id).style.display = 'flex';
+}
+const STORY = [
+  'এক সময় এই শহর ছিল নদীর তীরের ছোট একটি জনপদ।',
+  'আজ সে বড় হয়েছে, কিন্তু তার রাস্তায় এখনো হারিয়ে যায় অনেক স্বপ্ন।',
+  'তুমি এখানে এসেছ নিজের পথ খুঁজতে।',
+  'এখন বেছে নাও, তুমি কে হবে।'
+];
+let storyIdx = 0, storyTimer = null, storyFull = '', storyBusy = false;
+function finishLine() {
+  clearInterval(storyTimer);
+  gid('storytxt').textContent = storyFull;
+  storyBusy = false;
+  gid('storybtn').textContent = storyIdx >= STORY.length ? 'চরিত্র বাছাই' : 'পরবর্তী';
+}
+function nextLine() {
+  if (storyIdx >= STORY.length) { showScr('start'); return; }
+  storyFull = STORY[storyIdx++];
+  const el = gid('storytxt');
+  el.textContent = '';
+  storyBusy = true;
+  gid('storybtn').textContent = 'থামান';
+  let i = 0;
+  clearInterval(storyTimer);
+  storyTimer = setInterval(() => {
+    el.textContent = storyFull.slice(0, ++i);
+    if (i >= storyFull.length) finishLine();
+  }, 45);
+}
+gid('storybtn').addEventListener('click', () => { if (storyBusy) finishLine(); else nextLine(); });
+
+async function introSeq() {
+  showScr('loading');
+  const fill = gid('barfill');
+  let p = 0;
+  await new Promise(res => {
+    const t = setInterval(() => {
+      p = Math.min(100, p + 2 + Math.random() * 4);
+      fill.style.width = p + '%';
+      gid('pct').textContent = Math.floor(p) + '%';
+      if (p >= 100) { clearInterval(t); res(); }
+    }, 80);
+  });
+  await pause(400);
+  showScr('intro');
+  requestAnimationFrame(() => requestAnimationFrame(() => gid('intro').classList.add('go')));
+  await pause(3200);
+  showScr('story');
+  nextLine();
+}
+introSeq();
 </script>
 </body>
 </html>
