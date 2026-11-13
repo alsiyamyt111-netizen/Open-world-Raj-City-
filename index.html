@@ -537,7 +537,7 @@ async function buildCharacter(gender) {
   const actions = {};
   for (const [n, f] of [['idle', 'Idle'], ['walk', 'Walk'], ['run', 'Run']]) {
     const a = await loadGLTF(`models/${f}.fbx`);
-    if (a && a.animations.length) actions[n] = mixer.clipAction(a.animations[0], model);
+    if (a && a.animations.length) { const clip = a.animations[0]; clip.tracks = clip.tracks.filter(t => !t.name.endsWith('.position')); actions[n] = mixer.clipAction(clip, model); }
   }
   return { group, mixer, actions, current: null, state: null };
 }
@@ -685,6 +685,7 @@ const player = { x: 0, y: 0, z: 20, yaw: 0 };
 let stance = 'stand', jumping = false, vy = 0, cr = 0, pr = 0;
 let char = null, started = false;
 let phase = 0, amp = 0, lastStep = 0;
+let spd = 0;
 
 function blocked(x, z) {
   for (const b of boxes) {
@@ -703,6 +704,8 @@ function update(dt) {
   const mag = Math.min(1, Math.hypot(ix, iy));
   const moving = mag > 0.1;
 
+  const tSpeed = moving ? (run ? RUN : stance === 'crouch' ? WALK * 0.5 : stance === 'prone' ? WALK * 0.25 : WALK) * mag * (combatT > 0 ? 0.7 : 1) : 0;
+  spd += (tSpeed - spd) * (1 - Math.exp(-dt * (tSpeed > spd ? 4 : 9)));
   if (moving) {
     const fx = Math.sin(camYaw), fz = Math.cos(camYaw);
     const rx = -Math.cos(camYaw), rz = Math.sin(camYaw);
@@ -712,7 +715,7 @@ function update(dt) {
 
     if (combatT <= 0) player.yaw += wrap(Math.atan2(dx, dz) - player.yaw) * (1 - Math.exp(-dt * 12));
 
-    const speed = (run ? RUN : stance === 'crouch' ? WALK * 0.5 : stance === 'prone' ? WALK * 0.25 : WALK) * mag * (combatT > 0 ? 0.7 : 1);
+    const speed = spd;
     const nx = player.x + dx * speed * dt;
     const nz = player.z + dz * speed * dt;
     if (!blocked(nx, player.z)) player.x = nx;
@@ -810,7 +813,7 @@ function update(dt) {
     player.z - Math.cos(camYaw) * D * cp
   );
   camera.position.lerp(want, 1 - Math.exp(-dt * (dragId !== null ? 30 : 6)));
-  camera.fov += ((moving && run ? 72 : 60) - camera.fov) * 0.12;
+  camera.fov += ((moving && run ? 66 : 60) - camera.fov) * (1 - Math.exp(-dt * 2.5));
   camera.updateProjectionMatrix();
   const K = D * Math.max(0, Math.min(1, 1 + camPitch / 0.3));
   camera.lookAt(
