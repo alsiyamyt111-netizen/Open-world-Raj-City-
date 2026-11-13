@@ -885,8 +885,7 @@ function update(dt) {
       else if (stance === 'prone' && A.prone) state = 'prone';
       else if (stance === 'crouch' && (A.crouchidle || A.crouchwalk)) state = (moving && A.crouchwalk) || !A.crouchidle ? 'crouchwalk' : 'crouchidle';
       else if (atk && A[atk.type]) state = atk.type;
-      else if (gunT > 0 && A.fire) state = 'fire';
-      else if (!moving) state = combatT > 0 && A.fightidle ? 'fightidle' : 'idle';
+      else if (gunT > 0 && A.fire) state = 'fire'
       else state = run ? 'run' : 'walk';
       if (!A[state]) state = A.idle ? 'idle' : Object.keys(A)[0];
       const key = (state === 'punch' || state === 'kick') ? atk : state;   // নতুন ঘুসি = নতুন করে শুরু
