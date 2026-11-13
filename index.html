@@ -609,12 +609,26 @@ async function buildCharacter(gender) {
 
   const mixer = new THREE.AnimationMixer(model);
   const actions = {}, speed = {};
+  const normBone = nm => String(nm).replace(/^mixamorig\d*[:_]?/i, '').replace(/[^a-z0-9]/gi, '').toLowerCase();
+  const boneMap = new Map();
+  model.traverse(o => { if (o.isBone || o.type === 'Bone') boneMap.set(normBone(o.name), o.name); });
   const KEEP_Y = ['crouchidle', 'crouchwalk', 'prone'];      // এগুলোতে নিতম্বের উচ্চতা রাখতে হবে (নইলে শূন্যে ভাসবে)
   const ONCE = { jump: 0.75, punch: 0.5, kick: 0.7 };        // একবার চলবে, এত সেকেন্ডে শেষ হবে
   for (const [n, f] of Object.entries(ANIMS)) {
     const a = await loadAsset(f);
     if (!(a && a.animations.length)) continue;
     const clip = a.animations[0];
+    // হাড়ের নাম মেলানো: অ্যানিমেশন ফাইলের হাড়ের নাম (mixamorig:, mixamorig1:, বা প্রিফিক্স ছাড়া) মডেলের হাড়ের নামে বদলে নেয়
+    // নাম না মিললে ক্লিপ কোনো হাড়েই লাগে না, আর চরিত্র হাত মেলে (T-pose) দাঁড়িয়ে থাকে
+    clip.tracks = clip.tracks.map(t => {
+      const dot = t.name.lastIndexOf('.');
+      if (dot < 0) return null;
+      const bone = boneMap.get(normBone(t.name.slice(0, dot)));
+      if (!bone) return null;
+      t.name = bone + t.name.slice(dot);
+      return t;
+    }).filter(Boolean);
+    if (!clip.tracks.length) { console.warn('অ্যানিমেশন "' + f + '" এর হাড়ের নাম মডেলের সাথে মেলেনি, বাদ দেওয়া হলো'); continue; }
     clip.tracks = clip.tracks.filter(t => {
       if (!t.name.endsWith('.position')) return true;
       if (KEEP_Y.includes(n) && /Hips\.position$/.test(t.name)) {   // শুধু উচ্চতা (Y) রাখো, সামনে-পিছনে সরা বন্ধ
