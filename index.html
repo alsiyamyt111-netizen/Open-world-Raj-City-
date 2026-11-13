@@ -63,10 +63,6 @@
 <div id="loading" class="scr"><div class="t">Working Title</div><div id="bar"><i id="barfill"></i></div><div id="pct">0%</div></div>
 <div id="intro" class="scr">
   <div class="ttl">শহরে প্রবেশ করছেন...</div>
-  <div class="hud-el" style="left:14px;top:14px;width:100px;height:100px;border-radius:50%;border:3px solid #fff;background:#8fcf6a;transition-delay:.2s"></div>
-  <div class="hud-el" style="right:14px;top:14px;padding:8px 14px;background:rgba(0,0,0,.5);border-radius:10px;transition-delay:.4s">💵 ৳50000</div>
-  <div class="hud-el" style="left:14px;bottom:20px;width:200px;height:12px;background:#e74c3c;border-radius:6px;transition-delay:.6s"></div>
-  <div class="hud-el" style="right:20px;bottom:20px;width:70px;height:70px;border-radius:50%;border:2px solid #fff;background:rgba(255,255,255,.25);transition-delay:.8s"></div>
 </div>
 <div id="story" class="scr" style="background:#06090f;flex-direction:column;justify-content:flex-end;align-items:center;padding:24px;box-sizing:border-box;gap:18px;">
   <p id="storytxt" style="font-size:19px;line-height:1.6;max-width:600px;min-height:90px;text-align:center;"></p>
@@ -886,7 +882,8 @@ function update(dt) {
       else if (stance === 'crouch' && (A.crouchidle || A.crouchwalk)) state = (moving && A.crouchwalk) || !A.crouchidle ? 'crouchwalk' : 'crouchidle';
       else if (atk && A[atk.type]) state = atk.type;
       else if (gunT > 0 && A.fire) state = 'fire'
-      else state = run ? 'run' : 'walk';
+      else if (moving) state = run ? 'run' : 'walk';
+      else state = A.idle ? 'idle' : 'walk';
       if (!A[state]) state = A.idle ? 'idle' : Object.keys(A)[0];
       const key = (state === 'punch' || state === 'kick') ? atk : state;   // নতুন ঘুসি = নতুন করে শুরু
       if (key !== char.key) {
