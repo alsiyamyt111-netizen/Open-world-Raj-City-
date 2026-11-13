@@ -133,7 +133,7 @@ applyFake();
 
 // ---------- কনফিগ ----------
 const MAP = 200, SPACING = 40, ROAD_W = 10, PR = 0.45;
-const WALK = 4.5, RUN = 11;
+const WALK = 4.5, RUN = 7;
 const CHAR_HEIGHT = 1.8;
 const MODEL_YAW = 0;          // চরিত্র উল্টো দিকে হাঁটলে এটি Math.PI করুন
 
@@ -613,7 +613,8 @@ async function buildCharacter(gender) {
   const boneMap = new Map();
   model.traverse(o => { if (o.isBone || o.type === 'Bone') boneMap.set(normBone(o.name), o.name); });
   const KEEP_Y = ['crouchidle', 'crouchwalk', 'prone'];      // এগুলোতে নিতম্বের উচ্চতা রাখতে হবে (নইলে শূন্যে ভাসবে)
-  const ONCE = { jump: 0.75, punch: 0.5, kick: 0.7 };        // একবার চলবে, এত সেকেন্ডে শেষ হবে
+  const ONCE = { jump: 0.75, punch: 0.9, kick: 1.1 };        // একবার চলবে, সর্বোচ্চ এত সেকেন্ডে শেষ হবে (ক্লিপ ছোট হলে নিজের স্বাভাবিক সময়ে)
+  const dur = {};
   for (const [n, f] of Object.entries(ANIMS)) {
     const a = await loadAsset(f);
     if (!(a && a.animations.length)) continue;
@@ -639,7 +640,7 @@ async function buildCharacter(gender) {
       return false;
     });
     const act = mixer.clipAction(clip, model);
-    if (ONCE[n]) { act.setLoop(THREE.LoopOnce, 1); act.clampWhenFinished = true; speed[n] = Math.max(1, clip.duration / ONCE[n]); }
+    if (ONCE[n]) { const d = Math.min(clip.duration, ONCE[n]); act.setLoop(THREE.LoopOnce, 1); act.clampWhenFinished = true; speed[n] = clip.duration / d; dur[n] = d; }
     actions[n] = act;
   }
   if (!actions.idle && !actions.walk && !actions.run) { console.warn('অ্যানিমেশন ফাইল পাওয়া যায়নি, ব্যাকআপ চরিত্র ব্যবহার হচ্ছে'); return makePrimitive(gender); }
@@ -657,7 +658,9 @@ async function buildCharacter(gender) {
     gun.rotation.set(...GUN_ROT);
     gun.visible = false; hand.add(gun);
   }
-  return { group, mixer, actions, speed, gun, current: null, state: null, key: null };
+  console.log('লোড হওয়া অ্যানিমেশন:', Object.keys(actions).join(', '));
+  for (const k of Object.keys(ANIMS)) if (!actions[k]) console.warn('অ্যানিমেশন লোড হয়নি:', k);
+  return { group, mixer, actions, speed, dur, gun, current: null, state: null, key: null };
 }
 
 // মডেল না পেলে সাধারণ চরিত্র (ব্যাকআপ)
@@ -759,6 +762,7 @@ joy.addEventListener('pointermove', e => { if (e.pointerId === joyId) moveJoy(e)
 const endJoy = e => {
   if (e.pointerId !== joyId) return;
   joyId = null; jx = 0; jy = 0;
+  if (runTouch) setRun(false);   // জয়স্টিক ছাড়লে দৌড় বন্ধ
   knob.style.left = '35px'; knob.style.top = '35px';
 };
 joy.addEventListener('pointerup', endJoy);
@@ -782,8 +786,8 @@ bindTap(runBtn, () => { if (stance !== 'stand') stance = 'stand'; setRun(!runTou
 bindTap(document.getElementById('jump'), () => doJump());
 bindTap(document.getElementById('crouch'), () => toggleStance('crouch'));
 bindTap(document.getElementById('prone'), () => toggleStance('prone'));
-function doJump() { if (jumping) return; stance = 'stand'; jumping = true; vy = 7; }
-function toggleStance(st) { stance = stance === st ? 'stand' : st; setRun(false); }
+function doJump() { if (jumping) return; stance = 'stand'; atk = null; setRun(false); jumping = true; vy = 7; }
+function toggleStance(st) { stance = stance === st ? 'stand' : st; atk = null; setRun(false); }
 
 let dragId = null, lastX = 0, lastY = 0, camYaw = 0, camPitch = 0;
 const PITCH_MIN = -0.6, PITCH_MAX = 1.45;
@@ -932,7 +936,7 @@ function update(dt) {
     }
   }
 
-  document.getElementById('dbg').textContent = 'x:' + jx.toFixed(2) + ' y:' + jy.toFixed(2) + (run ? ' RUN' : '') + (jumping ? ' JUMP' : '') + (stance !== 'stand' ? ' ' + stance.toUpperCase() : '') + ' h:' + player.y.toFixed(2);
+  document.getElementById('dbg').textContent = 'x:' + jx.toFixed(2) + ' y:' + jy.toFixed(2) + (run ? ' RUN' : '') + (jumping ? ' JUMP' : '') + (stance !== 'stand' ? ' ' + stance.toUpperCase() : '') + (char && char.state ? ' [' + char.state + (char.mixer && !char.actions.punch ? ' !punch-missing' : '') + (char.mixer && !char.actions.kick ? ' !kick-missing' : '') + ']' : '') + ' h:' + player.y.toFixed(2);
   document.getElementById('crouch').classList.toggle('on', stance === 'crouch');
   document.getElementById('prone').classList.toggle('on', stance === 'prone');
   document.getElementById('jump').classList.toggle('on', jumping);
@@ -1187,15 +1191,18 @@ function sfx(kind) {
   }
 }
 function startCombat() { combatT = 4; if (runTouch) setRun(false); }
+let atkLast = '';
 function doPunch() {
-  if (atkCD > 0 || stance === 'prone') return;
-  startCombat(); gunT = 0; jabSide ^= 1;
-  atk = { type: 'punch', side: jabSide, t: 0, dur: char && char.mixer ? 0.5 : 0.32, hit: false }; atkCD = 0.38;
+  if (atkCD > 0 && atkLast === 'punch') return;   // একই বাটন বারবার চাপলে সামান্য বিরতি; অন্য বাটন চাপলে সাথে সাথে বদলে যাবে
+  stance = 'stand'; startCombat(); gunT = 0; jabSide ^= 1;
+  const d = char && char.mixer ? (char.dur.punch || 0.5) : 0.32;
+  atk = { type: 'punch', side: jabSide, t: 0, dur: d, hit: false }; atkCD = d * 0.7; atkLast = 'punch';
 }
 function doKick() {
-  if (atkCD > 0 || stance === 'prone') return;
-  startCombat(); gunT = 0;
-  atk = { type: 'kick', side: 1, t: 0, dur: char && char.mixer ? 0.7 : 0.5, hit: false }; atkCD = 0.65;
+  if (atkCD > 0 && atkLast === 'kick') return;
+  stance = 'stand'; startCombat(); gunT = 0;
+  const d = char && char.mixer ? (char.dur.kick || 0.7) : 0.5;
+  atk = { type: 'kick', side: 1, t: 0, dur: d, hit: false }; atkCD = d * 0.7; atkLast = 'kick';
 }
 function aimNPC(maxDeg, maxDist) {
   let best = null, bd = 1e9; const fx = Math.sin(camYaw), fz = Math.cos(camYaw);
