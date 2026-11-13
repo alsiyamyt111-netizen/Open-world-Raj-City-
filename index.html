@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Working Title</title>
 <style>
+  :root { --vw: 1vw; --vh: 1vh; }
   html, body { margin: 0; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; touch-action: none; user-select: none; }
   canvas#game { display: block; }
   #start { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; background: linear-gradient(#7ec8ff, #dff3ff); color: #123; text-align: center; }
@@ -18,7 +19,7 @@
   #mini { cursor: pointer; z-index: 4; }
   #bigmap { position: fixed; inset: 0; background: rgba(10,15,25,.93); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 10px; z-index: 20; }
   #bm { border-radius: 12px; border: 2px solid #fff; touch-action: none; }
-  #bmbar { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; color: #fff; font-size: 14px; max-width: 95vw; text-align: center; }
+  #bmbar { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; color: #fff; font-size: 14px; max-width: calc(var(--vw) * 95); text-align: center; }
   #bmbar button { padding: 8px 14px; border: 0; border-radius: 8px; font-size: 14px; }
   .act { position: fixed; display: none; border-radius: 50%; background: rgba(255,255,255,.25); color: #fff; border: 2px solid #fff; font-size: 14px; touch-action: none; -webkit-tap-highlight-color: transparent; z-index: 5; }
   .act.on { background: rgba(255,214,0,.85); color: #222; border-color: #ffd400; }
@@ -30,23 +31,21 @@
   #fire { right: 30px; bottom: 240px; width: 80px; height: 80px; font-size: 13px; line-height: 1.1; padding: 0; background: rgba(231,76,60,.55); }
   #eyebtn { left: 45px; bottom: 165px; width: 54px; height: 54px; font-size: 22px; padding: 0; }
   #gear { right: 12px; top: 100px; width: 40px; height: 40px; padding: 0; font-size: 20px; }
-  #editbar { position: fixed; left: 50%; top: 8px; transform: translateX(-50%); z-index: 40; display: none; flex-direction: column; gap: 6px; background: rgba(0,0,0,.84); color: #fff; padding: 8px 10px; border-radius: 10px; font-size: 12px; max-width: 92vw; text-align: center; }
+  #editbar { position: fixed; left: 50%; top: 8px; transform: translateX(-50%); z-index: 40; display: none; flex-direction: column; gap: 6px; background: rgba(0,0,0,.84); color: #fff; padding: 8px 10px; border-radius: 10px; font-size: 12px; max-width: calc(var(--vw) * 92); text-align: center; }
   #editbar.bottom { top: auto; bottom: 8px; }
   #editbar .row { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
   #editbar input { width: 110px; vertical-align: middle; }
   #editbar button { padding: 6px 12px; border: 0; border-radius: 8px; font-size: 13px; }
   body.editing [data-cust] { outline: 2px dashed #ffd400; outline-offset: 2px; }
   body.editing [data-cust].sel { outline: 3px solid #2ecc71; }
-  #eye { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); width: 36vw; min-width: 140px; max-width: 300px; height: 21vw; min-height: 84px; max-height: 180px; border: 2px solid #fff; box-shadow: 0 0 0 2px rgba(0,0,0,.4); display: none; z-index: 6; touch-action: none; }
+  #eye { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); width: calc(var(--vw) * 36); min-width: 140px; max-width: 300px; height: calc(var(--vw) * 21); min-height: 84px; max-height: 180px; border: 2px solid #fff; box-shadow: 0 0 0 2px rgba(0,0,0,.4); display: none; z-index: 6; touch-action: none; }
   #eye::after { content: '৩য় চোখ · টেনে ঘোরান'; position: absolute; left: 4px; top: 2px; font-size: 10px; color: #fff; text-shadow: 0 1px 2px #000; pointer-events: none; }
   #run.on { background: rgba(255,214,0,.85); color: #222; border-color: #ffd400; }
   #joy { touch-action: none; z-index: 5; }
-  #rot { position: fixed; inset: 0; background: #000; color: #fff; display: none; align-items: center; justify-content: center; text-align: center; z-index: 50; font-size: 18px; }
-  @media (orientation: portrait) { #rot { display: flex; } }
-  .scr { position: fixed; inset: 0; z-index: 30; display: none; color: #fff; font-family: sans-serif; }
+    .scr { position: fixed; inset: 0; z-index: 30; display: none; color: #fff; font-family: sans-serif; }
   #loading { background: #0b1220; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
   #loading .t { font-size: 28px; letter-spacing: 1px; animation: glow 1.6s ease-in-out infinite alternate; }
-  #bar { width: 60vw; max-width: 320px; height: 8px; background: #243047; border-radius: 6px; overflow: hidden; }
+  #bar { width: calc(var(--vw) * 60); max-width: 320px; height: 8px; background: #243047; border-radius: 6px; overflow: hidden; }
   #barfill { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #1f7ae0, #ffd400); }
   @keyframes glow { from { text-shadow: 0 0 4px #1f7ae0; } to { text-shadow: 0 0 18px #ffd400; } }
   #intro { background: radial-gradient(#2a4a6b, #0b1220); overflow: hidden; }
@@ -97,11 +96,40 @@
 <div id="editbar"><div id="edtxt">টেনে সরান · ট্যাপ করে বাছুন</div><div class="row"><label>সাইজ <input id="szr" type="range" min="0.5" max="2" step="0.05" value="1"></label><label>স্বচ্ছতা <input id="opr" type="range" min="0.3" max="1" step="0.05" value="1"></label></div><div class="row"><button id="edflip">⇅ উপর/নিচ</button><button id="edreset" style="background:#e67e22;color:#fff">রিসেট</button><button id="edsave" style="background:#2ecc71;color:#fff">✔ সেভ</button></div></div>
 <div id="bigmap"><canvas id="bm"></canvas><div id="bmbar"><span id="bmtxt">ম্যাপে ট্যাপ করে গন্তব্য মার্ক করুন</span><button id="bmclear" style="background:#e67e22;color:#fff">মার্ক মুছুন</button><button id="bmclose" style="background:#fff">বন্ধ</button></div></div>
 
-<div id="rot">📱 এই গেমটি শুধু পাশে (landscape) খেলা যাবে<br>ফোনটি পাশে ঘোরান</div>
-
 <script type="module">
 import * as THREE from 'three';
 import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/FBXLoader.js';
+import * as SkeletonUtils from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/SkeletonUtils.js';
+
+// ---------- সরাসরি landscape: ফোন portrait-এ থাকলে পুরো গেম ভেতরে ৯০° ঘুরিয়ে দেখায় (কোনো পারমিশন/ঘোরানো লাগে না) ----------
+// innerWidth/Height, টাচ-স্থানাঙ্ক ও getBoundingClientRect একসঙ্গে বদলানো হয়, তাই বাকি কোড অপরিবর্তিত।
+const __iwD = Object.getOwnPropertyDescriptor(window, 'innerWidth'), __ihD = Object.getOwnPropertyDescriptor(window, 'innerHeight');
+const __rW = () => (__iwD && __iwD.get ? __iwD.get.call(window) : document.documentElement.clientWidth);
+const __rH = () => (__ihD && __ihD.get ? __ihD.get.call(window) : document.documentElement.clientHeight);
+const __touch = matchMedia('(pointer: coarse)').matches;
+let FAKE = false;
+Object.defineProperty(window, 'innerWidth', { configurable: true, get: () => (FAKE ? __rH() : __rW()) });
+Object.defineProperty(window, 'innerHeight', { configurable: true, get: () => (FAKE ? __rW() : __rH()) });
+{
+  const gx = Object.getOwnPropertyDescriptor(MouseEvent.prototype, 'clientX').get, gy = Object.getOwnPropertyDescriptor(MouseEvent.prototype, 'clientY').get;
+  Object.defineProperty(MouseEvent.prototype, 'clientX', { configurable: true, get() { return FAKE ? gy.call(this) : gx.call(this); } });
+  Object.defineProperty(MouseEvent.prototype, 'clientY', { configurable: true, get() { return FAKE ? __rW() - gx.call(this) : gy.call(this); } });
+  const gbr = Element.prototype.getBoundingClientRect;
+  Element.prototype.getBoundingClientRect = function () {
+    const r = gbr.call(this); if (!FAKE) return r;
+    return new DOMRect(r.top, __rW() - r.right, r.height, r.width);
+  };
+}
+function applyFake() {
+  const W = __rW(), H = __rH(), b = document.body.style, de = document.documentElement.style;
+  FAKE = __touch && H > W;
+  if (FAKE) Object.assign(b, { position: 'fixed', left: '0', top: '0', width: H + 'px', height: W + 'px', transformOrigin: '0 0', transform: `translateX(${W}px) rotate(90deg)` });
+  else { b.position = b.left = b.top = b.width = b.height = b.transformOrigin = b.transform = ''; }
+  de.setProperty('--vw', (FAKE ? H : W) / 100 + 'px'); de.setProperty('--vh', (FAKE ? W : H) / 100 + 'px');
+}
+addEventListener('resize', applyFake);
+addEventListener('orientationchange', applyFake);
+applyFake();
 
 // ---------- কনফিগ ----------
 const MAP = 200, SPACING = 40, ROAD_W = 10, PR = 0.45;
@@ -542,10 +570,29 @@ function animateWorld(t, dt) {
 // ---------- চরিত্র ----------
 const fbxLoader = new FBXLoader();
 const loadGLTF = url => fbxLoader.loadAsync(url).catch(() => null);
+const assetCache = {};
+const loadAsset = name => assetCache[name] || (assetCache[name] = (async () => {
+  const tries = [...new Set([name, name.toLowerCase(), name[0].toUpperCase() + name.slice(1).toLowerCase()])];
+  for (const n of tries) { const o = await loadGLTF(`models/${n}.fbx`); if (o) return o; }
+  return null;
+})());
+// অ্যানিমেশনের নাম -> models/ ফোল্ডারের ফাইলের নাম (.fbx ছাড়া)
+const ANIMS = {
+  idle: 'Idle', walk: 'Walk', run: 'Run',
+  jump: 'Jump', crouchidle: 'crouchidle', crouchwalk: 'crouch', prone: 'prone',
+  punch: 'punch', kick: 'kick', fire: 'firing', fightidle: 'fightidel'
+};
+// NPC-দের অ্যানিমেশন (মার খাওয়া, মরা, ওঠা) — পরিস্থিতি অনুযায়ী নিজে চলে
+const NPC_ANIMS = { hit: 'Hitreaction', death: 'death', getup: 'Getup' };
+const PRELOAD = ['boy', 'girl', ...Object.values(ANIMS), ...Object.values(NPC_ANIMS)];
+// বন্দুক হাতে কীভাবে বসবে (মিটার/রেডিয়ান) — ভুল দিকে থাকলে এই সংখ্যাগুলো বদলান
+const GUN_POS = [0, 0.1, 0.05], GUN_ROT = [0, 0, Math.PI / 2];
+let preDone = 0;
+const preloadAll = () => Promise.all(PRELOAD.map(n => loadAsset(n).then(() => { preDone++; })));
 
 // Mixamo মডেল লোড (models/boy.glb, models/girl.glb, models/idle.glb, walk.glb, run.glb)
 async function buildCharacter(gender) {
-  const gltf = await loadGLTF(`models/${gender}.fbx`);
+  const gltf = await loadAsset(gender);
   if (!gltf) return makePrimitive(gender);
 
   const model = gltf;
@@ -561,12 +608,42 @@ async function buildCharacter(gender) {
   group.add(model);
 
   const mixer = new THREE.AnimationMixer(model);
-  const actions = {};
-  for (const [n, f] of [['idle', 'Idle'], ['walk', 'Walk'], ['run', 'Run']]) {
-    const a = await loadGLTF(`models/${f}.fbx`);
-    if (a && a.animations.length) { const clip = a.animations[0]; clip.tracks = clip.tracks.filter(t => !t.name.endsWith('.position')); actions[n] = mixer.clipAction(clip, model); }
+  const actions = {}, speed = {};
+  const KEEP_Y = ['crouchidle', 'crouchwalk', 'prone'];      // এগুলোতে নিতম্বের উচ্চতা রাখতে হবে (নইলে শূন্যে ভাসবে)
+  const ONCE = { jump: 0.75, punch: 0.5, kick: 0.7 };        // একবার চলবে, এত সেকেন্ডে শেষ হবে
+  for (const [n, f] of Object.entries(ANIMS)) {
+    const a = await loadAsset(f);
+    if (!(a && a.animations.length)) continue;
+    const clip = a.animations[0];
+    clip.tracks = clip.tracks.filter(t => {
+      if (!t.name.endsWith('.position')) return true;
+      if (KEEP_Y.includes(n) && /Hips\.position$/.test(t.name)) {   // শুধু উচ্চতা (Y) রাখো, সামনে-পিছনে সরা বন্ধ
+        const v = t.values, x0 = v[0], z0 = v[2];
+        for (let i = 0; i < v.length; i += 3) { v[i] = x0; v[i + 2] = z0; }
+        return true;
+      }
+      return false;
+    });
+    const act = mixer.clipAction(clip, model);
+    if (ONCE[n]) { act.setLoop(THREE.LoopOnce, 1); act.clampWhenFinished = true; speed[n] = Math.max(1, clip.duration / ONCE[n]); }
+    actions[n] = act;
   }
-  return { group, mixer, actions, current: null, state: null };
+  if (!actions.idle && !actions.walk && !actions.run) { console.warn('অ্যানিমেশন ফাইল পাওয়া যায়নি, ব্যাকআপ চরিত্র ব্যবহার হচ্ছে'); return makePrimitive(gender); }
+  // বন্দুক: ডান হাতের হাড়ে জোড়া
+  let gun = null;
+  let hand = model.getObjectByName('mixamorigRightHand');
+  if (!hand) model.traverse(o => { if (!hand && /RightHand$/.test(o.name)) hand = o; });
+  if (hand) {
+    const k = 1 / s, mat = new THREE.MeshStandardMaterial({ color: 0x2b2b2b, metalness: 0.6, roughness: 0.4 });
+    gun = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.07 * k, 0.75 * k, 0.1 * k), mat); body.position.y = 0.25 * k;
+    const grip = new THREE.Mesh(new THREE.BoxGeometry(0.06 * k, 0.1 * k, 0.16 * k), mat); grip.position.set(0, -0.05 * k, -0.08 * k);
+    gun.add(body, grip);
+    gun.position.set(GUN_POS[0] * k, GUN_POS[1] * k, GUN_POS[2] * k);
+    gun.rotation.set(...GUN_ROT);
+    gun.visible = false; hand.add(gun);
+  }
+  return { group, mixer, actions, speed, gun, current: null, state: null, key: null };
 }
 
 // মডেল না পেলে সাধারণ চরিত্র (ব্যাকআপ)
@@ -703,8 +780,8 @@ addEventListener('pointermove', e => {
   camPitch = Math.max(PITCH_MIN, Math.min(PITCH_MAX, camPitch + (lastY - e.clientY) * 0.006));
   lastX = e.clientX; lastY = e.clientY;
 });
-addEventListener('pointerup', () => dragId = null);
-addEventListener('pointercancel', () => dragId = null);
+addEventListener('pointerup', e => { if (e.pointerId === dragId) dragId = null; });
+addEventListener('pointercancel', e => { if (e.pointerId === dragId) dragId = null; });
 
 // ---------- প্লেয়ার ----------
 const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
@@ -773,19 +850,37 @@ function update(dt) {
     cr += ((stance === 'crouch' ? 1 : 0) - cr) * (1 - Math.exp(-dt * 12));
     pr += ((stance === 'prone' ? 1 : 0) - pr) * (1 - Math.exp(-dt * 10));
     char.group.rotation.order = 'YXZ';
-    char.group.position.set(player.x - Math.sin(player.yaw) * 0.9 * pr, player.y + pr * 0.2, player.z - Math.cos(player.yaw) * 0.9 * pr);
-    char.group.rotation.set(pr * Math.PI / 2, player.yaw, 0);
-    char.group.scale.y = 1 - 0.35 * cr;
+    if (char.mixer) {            // Mixamo: অ্যানিমেশনই শোয়া/বসা দেখায়, তাই কাত/চ্যাপ্টা নয়
+      char.group.position.set(player.x, player.y, player.z);
+      char.group.rotation.set(0, player.yaw, 0);
+    } else {
+      char.group.position.set(player.x - Math.sin(player.yaw) * 0.9 * pr, player.y + pr * 0.2, player.z - Math.cos(player.yaw) * 0.9 * pr);
+      char.group.rotation.set(pr * Math.PI / 2, player.yaw, 0);
+      char.group.scale.y = 1 - 0.35 * cr;
+    }
 
     if (char.mixer) {
-      // Mixamo অ্যানিমেশন: idle / walk / run
-      const state = !moving ? 'idle' : (run ? 'run' : 'walk');
-      if (state !== char.state && char.actions[state]) {
-        const next = char.actions[state];
-        if (char.current) char.current.fadeOut(0.2);
-        next.reset().fadeIn(0.2).play();
-        char.current = next; char.state = state;
+      // Mixamo অ্যানিমেশন বাছাই (অগ্রাধিকার ওপর থেকে নিচে)
+      const A = char.actions;
+      let state;
+      if (jumping && A.jump) state = 'jump';
+      else if (stance === 'prone' && A.prone) state = 'prone';
+      else if (stance === 'crouch' && (A.crouchidle || A.crouchwalk)) state = (moving && A.crouchwalk) || !A.crouchidle ? 'crouchwalk' : 'crouchidle';
+      else if (atk && A[atk.type]) state = atk.type;
+      else if (gunT > 0 && A.fire) state = 'fire';
+      else if (!moving) state = combatT > 0 && A.fightidle ? 'fightidle' : 'idle';
+      else state = run ? 'run' : 'walk';
+      if (!A[state]) state = A.idle ? 'idle' : Object.keys(A)[0];
+      const key = (state === 'punch' || state === 'kick') ? atk : state;   // নতুন ঘুসি = নতুন করে শুরু
+      if (key !== char.key) {
+        const next = A[state];
+        if (char.current && char.current !== next) char.current.fadeOut(0.15);
+        next.reset().fadeIn(0.15).play();
+        next.timeScale = char.speed[state] || 1;
+        char.current = next; char.state = state; char.key = key;
       }
+      if (state === 'prone') A.prone.timeScale = moving ? 1 : 0;   // দাঁড়িয়ে থাকলে শোয়া ভঙ্গিতে স্থির
+      if (char.gun) char.gun.visible = gunT > 0 && stance === 'stand';
       char.mixer.update(dt);
     } else {
       // ব্যাকআপ চরিত্রের সরল অ্যানিমেশন
@@ -927,7 +1022,7 @@ function drawBig() {
 }
 function openMap() {
   if (!started) return;
-  mapOpen = true; jx = 0; jy = 0;
+  mapOpen = true; jx = 0; jy = 0; fireHeld = false; dragId = null;
   const side = Math.floor(Math.min(innerWidth - 16, innerHeight - 90));
   bmSide = side; bmS = side / 380; bm.width = bm.height = side;
   bigWrap.style.display = 'flex';
@@ -1081,12 +1176,12 @@ function startCombat() { combatT = 4; if (runTouch) setRun(false); }
 function doPunch() {
   if (atkCD > 0 || stance === 'prone') return;
   startCombat(); gunT = 0; jabSide ^= 1;
-  atk = { type: 'punch', side: jabSide, t: 0, dur: 0.32, hit: false }; atkCD = 0.38;
+  atk = { type: 'punch', side: jabSide, t: 0, dur: char && char.mixer ? 0.5 : 0.32, hit: false }; atkCD = 0.38;
 }
 function doKick() {
   if (atkCD > 0 || stance === 'prone') return;
   startCombat(); gunT = 0;
-  atk = { type: 'kick', side: 1, t: 0, dur: 0.5, hit: false }; atkCD = 0.65;
+  atk = { type: 'kick', side: 1, t: 0, dur: char && char.mixer ? 0.7 : 0.5, hit: false }; atkCD = 0.65;
 }
 function aimNPC(maxDeg, maxDist) {
   let best = null, bd = 1e9; const fx = Math.sin(camYaw), fz = Math.cos(camYaw);
@@ -1133,7 +1228,7 @@ function castRay(o, d, maxT) {
 }
 function hurtNPC(n, dmg, dx, dz, kb) {
   if (n.dead) return;
-  n.hp -= dmg; n.flash = 0.25;
+  n.hp -= dmg; n.flash = 0.25; n.hitT = 0.6; n.hitKey = (n.hitKey || 0) + 1;
   const L = Math.hypot(dx, dz) || 1; n.knock.x += dx / L * kb; n.knock.z += dz / L * kb;
   if (n.hp <= 0) { n.dead = true; n.deadT = 0; kills++; }
 }
@@ -1208,32 +1303,121 @@ function buildNPCs() {
   }
   for (const [x, z] of [[3, 32], [-3, 40], [4, 48]]) segs.push([[x, z - 2], [x, z + 2]]);
   for (const [a, b] of segs) {
-    const c = makePrimitive(Math.random() < 0.5 ? 'boy' : 'girl'), mats = new Set();
+    const gender = Math.random() < 0.5 ? 'boy' : 'girl', c = makePrimitive(gender), mats = new Set();
     c.group.children[0].material.color.set(pick(cols));
     c.group.traverse(o => { if (o.isMesh) mats.add(o.material); });
     c.group.rotation.order = 'YXZ'; scene.add(c.group);
-    npcs.push({ g: c.group, parts: c, mats: [...mats], hp: 100, a, b, t: Math.random(), dir: 1, knock: new THREE.Vector3(), flash: 0, dead: false, deadT: 0, phase: Math.random() * 6 });
+    npcs.push({ gender, g: c.group, parts: c, mats: [...mats], hp: 100, a, b, t: Math.random(), dir: 1, knock: new THREE.Vector3(), flash: 0, dead: false, deadT: 0, phase: Math.random() * 6 });
   }
+  upgradeNPCs();
+}
+// Mixamo NPC: বক্স-চরিত্র বদলে আসল চরিত্র বসানো (ফাইল না পেলে বক্স-চরিত্রই থাকে)
+async function loadFresh(name) {
+  for (const n of new Set([name, name.toLowerCase(), name[0].toUpperCase() + name.slice(1).toLowerCase()])) {
+    try { return await fbxLoader.loadAsync(`models/${n}.fbx`); } catch (e) { /* পরের নাম */ }
+  }
+  return null;
+}
+async function upgradeNPCs() {
+  try {
+    const bases = { boy: await loadFresh('boy'), girl: await loadFresh('girl') };
+    const clips = {}, KEEP_Y = ['hit', 'death', 'getup'];
+    for (const [k, f] of Object.entries({ walk: ANIMS.walk, ...NPC_ANIMS })) {
+      const a = await loadAsset(f);
+      if (!(a && a.animations.length)) continue;
+      const clip = a.animations[0];
+      clip.tracks = clip.tracks.filter(t => {
+        if (!t.name.endsWith('.position')) return true;
+        if (KEEP_Y.includes(k) && /Hips\.position$/.test(t.name)) {
+          const v = t.values, x0 = v[0], z0 = v[2];
+          for (let i = 0; i < v.length; i += 3) { v[i] = x0; v[i + 2] = z0; }
+          return true;
+        }
+        return false;
+      });
+      clips[k] = clip;
+    }
+    if (!clips.walk || !(bases.boy || bases.girl)) return;
+    const tints = [0xe74c3c, 0xf39c12, 0x27ae60, 0x8e44ad, 0x16a085, 0xd35400];
+    for (const n of npcs) {
+      const base = bases[n.gender] || bases.boy || bases.girl;
+      const model = SkeletonUtils.clone(base);
+      model.rotation.y = MODEL_YAW;
+      let box = new THREE.Box3().setFromObject(model);
+      model.scale.setScalar(CHAR_HEIGHT / (box.max.y - box.min.y));
+      box = new THREE.Box3().setFromObject(model);
+      model.position.y -= box.min.y;
+      const mats = [], tint = new THREE.Color(tints[Math.floor(Math.random() * tints.length)]);
+      model.traverse(o => {
+        if (!o.isMesh) return;
+        o.castShadow = true;
+        o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone();
+        for (const m of (Array.isArray(o.material) ? o.material : [o.material])) { if (m.emissive) mats.push(m); if (m.color) m.color.lerp(tint, 0.25); }
+      });
+      const g = new THREE.Group(); g.add(model);
+      g.position.copy(n.g.position); g.position.y = 0; g.rotation.y = n.g.rotation.y;
+      scene.remove(n.g); scene.add(g);
+      const mixer = new THREE.AnimationMixer(model), acts = {}, spd = {};
+      for (const [k, clip] of Object.entries(clips)) {
+        const act = mixer.clipAction(clip, model);
+        const target = { hit: 0.6, getup: 2.5 }[k];
+        if (k === 'hit' || k === 'death' || k === 'getup') { act.setLoop(THREE.LoopOnce, 1); act.clampWhenFinished = true; }
+        spd[k] = target ? Math.max(1, clip.duration / target) : 1;
+        acts[k] = act;
+      }
+      n.getDur = acts.getup ? acts.getup.getClip().duration / spd.getup : 2.5;
+      n.g = g; n.parts = null; n.mats = mats; n.mixer = mixer; n.acts = acts; n.spd = spd; n.st = null; n.cur = null; n.hitKey = 0; n.seenHit = 0;
+      n.phase = Math.random() * 6;
+      setNPCAnim(n, 'walk');
+    }
+  } catch (e) { console.warn('NPC আপগ্রেড হয়নি, বক্স-চরিত্র থাকছে', e); }
+}
+function setNPCAnim(n, st, force) {
+  const next = n.acts[st];
+  if (!next || (n.st === st && !force)) return;
+  if (n.cur && n.cur !== next) n.cur.fadeOut(0.15);
+  next.reset().fadeIn(0.15).play(); next.timeScale = n.spd[st] || 1;
+  n.cur = next; n.st = st;
 }
 function updateNPCs(dt) {
   for (const n of npcs) {
     if (n.dead) {
-      n.deadT += dt; const f = Math.min(1, n.deadT / 0.4);
-      n.g.rotation.x = -f * Math.PI / 2; n.g.position.y = 0.15 + f * 0.15;
-      if (n.deadT > 6) { n.dead = false; n.hp = 100; n.g.rotation.x = 0; n.knock.set(0, 0, 0); }
+      n.deadT += dt;
+      if (n.mixer) {
+        n.g.position.y = 0;
+        if (n.deadT <= 6) setNPCAnim(n, 'death');
+        else {
+          setNPCAnim(n, 'getup');
+          if (n.deadT > 6 + n.getDur || !n.acts.getup) { n.dead = false; n.hp = 100; n.knock.set(0, 0, 0); n.hitT = 0; setNPCAnim(n, 'walk', true); }
+        }
+      } else {
+        const f = Math.min(1, n.deadT / 0.4);
+        n.g.rotation.x = -f * Math.PI / 2; n.g.position.y = 0.15 + f * 0.15;
+        if (n.deadT > 6) { n.dead = false; n.hp = 100; n.g.rotation.x = 0; n.knock.set(0, 0, 0); }
+      }
     } else {
+      const hurt = n.mixer && n.hitT > 0;
+      if (hurt) n.hitT -= dt;
       const len = Math.hypot(n.b[0] - n.a[0], n.b[1] - n.a[1]) || 1;
-      n.t += n.dir * 1.3 * dt / len;
-      if (n.t > 1) { n.t = 1; n.dir = -1; } else if (n.t < 0) { n.t = 0; n.dir = 1; }
+      if (!hurt) {
+        n.t += n.dir * 1.3 * dt / len;
+        if (n.t > 1) { n.t = 1; n.dir = -1; } else if (n.t < 0) { n.t = 0; n.dir = 1; }
+      }
       const x = n.a[0] + (n.b[0] - n.a[0]) * n.t, z = n.a[1] + (n.b[1] - n.a[1]) * n.t;
       n.knock.multiplyScalar(Math.exp(-dt * 4));
       const cur = n.g.position;
-      cur.set(x + n.knock.x * 0.25 + (cur.userData?.ox || 0), 0.15, z + n.knock.z * 0.25);
+      cur.set(x + n.knock.x * 0.25 + (cur.userData?.ox || 0), n.mixer ? 0 : 0.15, z + n.knock.z * 0.25);
       n.g.rotation.y = Math.atan2((n.b[0] - n.a[0]) * n.dir, (n.b[1] - n.a[1]) * n.dir);
-      n.phase += dt * 6;
-      n.parts.legL.rotation.x = Math.sin(n.phase) * 0.6; n.parts.legR.rotation.x = -Math.sin(n.phase) * 0.6;
-      n.parts.armL.rotation.x = -Math.sin(n.phase) * 0.5; n.parts.armR.rotation.x = Math.sin(n.phase) * 0.5;
+      if (n.mixer) {
+        if (n.acts.hit && n.hitKey !== n.seenHit) { n.seenHit = n.hitKey; setNPCAnim(n, 'hit', true); }
+        else if (!hurt) setNPCAnim(n, 'walk');
+      } else {
+        n.phase += dt * 6;
+        n.parts.legL.rotation.x = Math.sin(n.phase) * 0.6; n.parts.legR.rotation.x = -Math.sin(n.phase) * 0.6;
+        n.parts.armL.rotation.x = -Math.sin(n.phase) * 0.5; n.parts.armR.rotation.x = Math.sin(n.phase) * 0.5;
+      }
     }
+    if (n.mixer && Math.hypot(n.g.position.x - player.x, n.g.position.z - player.z) < 90) n.mixer.update(dt);   // দূরের NPC-র অ্যানিমেশন বন্ধ (ফোন হালকা রাখতে)
     if (n.flash > 0) n.flash -= dt;
     const f = Math.max(0, n.flash) / 0.25 * 0.6;
     for (const m of n.mats) m.emissive.setRGB(f, 0, 0);
@@ -1366,7 +1550,7 @@ function loop(now) {
   requestAnimationFrame(loop);
   const el = now - last;
   if (el < 33) return;
-  last = now;
+  last = now - (el % 33);
   const dt = Math.min(el / 1000, 0.05);
 
   animateWorld(now / 1000, dt);
@@ -1394,15 +1578,14 @@ async function startGame(gender) {
   if (!ac) initAudio();
   if (ac.state === 'suspended') ac.resume();
 
-  char = await buildCharacter(gender);
+  try { char = await buildCharacter(gender); }
+  catch (e) { document.getElementById('msg').textContent = 'ত্রুটি হয়েছে, আবার চেষ্টা করুন'; document.querySelectorAll('#start button').forEach(b => b.disabled = false); return; }
   scene.add(char.group);
   camYaw = 0; player.yaw = 0;
   started = true;
 
   document.getElementById('start').style.display = 'none';
   document.body.classList.add('playing');
-  try { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(() => {}); } catch (e) {}
-  try { screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => {}); } catch (e) {}
   document.getElementById('hud').style.display = 'block';
   document.getElementById('mini').style.display = 'block';
   document.getElementById('joy').style.display = 'block';
@@ -1458,9 +1641,11 @@ async function introSeq() {
   showScr('loading');
   const fill = gid('barfill');
   let p = 0;
+  const pre = preloadAll(); let preFin = false; pre.then(() => { preFin = true; });
   await new Promise(res => {
     const t = setInterval(() => {
-      p = Math.min(100, p + 2 + Math.random() * 4);
+      const target = preFin ? 100 : Math.min(95, preDone / PRELOAD.length * 100);
+      p = Math.min(target, p + 2 + Math.random() * 3);
       fill.style.width = p + '%';
       gid('pct').textContent = Math.floor(p) + '%';
       if (p >= 100) { clearInterval(t); res(); }
@@ -1473,6 +1658,10 @@ async function introSeq() {
   showScr('story');
   nextLine();
 }
+// প্রথম স্পর্শে নিঃশব্দে full screen (ঠিকানা-বার লুকাতে); landscape লকের দরকার নেই
+addEventListener('pointerdown', () => {
+  try { if (!document.fullscreenElement && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); } catch (e) {}
+}, { once: true });
 introSeq();
 </script>
 </body>
