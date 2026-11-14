@@ -26,9 +26,14 @@
   #jump { right: 30px; bottom: 145px; width: 80px; height: 80px; }
   #crouch { right: 125px; bottom: 45px; width: 62px; height: 62px; }
   #prone { right: 125px; bottom: 120px; width: 62px; height: 62px; }
-  #punch { right: 125px; bottom: 195px; width: 62px; height: 62px; font-size: 12px; line-height: 1.1; padding: 0; }
   #kick { right: 125px; bottom: 270px; width: 62px; height: 62px; font-size: 12px; line-height: 1.1; padding: 0; }
-  #fire { right: 30px; bottom: 240px; width: 80px; height: 80px; font-size: 13px; line-height: 1.1; padding: 0; background: rgba(231,76,60,.55); }
+  #atk { right: 30px; bottom: 240px; width: 90px; height: 90px; font-size: 11px; line-height: 1.1; padding: 0; background: rgba(231,76,60,.55); }
+  #wsel { right: 125px; bottom: 195px; width: 62px; height: 62px; font-size: 22px; padding: 0; }
+  #wheel { position: fixed; left: 50%; top: 50%; width: 300px; height: 300px; margin: -150px 0 0 -150px; display: none; z-index: 25; background: rgba(20,20,24,.93); border-radius: 50%; border: 3px solid #888; touch-action: none; }
+  #wheel .wb { position: absolute; width: 76px; height: 76px; border-radius: 50%; border: 2px solid #666; background: #2b2b30; color: #fff; font-size: 11px; line-height: 1.2; padding: 0; }
+  #wheel .wb.on { background: #ffd400; color: #222; border-color: #fff; }
+  #wheel .wb b { display: block; font-size: 24px; font-weight: normal; }
+  #whub { position: absolute; left: 100px; top: 100px; width: 100px; height: 100px; border-radius: 50%; background: #17171b; color: #fff; font-size: 13px; display: flex; align-items: center; justify-content: center; text-align: center; }
   #eyebtn { left: 45px; bottom: 165px; width: 54px; height: 54px; font-size: 22px; padding: 0; }
   #gear { right: 12px; top: 100px; width: 40px; height: 40px; padding: 0; font-size: 20px; }
   #editbar { position: fixed; left: 50%; top: 8px; transform: translateX(-50%); z-index: 40; display: none; flex-direction: column; gap: 6px; background: rgba(0,0,0,.84); color: #fff; padding: 8px 10px; border-radius: 10px; font-size: 12px; max-width: calc(var(--vw) * 92); text-align: center; }
@@ -103,9 +108,10 @@
 <button id="jump" class="act">লাফ</button>
 <button id="crouch" class="act">বসুন</button>
 <button id="prone" class="act">শুয়ুন</button>
-<button id="punch" class="act">👊<br>ঘুসি</button>
 <button id="kick" class="act">🦵<br>লাথি</button>
-<button id="fire" class="act">🔫<br>ফায়ার</button>
+<button id="atk" class="act">👊</button>
+<button id="wsel" class="act">🎒</button>
+<div id="wheel"><div id="whub">অস্ত্র বাছুন</div></div>
 <button id="eyebtn" class="act">👁</button>
 <div id="eye"></div>
 <button id="gear" class="act">⚙</button>
@@ -837,12 +843,12 @@ addEventListener('keydown', e => {
   if (e.code === 'Space') doJump();
   if (e.code === 'KeyC') toggleStance('crouch');
   if (e.code === 'KeyZ') toggleStance('prone');
-  if (e.code === 'KeyF') fireHeld = true;
+  if (e.code === 'KeyF') attackDown();
   if (e.code === 'KeyJ') doPunch();
   if (e.code === 'KeyK') doKick();
   if (e.code.startsWith('Arrow')) e.preventDefault();
 });
-addEventListener('keyup', e => { keys.delete(e.code); if (e.code === 'KeyF') fireHeld = false; });
+addEventListener('keyup', e => { keys.delete(e.code); if (e.code === 'KeyF') attackUp(); });
 
 const joy = document.getElementById('joy'), knob = document.getElementById('knob');
 let joyId = null, jx = 0, jy = 0, jcx = 0, jcy = 0;
@@ -897,15 +903,30 @@ function toggleStance(st) { stance = stance === st ? 'stand' : st; atk = null; s
 
 let dragId = null, lastX = 0, lastY = 0, camYaw = 0, camPitch = 0;
 const PITCH_MIN = -0.6, PITCH_MAX = 1.45;
-renderer.domElement.addEventListener('pointerdown', e => { dragId = e.pointerId; lastX = e.clientX; lastY = e.clientY; });
+let camDist = 5, camFront = false, camVi = 0, pinch0 = 1, pinchD0 = 5;
+const cptr = new Map();
+renderer.domElement.addEventListener('pointerdown', e => {
+  cptr.set(e.pointerId, [e.clientX, e.clientY]);
+  if (cptr.size === 2) {   // দুই আঙুলে পিঞ্চ = জুম
+    const [a, b] = [...cptr.values()];
+    pinch0 = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1; pinchD0 = camDist; dragId = null; return;
+  }
+  dragId = e.pointerId; lastX = e.clientX; lastY = e.clientY;
+});
 addEventListener('pointermove', e => {
+  if (cptr.has(e.pointerId)) cptr.set(e.pointerId, [e.clientX, e.clientY]);
+  if (cptr.size === 2) {
+    const [a, b] = [...cptr.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1;
+    camDist = Math.max(1.4, Math.min(14, pinchD0 * pinch0 / d)); return;
+  }
   if (e.pointerId !== dragId) return;
   camYaw -= (e.clientX - lastX) * 0.008;
   camPitch = Math.max(PITCH_MIN, Math.min(PITCH_MAX, camPitch + (lastY - e.clientY) * 0.006));
   lastX = e.clientX; lastY = e.clientY;
 });
-addEventListener('pointerup', e => { if (e.pointerId === dragId) dragId = null; });
-addEventListener('pointercancel', e => { if (e.pointerId === dragId) dragId = null; });
+const endPtr = e => { cptr.delete(e.pointerId); if (e.pointerId === dragId) dragId = null; };
+addEventListener('pointerup', endPtr);
+addEventListener('pointercancel', endPtr);
 
 // ---------- প্লেয়ার ----------
 const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
@@ -1056,18 +1077,19 @@ function update(dt) {
   if (moving && stepIdx !== lastStep) { lastStep = stepIdx; playStep(run); }
 
   // ক্যামেরা: yaw = ৩৬০° ঘোরা, pitch = আকাশ/নিচ দেখা (সোয়াইপ)
-  const D = 6, H = 2.2, cp = Math.cos(camPitch), sp = Math.sin(camPitch), eyeOff = cr * 0.55 + pr * 1.1;
+  const D = camDist, H = camFront ? 1.7 : Math.max(1.3, Math.min(2.2, 0.9 + D * 0.22)), cp = Math.cos(camPitch), sp = Math.sin(camPitch), eyeOff = cr * 0.55 + pr * 1.1, fr = camFront ? 1 : -1;
   const down = Math.max(0, -sp);
   const want = new THREE.Vector3(
-    player.x - Math.sin(camYaw) * D * cp,
+    player.x + fr * Math.sin(camYaw) * D * cp,
     Math.max(0.4, H + D * down - eyeOff + player.y),
-    player.z - Math.cos(camYaw) * D * cp
+    player.z + fr * Math.cos(camYaw) * D * cp
   );
   camera.position.lerp(want, 1 - Math.exp(-dt * (dragId !== null ? 30 : 6)));
   camera.fov += ((moving && run ? 66 : 60) - camera.fov) * (1 - Math.exp(-dt * 2.5));
   camera.updateProjectionMatrix();
   const K = D * Math.max(0, Math.min(1, 1 + camPitch / 0.3));
-  camera.lookAt(
+  if (camFront) camera.lookAt(player.x, 1.55 - eyeOff + player.y, player.z);
+  else camera.lookAt(
     player.x + Math.sin(camYaw) * cp * K,
     1.6 + sp * K - eyeOff + player.y,
     player.z + Math.cos(camYaw) * cp * K
@@ -1309,6 +1331,97 @@ function sfx(kind) {
     o.connect(g).connect(ac.destination); o.start(t); o.stop(t + 0.15);
   }
 }
+// ---------- অস্ত্র: ঘুসি, ছুরি, পিস্তল, রাইফেল, গ্রেনেড (চাকা থেকে বাছাই, একটাই আক্রমণ বাটন) ----------
+const WEAPONS = [
+  { id: 'fist', name: 'ঘুসি', ico: '👊', melee: true },
+  { id: 'knife', name: 'ছুরি', ico: '🔪', melee: true },
+  { id: 'pistol', name: 'পিস্তল', ico: '🔫', mag: 12, cd: 0.33, auto: false, body: 20, head: 40 },
+  { id: 'rifle', name: 'রাইফেল', ico: '🔫', mag: 30, cd: 0.14, auto: true, body: 25, head: 50 },
+  { id: 'grenade', name: 'গ্রেনেড', ico: '💣' }
+];
+let wIdx = 3, atkHeld = false, reloadW = 3;
+let wst = { pistol: { mag: 12, res: 48 }, rifle: { mag: 30, res: 120 }, grenade: { n: 5 } };
+function restock() { wst = { pistol: { mag: 12, res: 48 }, rifle: { mag: 30, res: 120 }, grenade: { n: 5 } }; reloadT = 0; lastHud = ''; }
+function addAmmo() { wst.pistol.res = Math.min(240, wst.pistol.res + 12); wst.rifle.res = Math.min(240, wst.rifle.res + 30); wst.grenade.n = Math.min(9, wst.grenade.n + 1); lastHud = ''; }
+function startReload() {
+  const w = WEAPONS[wIdx], s = wst[w.id];
+  if (!s || !w.mag || reloadT > 0 || s.mag >= w.mag || s.res <= 0) return;
+  reloadT = 1.4; reloadW = wIdx;
+}
+function finishReload() {
+  const w = WEAPONS[reloadW], s = wst[w.id]; if (!s) return;
+  const take = Math.min(w.mag - s.mag, s.res); s.mag += take; s.res -= take;
+}
+function useWeapon(first) {
+  const w = WEAPONS[wIdx];
+  if (w.id === 'fist') doPunch();
+  else if (w.id === 'knife') doKnife();
+  else if (w.id === 'grenade') { if (first) throwGrenade(); }
+  else fireHeld = true;
+}
+function attackDown() { if (pDead) return; atkHeld = true; useWeapon(true); }
+function attackUp() { atkHeld = false; fireHeld = false; }
+function doKnife() {
+  if (atkCD > 0 && atkLast === 'knife') return;
+  stance = 'stand'; startCombat(); gunT = 0; jabSide ^= 1;
+  const d = char && char.mixer ? (char.dur.punch || 0.5) : 0.32;
+  atk = { type: 'punch', w: 'knife', side: jabSide, t: 0, dur: d, hit: false }; atkCD = d * 0.7; atkLast = 'knife';
+}
+// গ্রেনেড: ছুড়লে বাঁকা পথে গিয়ে ১.৬ সেকেন্ডে ফাটে (কাছে থাকলে আপনিও আহত হবেন)
+const grenades = [];
+function throwGrenade() {
+  const g = wst.grenade; if (g.n <= 0) return;
+  g.n--; lastHud = ''; stance = 'stand'; startCombat(); gunT = 0;
+  const d = char && char.mixer ? (char.dur.punch || 0.5) : 0.32;
+  atk = { type: 'punch', side: 1, t: 0, dur: d, hit: true }; atkCD = d * 0.7; atkLast = 'grenade';
+  const pt = Math.max(0.1, Math.min(0.8, 0.3 + camPitch * 0.5));
+  const v = new THREE.Vector3(Math.sin(camYaw) * Math.cos(pt), Math.sin(pt), Math.cos(camYaw) * Math.cos(pt)).multiplyScalar(14);
+  const m = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 6), new THREE.MeshStandardMaterial({ color: 0x2f4f2f }));
+  scene.add(m);
+  grenades.push({ m, p: new THREE.Vector3(player.x, player.y + 1.4, player.z), v, t: 0 });
+}
+function explode(p) {
+  for (let i = 0; i < 6; i++) spawnSpark(new THREE.Vector3(p.x + (Math.random() - 0.5) * 2, p.y + Math.random() * 1.5, p.z + (Math.random() - 0.5) * 2), i % 2 ? 0xff7a1a : 0xffd25a);
+  muzzle.position.copy(p); muzzleT = 0.18; sfx('gun'); sfx('kick');
+  for (const n of npcs) {
+    if (n.dead) continue;
+    const dx = n.g.position.x - p.x, dz = n.g.position.z - p.z, d = Math.hypot(dx, dz);
+    if (d < 7) hurtNPC(n, 15 + 85 * (1 - d / 7), dx, dz, 8);
+  }
+  const dp = Math.hypot(player.x - p.x, player.z - p.z);
+  if (dp < 4.5) hurtPlayer(5 + 25 * (1 - dp / 4.5));
+}
+function updateGrenades(dt) {
+  for (let i = grenades.length - 1; i >= 0; i--) {
+    const g = grenades[i];
+    g.v.y -= 20 * dt; g.p.addScaledVector(g.v, dt); g.t += dt;
+    if (g.p.y < 0.2) { g.p.y = 0.2; g.v.set(g.v.x * 0.4, Math.abs(g.v.y) * 0.3, g.v.z * 0.4); }
+    if (g.p.y < 9 && blocked(g.p.x, g.p.z)) { g.p.x -= g.v.x * dt; g.p.z -= g.v.z * dt; g.v.x *= -0.3; g.v.z *= -0.3; }
+    g.m.position.copy(g.p);
+    if (g.t > 1.6) { explode(g.p); scene.remove(g.m); grenades.splice(i, 1); }
+  }
+}
+// অস্ত্রের চাকা
+const wheelEl = document.getElementById('wheel');
+const wbtns = WEAPONS.map((w, i) => {
+  const b = document.createElement('button'); b.className = 'wb';
+  const a = -Math.PI / 2 + i * 2 * Math.PI / WEAPONS.length;
+  b.style.left = (150 + Math.cos(a) * 100 - 38) + 'px'; b.style.top = (150 + Math.sin(a) * 100 - 38) + 'px';
+  wheelEl.appendChild(b);
+  bindTap(b, () => selectWeapon(i));
+  return b;
+});
+function renderWheel() {
+  WEAPONS.forEach((w, i) => {
+    const s = wst[w.id], t = w.melee ? '' : w.id === 'grenade' ? s.n : s.mag + '/' + s.res;
+    wbtns[i].innerHTML = '<b>' + w.ico + '</b>' + w.name + (t !== '' ? '<br>' + t : '');
+    wbtns[i].classList.toggle('on', i === wIdx);
+  });
+}
+function selectWeapon(i) { wIdx = i; fireHeld = false; atkHeld = false; reloadT = 0; lastHud = ''; wheelEl.style.display = 'none'; }
+bindTap(document.getElementById('wsel'), () => { renderWheel(); wheelEl.style.display = wheelEl.style.display === 'block' ? 'none' : 'block'; });
+bindTap(document.getElementById('whub'), () => { wheelEl.style.display = 'none'; });
+
 function startCombat() { combatT = 4; if (runTouch) setRun(false); }
 let atkLast = '';
 function doPunch() {
@@ -1373,8 +1486,10 @@ function hurtNPC(n, dmg, dx, dz, kb) {
   if (n.hp <= 0) { n.dead = true; n.deadT = 0; n.hostT = 0; kills++; }
 }
 function shoot() {
-  if (ammo <= 0) { reloadT = 1.4; return; }
-  ammo--; fireCD = 0.14; startCombat(); gunT = 2.5; atk = null; recoil = 0.14; muzzleT = 0.05;
+  const w = WEAPONS[wIdx], s = wst[w.id];
+  if (!s || !w.mag) return;
+  if (s.mag <= 0) { startReload(); fireHeld = false; return; }
+  s.mag--; fireCD = w.cd; startCombat(); gunT = 2.5; atk = null; recoil = 0.14; muzzleT = 0.05;
   const tg = aimNPC(10, 60);
   const o = new THREE.Vector3(player.x + Math.sin(player.yaw) * 0.5, player.y + 1.35 - cr * 0.4 - pr * 1.0, player.z + Math.cos(player.yaw) * 0.5);
   let d;
@@ -1384,13 +1499,14 @@ function shoot() {
   spawnTracer(o, end);
   muzzle.position.copy(o); sfx('gun');
   if (r.hit) {
-    if (r.hit.type === 'npc') { spawnSpark(end, 0xff3b3b); hurtNPC(r.hit.n, r.hit.head ? 50 : 25, d.x, d.z, 2); }
+    if (r.hit.type === 'npc') { spawnSpark(end, 0xff3b3b); hurtNPC(r.hit.n, r.hit.head ? w.head : w.body, d.x, d.z, 2); }
     else spawnSpark(end, 0xffd25a);
   }
-  if (ammo <= 0) reloadT = 1.4;
+  if (s.mag <= 0) startReload();
+  if (!w.auto) fireHeld = false;
 }
-function meleeHit(type) {
-  const range = type === 'punch' ? 2.2 : 2.7, dmg = type === 'punch' ? 12 : 22, kb = type === 'punch' ? 3 : 7;
+function meleeHit(type, wn) {
+  const kn = wn === 'knife', range = type === 'punch' ? (kn ? 2.0 : 2.2) : 2.7, dmg = type === 'punch' ? (kn ? 24 : 12) : 22, kb = type === 'punch' ? 3 : 7;
   const fx = Math.sin(player.yaw), fz = Math.cos(player.yaw);
   let any = false;
   for (const n of npcs) {
@@ -1406,11 +1522,13 @@ function meleeHit(type) {
 function updateCombat(dt) {
   combatT = Math.max(0, combatT - dt); gunT = Math.max(0, gunT - dt); atkCD = Math.max(0, atkCD - dt);
   fireCD = Math.max(0, fireCD - dt); muzzleT = Math.max(0, muzzleT - dt); recoil *= Math.exp(-dt * 18);
-  if (reloadT > 0) { reloadT -= dt; if (reloadT <= 0) ammo = 30; }
+  if (reloadT > 0) { reloadT -= dt; if (reloadT <= 0) finishReload(); }
   if (fireHeld && fireCD <= 0 && reloadT <= 0) shoot();
+  if (atkHeld && WEAPONS[wIdx].melee) useWeapon(false);
+  updateGrenades(dt);
   if (atk) {
     atk.t += dt;
-    if (!atk.hit && atk.t >= atk.dur * 0.4) { atk.hit = true; meleeHit(atk.type); }
+    if (!atk.hit && atk.t >= atk.dur * 0.4) { atk.hit = true; meleeHit(atk.type, atk.w); }
     if (atk.t >= atk.dur) atk = null;
   }
   muzzle.intensity = muzzleT > 0 ? 80 : 0;
@@ -1419,8 +1537,14 @@ function updateCombat(dt) {
     sp.t -= dt; sp.m.scale.setScalar(0.5 + (0.25 - sp.t) * 6); sp.m.material.opacity = Math.max(0, sp.t / 0.25);
     if (sp.t <= 0) sp.m.visible = false;
   }
-  const h = '🔫 ' + (reloadT > 0 ? 'রিলোড…' : ammo) + '/30 · 💥 ' + kills;
-  if (h !== lastHud) { lastHud = h; document.getElementById('ammo').textContent = h; }
+  const w = WEAPONS[wIdx], sw = wst[w.id];
+  const at = w.melee ? '' : w.id === 'grenade' ? String(sw.n) : (reloadT > 0 ? 'রিলোড…' : sw.mag + '/' + sw.res);
+  const h = w.ico + ' ' + w.name + (at ? ' ' + at : '') + ' · 💥 ' + kills;
+  if (h !== lastHud) {
+    lastHud = h; document.getElementById('ammo').textContent = h;
+    document.getElementById('atk').innerHTML = '<div style="font-size:30px">' + w.ico + '</div><div style="font-size:11px">' + (at || w.name) + '</div>';
+    renderWheel();
+  }
 }
 function holdBtn(id, on, off) {
   const b = document.getElementById(id);
@@ -1430,8 +1554,7 @@ function holdBtn(id, on, off) {
   for (const ev of ['pointerup', 'pointercancel', 'pointerleave', 'touchend', 'touchcancel', 'mouseup', 'mouseleave']) b.addEventListener(ev, up, { passive: false });
   b.addEventListener('contextmenu', e => e.preventDefault());
 }
-holdBtn('fire', () => { fireHeld = true; }, () => { fireHeld = false; });
-holdBtn('punch', () => doPunch(), () => {});
+holdBtn('atk', () => attackDown(), () => attackUp());
 holdBtn('kick', () => doKick(), () => {});
 
 // NPC (মার খায়, পড়ে যায়, ৬ সেকেন্ড পর আবার ওঠে)
@@ -1458,6 +1581,18 @@ async function loadFresh(name) {
   }
   return null;
 }
+const normBoneName = nm => String(nm).replace(/^mixamorig\d*[:_]?/i, '').replace(/[^a-z0-9]/gi, '').toLowerCase();
+function remapClip(clip, model) {
+  const bm = new Map();
+  model.traverse(o => { if (o.isBone || o.type === 'Bone') bm.set(normBoneName(o.name), o.name); });
+  const c = clip.clone();
+  c.tracks = c.tracks.map(t => {
+    const dot = t.name.lastIndexOf('.'); if (dot < 0) return null;
+    const bone = bm.get(normBoneName(t.name.slice(0, dot))); if (!bone) return null;
+    const nt = t.clone(); nt.name = bone + t.name.slice(dot); return nt;
+  }).filter(Boolean);
+  return c;
+}
 async function upgradeNPCs() {
   try {
     const bases = { boy: await loadFresh('boy'), girl: await loadFresh('girl') };
@@ -1478,7 +1613,7 @@ async function upgradeNPCs() {
       clips[k] = clip;
     }
     if (!clips.walk || !(bases.boy || bases.girl)) return;
-    const tints = [0xe74c3c, 0xf39c12, 0x27ae60, 0x8e44ad, 0x16a085, 0xd35400];
+    const tints = [0xe74c3c, 0xf39c12, 0x27ae60, 0x8e44ad, 0x16a085, 0xd35400], clipCache = new Map();
     for (const n of npcs) {
       const base = bases[n.gender] || bases.boy || bases.girl;
       const model = SkeletonUtils.clone(base);
@@ -1498,7 +1633,9 @@ async function upgradeNPCs() {
       g.position.copy(n.g.position); g.position.y = 0; g.rotation.y = n.g.rotation.y;
       scene.remove(n.g); scene.add(g);
       const mixer = new THREE.AnimationMixer(model), acts = {}, spd = {};
-      for (const [k, clip] of Object.entries(clips)) {
+      let mcl = clipCache.get(base);
+      if (!mcl) { mcl = {}; for (const [k, c] of Object.entries(clips)) mcl[k] = remapClip(c, model); clipCache.set(base, mcl); }
+      for (const [k, clip] of Object.entries(mcl)) {
         const act = mixer.clipAction(clip, model);
         const target = { hit: 0.6, getup: 2.5, punch: 0.7 }[k];
         if (k === 'hit' || k === 'death' || k === 'getup' || k === 'punch') { act.setLoop(THREE.LoopOnce, 1); act.clampWhenFinished = true; }
@@ -1634,7 +1771,7 @@ function hurtPlayer(dmg) {
   if (hp <= 0) { hp = 0; pDead = true; deadT = 0; deaths++; document.getElementById('dead').style.display = 'flex'; setRun(false); saveProgress(); }
 }
 function respawnPlayer() {
-  pDead = false; hp = 100; armor = 100; player.x = 0; player.z = 20; player.y = 0; stance = 'stand'; jumping = false;
+  pDead = false; hp = 100; armor = 100; restock(); player.x = 0; player.z = 20; player.y = 0; stance = 'stand'; jumping = false;
   document.getElementById('dead').style.display = 'none'; saveProgress();
 }
 let lastBars = '';
@@ -1642,7 +1779,7 @@ function updateVitals(dt) {
   hurtT += dt;
   if (!pDead) { if (hp < 100 && hurtT > 8) hp = Math.min(100, hp + 2 * dt); }   // ৮ সেকেন্ড মার না খেলে ধীরে ধীরে সেরে ওঠে
   else {
-    deadT += dt; fireHeld = false; fireCD = 1; atkCD = 1; atk = null; gunT = 0; combatT = 0;
+    deadT += dt; fireHeld = false; atkHeld = false; fireCD = 1; atkCD = 1; atk = null; gunT = 0; combatT = 0;
     if (deadT > 3.5) respawnPlayer();
   }
   const tm = performance.now() / 1000;
@@ -1651,6 +1788,7 @@ function updateVitals(dt) {
     pk.g.rotation.y += dt * 2; pk.g.position.y = 0.9 + Math.sin(tm * 2 + pk.x) * 0.12;
     if (!pDead && Math.hypot(pk.x - player.x, pk.z - player.z) < 1.4) {
       if (pk.type === 'med') hp = Math.min(100, hp + 50); else armor = Math.min(100, armor + 50);
+      addAmmo();
       pk.g.visible = false; pk.t = 40; sfx('kick');
     }
   }
@@ -1686,17 +1824,8 @@ function applyOutfit(c, p) {
     let n = 0;
     for (const [m, on] of mats) { const nm = (m.name || '') + ' ' + on; if (m.color && cloth.test(nm) && !skin.test(nm)) { m.color.lerp(dress, 0.55); n++; } }
     if (!n && mats.length <= 2) for (const [m] of mats) if (m.color) m.color.lerp(dress, 0.2);   // রোবট মডেল: পুরোটায় হালকা রং; মানুষের মডেলে (বেশি অংশ) ত্বকে রং লাগে না
-    let spine = model.getObjectByName('mixamorigSpine2');
-    if (!spine) model.traverse(o => { if (!spine && /Spine2$/.test(o.name)) spine = o; });
-    if (spine) {
-      const k = 1 / model.scale.x, v = makeVest(k);
-      v.position.set(VEST_POS[0] * k, VEST_POS[1] * k, VEST_POS[2] * k);
-      spine.add(v); c.vest = v;
-    }
   } else {
     c.group.children[0].material.color.set(dress);
-    const v = makeVest(1); v.scale.set(1.6, 1.2, 1.25); v.position.set(0, 1.3, 0);
-    c.group.add(v); c.vest = v;
   }
 }
 
@@ -1781,9 +1910,9 @@ function renderEye() {
 }
 
 // ---------- বাটন কাস্টমাইজ (টেনে সরানো, সাইজ, স্বচ্ছতা, সেভ) ----------
-const CUST = ['joy', 'run', 'jump', 'crouch', 'prone', 'punch', 'kick', 'fire', 'eyebtn', 'mini', 'eye', 'bars'];
-const CNAME = { joy: 'জয়স্টিক', run: 'দৌড়', jump: 'লাফ', crouch: 'বসুন', prone: 'শুয়ুন', punch: 'ঘুসি', kick: 'লাথি', fire: 'ফায়ার', eyebtn: '৩য় চোখ বাটন', mini: 'মিনি ম্যাপ', eye: '৩য় চোখের জানালা', bars: 'হেলথ বার' };
-const OPAQ = ['joy', 'run', 'jump', 'crouch', 'prone', 'punch', 'kick', 'fire', 'eyebtn'];
+const CUST = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'kick', 'eyebtn', 'mini', 'eye', 'bars'];
+const CNAME = { joy: 'জয়স্টিক', run: 'দৌড়', jump: 'লাফ', crouch: 'বসুন', prone: 'শুয়ুন', atk: 'আক্রমণ বাটন', wsel: 'অস্ত্র বাছাই', kick: 'লাথি', eyebtn: '৩য় চোখ বাটন', mini: 'মিনি ম্যাপ', eye: '৩য় চোখের জানালা', bars: 'হেলথ বার' };
+const OPAQ = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'kick', 'eyebtn'];
 let layout = { op: 1 }, editMode = false, selId = null, dragP = null, dragOff = [0, 0];
 try { const j = localStorage.getItem('wt_layout'); if (j) layout = Object.assign({ op: 1 }, JSON.parse(j)); } catch (e) {}
 CUST.forEach(id => { document.getElementById(id).dataset.cust = id; });
