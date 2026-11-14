@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FBX → ছোট GLB (ফোনেই)</title>
+<style>
+  body { font-family: sans-serif; background: #0b1220; color: #fff; margin: 0; padding: 16px; line-height: 1.6; }
+  h2 { margin: 0 0 8px; font-size: 20px; }
+  .box { background: #17233a; border-radius: 12px; padding: 12px; margin: 10px 0; }
+  select, button, input[type=file] { font-size: 16px; padding: 10px; border-radius: 10px; border: 0; width: 100%; box-sizing: border-box; margin-top: 6px; }
+  button { background: #1f7ae0; color: #fff; }
+  button:disabled { background: #5a6b85; }
+  label { display: block; margin-top: 8px; }
+  #log { font-size: 13px; white-space: pre-wrap; background: #0e1626; border-radius: 10px; padding: 10px; min-height: 80px; }
+  #out a { display: block; background: #2ecc71; color: #04210f; text-align: center; padding: 12px; border-radius: 10px; margin-top: 8px; font-weight: bold; text-decoration: none; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+<h2>FBX → ছোট GLB</h2>
+<div>ফোনের ব্রাউজারেই বড় Mixamo চরিত্রের (FBX) টেক্সচার ছোট করে .glb বানায়। ফাইল ফোনের বাইরে কোথাও যায় না।</div>
+
+<div class="box">
+  <b>১. চরিত্রের .fbx ফাইল বাছুন</b>
+  <input type="file" id="file">
+  <label><b>২. টেক্সচারের সর্বোচ্চ মাপ</b>
+    <select id="size">
+      <option value="512">৫১২ (সবচেয়ে ছোট ফাইল)</option>
+      <option value="1024" selected>১০২৪ (প্রস্তাবিত)</option>
+      <option value="2048">২০৪৮ (ভালো মান, বড় ফাইল)</option>
+    </select>
+  </label>
+  <label><input type="checkbox" id="colorOnly" checked> শুধু রঙের টেক্সচার রাখুন (নরমাল/স্পেকুলার বাদ — ফাইল অনেক ছোট হয়)</label>
+  <button id="go" disabled>৩. রূপান্তর শুরু করুন</button>
+</div>
+
+<div class="box"><b>অবস্থা</b><div id="log">ফাইল বাছুন…</div></div>
+<div id="out"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/FBXLoader.js';
+import { GLTFExporter } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/exporters/GLTFExporter.js';
+
+const $ = id => document.getElementById(id);
+const log = t => { $('log').textContent += '\n' + t; };
+const mb = n => (n / 1048576).toFixed(1) + ' MB';
+let file = null;
+
+$('file').addEventListener('change', e => {
+  file = e.target.files[0] || null;
+  $('go').disabled = !file;
+  $('log').textContent = file ? 'বাছা ফাইল: ' + file.name + ' (' + mb(file.size) + ')' : 'ফাইল বাছুন…';
+  $('out').innerHTML = '';
+});
+
+const pause = ms => new Promise(r => setTimeout(r, ms));
+
+// ছবি ছোট করে canvas বানায়; স্বচ্ছতা থাকলে PNG, নইলে JPEG (ছোট)
+function shrink(tex, max) {
+  const img = tex.image;
+  const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+  const sc = Math.min(1, max / Math.max(w, h));
+  const cw = Math.max(1, Math.round(w * sc)), ch = Math.max(1, Math.round(h * sc));
+  const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+  const g = cv.getContext('2d'); g.drawImage(img, 0, 0, cw, ch);
+  let alpha = false;
+  const d = g.getImageData(0, 0, cw, ch).data;
+  for (let i = 3; i < d.length; i += 28) if (d[i] < 250) { alpha = true; break; }
+  tex.image = cv; tex.userData.mimeType = alpha ? 'image/png' : 'image/jpeg'; tex.needsUpdate = true;
+  return alpha;
+}
+
+async function waitTextures(obj) {
+  const texs = new Set();
+  obj.traverse(o => { if (o.isMesh) for (const m of [].concat(o.material)) for (const k in m) if (m[k] && m[k].isTexture) texs.add(m[k]); });
+  for (let i = 0; i < 600; i++) {
+    let ok = true;
+    for (const t of texs) if (!(t.image && (t.image.naturalWidth || t.image.width))) ok = false;
+    if (ok) return;
+    await pause(100);
+  }
+}
+
+$('go').addEventListener('click', async () => {
+  if (!file) return;
+  $('go').disabled = true; $('out').innerHTML = '';
+  const max = +$('size').value, colorOnly = $('colorOnly').checked;
+  try {
+    log('ফাইল পড়া হচ্ছে…');
+    const buf = await file.arrayBuffer();
+    log('মডেল খোলা হচ্ছে (একটু সময় লাগবে)…');
+    const obj = new FBXLoader().parse(buf, '');
+    log('টেক্সচার লোড হচ্ছে…');
+    await waitTextures(obj);
+
+    const done = new Map();
+    let n = 0;
+    obj.traverse(o => {
+      if (!o.isMesh) return;
+      const list = [].concat(o.material).map(old => {
+        if (done.has(old)) return done.get(old);
+        let alpha = false;
+        const map = old.map || null;
+        if (map) { log('টেক্সচার ছোট করা হচ্ছে: ' + (map.image.width || '?') + '→' + max); alpha = shrink(map, max); n++; }
+        const m = new THREE.MeshStandardMaterial({ name: old.name, color: old.color ? old.color.clone() : 0xffffff, map, roughness: 0.85, metalness: 0, side: old.side });
+        if (!colorOnly && old.normalMap) { shrink(old.normalMap, max); m.normalMap = old.normalMap; }
+        if (alpha || old.transparent) { m.alphaTest = 0.5; }
+        done.set(old, m); return m;
+      });
+      o.material = Array.isArray(o.material) ? list : list[0];
+    });
+    log('ছবি ছোট হয়েছে: ' + n + 'টি। GLB বানানো হচ্ছে…');
+
+    const result = await new Promise((res, rej) => {
+      new GLTFExporter().parse(obj, res, rej, { binary: true, animations: [] });
+    });
+    const blob = new Blob([result], { type: 'model/gltf-binary' });
+    const base = file.name.replace(/\.[^.]+$/, '');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = base + '.glb';
+    a.textContent = '⬇ ডাউনলোড: ' + base + '.glb (' + mb(blob.size) + ')';
+    $('out').appendChild(a);
+    log('শেষ! আগে: ' + mb(file.size) + ' → এখন: ' + mb(blob.size) + '\nডাউনলোড করে নাম দিন boy.glb বা girl.glb এবং models/ ফোল্ডারে রাখুন।');
+  } catch (e) {
+    log('ত্রুটি: ' + (e && e.message ? e.message : e) + '\nমাপ ৫১২ করে আবার চেষ্টা করুন (ফোনের মেমোরি কম হলে এমন হয়)।');
+  }
+  $('go').disabled = false;
+});
+</script>
+</body>
+</html>
