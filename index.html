@@ -233,7 +233,8 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.prepend(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight(0xcfe3ff, 0x6a8a50, 0.75));
+const hemi = new THREE.HemisphereLight(0xcfe3ff, 0x6a8a50, 0.75);
+scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffd9a8, 1.6);
 sun.castShadow = true;
 sun.shadow.mapSize.set(1024, 1024);
@@ -241,6 +242,62 @@ sun.shadow.bias = -0.0005;
 sun.shadow.normalBias = 0.03;
 Object.assign(sun.shadow.camera, { left: -45, right: 45, top: 45, bottom: -45, far: 300 });
 scene.add(sun, sun.target);
+
+
+// ---------- দিন-রাত: দিনে বাতি বন্ধ, রাতে বাতি জ্বলে + আকাশে চাঁদ ও তারা ----------
+const DAY_LEN = 360;      // একটা পূর্ণ দিন-রাত কত সেকেন্ডে (কম দিলে দ্রুত বদলায়)
+let dayP = 0.3;           // 0.25 = দুপুর, 0.75 = মাঝরাত
+let nightK = 0;           // 0 = পুরো দিন, 1 = গভীর রাত
+const sstep = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const skyDay = new THREE.Color(0x8fb6e0), skyDusk = new THREE.Color(0xe8905a), skyNight = new THREE.Color(0x050914), skyTmp = new THREE.Color();
+const hemiSkyD = new THREE.Color(0xcfe3ff), hemiSkyN = new THREE.Color(0x2a3a66), hemiGrD = new THREE.Color(0x6a8a50), hemiGrN = new THREE.Color(0x141a14);
+const sunDayCol = new THREE.Color(0xffd9a8), sunDuskCol = new THREE.Color(0xff8a4a), moonLightCol = new THREE.Color(0x8fa8ff);
+const globeDay = new THREE.Color(0x8a8472), globeNight = new THREE.Color(0xfff1c9), hlDay = new THREE.Color(0x9aa4a8), hlNight = new THREE.Color(0xfff2b0), tlDay = new THREE.Color(0x7a1a1a), tlNight = new THREE.Color(0xff2a2a);
+const stars = (() => {
+  const n = 1600, pos = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) { const u = Math.random() * 2 - 1, a = Math.random() * 6.2832, r = Math.sqrt(1 - u * u); pos[i * 3] = r * Math.cos(a) * 330; pos[i * 3 + 1] = u * 330; pos[i * 3 + 2] = r * Math.sin(a) * 330; }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const m = new THREE.Points(g, new THREE.PointsMaterial({ color: 0xffffff, size: 2.2, sizeAttenuation: false, transparent: true, opacity: 0, depthWrite: false, fog: false }));
+  m.frustumCulled = false; m.renderOrder = -2; scene.add(m); return m;
+})();
+const moon = (() => {
+  const mk = (sz, draw) => { const c = document.createElement('canvas'); c.width = c.height = sz; draw(c.getContext('2d'), sz); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
+  const face = mk(128, (c, z) => {
+    c.fillStyle = '#f3efdc'; c.fillRect(0, 0, z, z);
+    for (let i = 0; i < 14; i++) { c.fillStyle = 'rgba(150,145,125,' + (0.15 + Math.random() * 0.2) + ')'; c.beginPath(); c.arc(Math.random() * z, Math.random() * z, 6 + Math.random() * 14, 0, 6.3); c.fill(); }
+  });
+  const glow = mk(128, (c, z) => { const gr = c.createRadialGradient(z / 2, z / 2, 0, z / 2, z / 2, z / 2); gr.addColorStop(0, 'rgba(220,230,255,0.85)'); gr.addColorStop(0.35, 'rgba(180,200,255,0.25)'); gr.addColorStop(1, 'rgba(180,200,255,0)'); c.fillStyle = gr; c.fillRect(0, 0, z, z); });
+  const grp = new THREE.Group();
+  const disc = new THREE.Mesh(new THREE.SphereGeometry(13, 24, 16), new THREE.MeshBasicMaterial({ map: face, fog: false, transparent: true }));
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false }));
+  halo.scale.set(90, 90, 1);
+  grp.add(disc, halo); grp.renderOrder = -1; grp.visible = false; scene.add(grp); return grp;
+})();
+function updateDayNight(dt, advance) {
+  if (advance) dayP = (dayP + dt / DAY_LEN) % 1;
+  const a = dayP * Math.PI * 2, el = Math.sin(a), dx = Math.cos(a);
+  nightK = 1 - sstep(-0.12, 0.18, el);
+  const day = 1 - nightK;
+  // আকাশ ও কুয়াশার রং
+  if (el > 0) skyTmp.copy(skyDusk).lerp(skyDay, sstep(0, 0.4, el)); else skyTmp.copy(skyDusk).lerp(skyNight, sstep(0, 0.3, -el));
+  scene.background.copy(skyTmp); scene.fog.color.copy(skyTmp);
+  // চারপাশের আলো
+  hemi.intensity = 0.16 + 0.59 * day; hemi.color.copy(hemiSkyN).lerp(hemiSkyD, day); hemi.groundColor.copy(hemiGrN).lerp(hemiGrD, day);
+  // সূর্য (দিনে) / চাঁদের আলো (রাতে) — ছায়াও এর সাথে বদলায়
+  if (el >= 0) { sun.intensity = 1.6 * sstep(0, 0.3, el); sun.color.copy(sunDuskCol).lerp(sunDayCol, sstep(0, 0.4, el)); sun.position.set(player.x + dx * 100, player.y + 20 + el * 80, player.z + 40); }
+  else { sun.intensity = 0.35 * sstep(0, 0.3, -el); sun.color.copy(moonLightCol); sun.position.set(player.x - dx * 100, player.y + 20 - el * 80, player.z - 40); }
+  sun.target.position.set(player.x, 0, player.z);
+  // বাতি: রাতে জ্বলে, দিনে বন্ধ
+  for (const l of lampLights) l.intensity = 60 * nightK;
+  if (nightMats.globe) nightMats.globe.color.copy(globeDay).lerp(globeNight, nightK);
+  if (nightMats.pool) nightMats.pool.opacity = 0.55 * nightK;
+  if (nightMats.hl) { nightMats.hl.color.copy(hlDay).lerp(hlNight, nightK); nightMats.tl.color.copy(tlDay).lerp(tlNight, nightK); }
+  // চাঁদ ও তারা (ক্যামেরার সাথে সাথে সরে, তাই সবসময় অনেক দূরে দেখায়)
+  stars.material.opacity = Math.max(0, (nightK - 0.35) / 0.65); stars.visible = stars.material.opacity > 0.01;
+  stars.position.copy(camera.position); stars.rotation.y = dayP * 6.2832;
+  moon.visible = el < 0.15;
+  if (moon.visible) { moon.children[0].material.opacity = moon.children[1].material.opacity = Math.min(1, nightK * 1.6); moon.position.set(camera.position.x - dx * 220, camera.position.y - el * 220 + 30, camera.position.z - 120); }
+}
 
 // ---------- টেক্সচার (কোড দিয়ে তৈরি) ----------
 function noise(g, w, h, colors, count) {
@@ -585,7 +642,7 @@ const lamps = [], lampLights = [];
 let sigH = null, sigV = null;
 function buildLampHeads(pts) {
   const gold = new THREE.MeshStandardMaterial({ color: 0xe0a82a, metalness: 0.6, roughness: 0.35 });
-  const globeMat = new THREE.MeshBasicMaterial({ color: 0xfff1c9 });
+  const globeMat = new THREE.MeshBasicMaterial({ color: 0xfff1c9 }); nightMats.globe = globeMat;
   const H0 = 6.5, collar = [], rings = [], arms = [], globes = [];
   const defs = [];
   for (let i = 0; i < 6; i++) defs.push([i / 6 * 6.283, 1.5, 1.0]);
@@ -655,7 +712,8 @@ function buildStreet() {
   gr.addColorStop(0, 'rgba(255,220,140,0.9)'); gr.addColorStop(1, 'rgba(255,220,140,0)');
   pg.fillStyle = gr; pg.fillRect(0, 0, 64, 64);
   const poolGeo = new THREE.PlaneGeometry(10, 10); poolGeo.rotateX(-Math.PI / 2);
-  makeInst(poolGeo, new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(pc), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.55 }), poolL);
+  nightMats.pool = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(pc), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0 });
+  makeInst(poolGeo, nightMats.pool, poolL);
   const woodMat = new THREE.MeshStandardMaterial({ color: 0x5a4632, roughness: 1 });
   makeInst(pcyl, woodMat, poleL, true);
   makeInst(new THREE.BoxGeometry(0.15, 0.15, 2.4), woodMat, armZ);
@@ -674,22 +732,52 @@ function buildStreet() {
 
 // ---------- ট্রাফিক (বাঁ দিকে চলে) ----------
 const cars = [];
+const nightMats = {};   // রাতে জ্বলা/দিনে নেভা উপকরণ (বাতির গোলক, আলোর বৃত্ত, গাড়ির হেডলাইট)
 function buildCars() {
-  const bodyGeo = new THREE.BoxGeometry(1.9, 0.7, 4.2), cabGeo = new THREE.BoxGeometry(1.6, 0.6, 2.1);
-  const whGeo = new THREE.CylinderGeometry(0.38, 0.38, 2.0, 12); whGeo.rotateZ(Math.PI / 2);
-  const glass = new THREE.MeshStandardMaterial({ color: 0x2b3a4a, roughness: 0.3 }), tyre = new THREE.MeshStandardMaterial({ color: 0x151515 });
+  // ছোট সাহায্যকারী: একই উপকরণের অনেক আকৃতি জুড়ে একটি জিওমেট্রি বানায় (যাতে গাড়ি প্রতি মাত্র ৬টি মেশ লাগে)
+  const merge = list => {
+    const ps = [], ns = [];
+    for (const [geo, x, y, z] of list) {
+      const g = (geo.index ? geo.toNonIndexed() : geo.clone()); g.translate(x || 0, y || 0, z || 0);
+      ps.push(g.attributes.position.array); ns.push(g.attributes.normal.array);
+    }
+    const cat = arr => { const n = arr.reduce((a, b) => a + b.length, 0), o = new Float32Array(n); let k = 0; for (const a of arr) { o.set(a, k); k += a.length; } return o; };
+    const out = new THREE.BufferGeometry();
+    out.setAttribute('position', new THREE.BufferAttribute(cat(ps), 3)); out.setAttribute('normal', new THREE.BufferAttribute(cat(ns), 3));
+    return out;
+  };
+  // পাশের ছায়ামূর্তি (দৈর্ঘ্য x উচ্চতা) বের করে প্রস্থ বরাবর টেনে বেভেলসহ মসৃণ আকার
+  const ext = (pts, w, bev) => {
+    const sh = new THREE.Shape(); pts.forEach(([x, y], i) => i ? sh.lineTo(x, y) : sh.moveTo(x, y)); sh.closePath();
+    const d = w - bev * 2;
+    const g = new THREE.ExtrudeGeometry(sh, { depth: d, bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 3, curveSegments: 6 });
+    g.translate(0, 0, -d / 2); g.rotateY(-Math.PI / 2); return g;
+  };
+  const box = (w, h, d) => new THREE.BoxGeometry(w, h, d);
+  const cyl = (r, l, seg) => { const g = new THREE.CylinderGeometry(r, r, l, seg); g.rotateZ(Math.PI / 2); return g; };
+
+  const bodyG = ext([[-1.95, 0.42], [1.95, 0.42], [1.95, 0.8], [1.4, 0.93], [0.7, 0.97], [-1.0, 0.97], [-1.8, 0.93], [-1.95, 0.82]], 1.84, 0.14);
+  const cabinG = ext([[-1.05, 0.95], [-0.55, 1.46], [0.55, 1.46], [1.05, 0.95]], 1.6, 0.06);
+  const paintGeo = merge([[bodyG], [box(1.6, 0.07, 1.14), 0, 1.52, 0], [box(0.14, 0.1, 0.22), -1.0, 1.05, 0.6], [box(0.14, 0.1, 0.22), 1.0, 1.05, 0.6]]);
+  const glassGeo = merge([[cabinG], [box(1.64, 0.5, 0.07), 0, 1.22, 0.05]]);
+  const wheelPos = [[-0.92, 0.38, 1.3], [0.92, 0.38, 1.3], [-0.92, 0.38, -1.3], [0.92, 0.38, -1.3]];
+  const darkGeo = merge([...wheelPos.map(([x, y, z]) => [cyl(0.38, 0.3, 16), x, y, z]), [box(1.86, 0.2, 0.14), 0, 0.4, 2.02], [box(1.86, 0.2, 0.14), 0, 0.4, -2.02], [box(0.9, 0.2, 0.06), 0, 0.64, 2.1]]);
+  const chromeGeo = merge([...wheelPos.map(([x, y, z]) => [cyl(0.22, 0.32, 10), x, y, z]), [box(0.5, 0.14, 0.04), 0, 0.58, -2.11]]);
+  const headGeo = merge([[box(0.38, 0.16, 0.08), -0.62, 0.74, 2.09], [box(0.38, 0.16, 0.08), 0.62, 0.74, 2.09]]);
+  const tailGeo = merge([[box(0.42, 0.14, 0.06), -0.62, 0.76, -2.09], [box(0.42, 0.14, 0.06), 0.62, 0.76, -2.09]]);
+
+  const glass = new THREE.MeshStandardMaterial({ color: 0x1d2a38, roughness: 0.1, metalness: 0.7 });
+  const tyre = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.9 });
+  const chrome = new THREE.MeshStandardMaterial({ color: 0xcfd4d8, roughness: 0.25, metalness: 0.9 });
   const hl = new THREE.MeshBasicMaterial({ color: 0xfff2b0 }), tl = new THREE.MeshBasicMaterial({ color: 0xff2a2a });
-  const lg = new THREE.BoxGeometry(1.5, 0.16, 0.05);
+  nightMats.hl = hl; nightMats.tl = tl;
   for (let i = 0; i < 22; i++) {
     const g = new THREE.Group();
-    const mat = new THREE.MeshStandardMaterial({ color: pick([0xd63031, 0x0984e3, 0xfdcb6e, 0xdfe6e9, 0x2d3436, 0x00b894, 0xe17055]), roughness: 0.4, metalness: 0.3 });
-    const body = new THREE.Mesh(bodyGeo, mat); body.position.y = 0.6;
-    const cab = new THREE.Mesh(cabGeo, glass); cab.position.set(0, 1.2, -0.2);
-    const w1 = new THREE.Mesh(whGeo, tyre); w1.position.set(0, 0.38, 1.3);
-    const w2 = new THREE.Mesh(whGeo, tyre); w2.position.set(0, 0.38, -1.3);
-    const f = new THREE.Mesh(lg, hl); f.position.set(0, 0.65, 2.12);
-    const b = new THREE.Mesh(lg, tl); b.position.set(0, 0.65, -2.12);
-    body.castShadow = true; g.add(body, cab, w1, w2, f, b); scene.add(g);
+    const mat = new THREE.MeshStandardMaterial({ color: pick([0xd63031, 0x0984e3, 0xfdcb6e, 0xdfe6e9, 0x2d3436, 0x00b894, 0xe17055]), roughness: 0.28, metalness: 0.55 });
+    const body = new THREE.Mesh(paintGeo, mat); body.castShadow = true;
+    const cab = new THREE.Mesh(glassGeo, glass); cab.castShadow = true;
+    g.add(body, cab, new THREE.Mesh(darkGeo, tyre), new THREE.Mesh(chromeGeo, chrome), new THREE.Mesh(headGeo, hl), new THREE.Mesh(tailGeo, tl));
+    scene.add(g);
     cars.push({ g, axis: Math.random() < 0.5 ? 'x' : 'z', p: (Math.floor(Math.random() * 9) - 4) * SPACING, dir: Math.random() < 0.5 ? 1 : -1, pos: -170 + Math.random() * 340, speed: 0, vmax: 6 + Math.random() * 4 });
   }
 }
@@ -729,8 +817,18 @@ function animateWorld(t, dt) {
 const fbxLoader = new FBXLoader();
 const gltfLoader = new GLTFLoader();
 // চরিত্র (boy/girl) প্রথমে models/NAME.glb (ছোট সাইজ) খোঁজে, না পেলে .fbx; অ্যানিমেশন শুধু .fbx
+// ===== চরিত্রের তালিকা =====
+// নতুন চরিত্র যোগ করতে: ফাইলটা models/ ফোল্ডারে রাখুন (যেমন models/soldier.glb), তারপর নিচে একটা লাইন যোগ করুন।
+// id = যেকোনো ইংরেজি নাম (ছোট হাতের), files = models/ ফোল্ডারের ফাইলের নাম (.glb ছাড়া; একাধিক নাম দিলে প্রথম যেটা পাবে)
+const CHARACTERS = [
+  { id: 'boy', name: 'ছেলে', icon: '👦', files: ['boy', 'x boy', 'x_boy', 'xboy'] },
+  { id: 'girl', name: 'মেয়ে', icon: '👧', files: ['girl', 'Y girl', 'y girl', 'Y_girl', 'ygirl'] },
+  // { id: 'soldier', name: 'সৈনিক', icon: '🪖', files: ['soldier'] },
+  // { id: 'robot', name: 'রোবট', icon: '🤖', files: ['robot'] },
+];
+const CHAR_ALIAS = Object.fromEntries(CHARACTERS.map(c => [c.id.toLowerCase(), c.files]));
 async function loadAny(n) {
-  const alias = { boy: ['boy', 'x boy', 'x_boy', 'xboy'], girl: ['girl', 'Y girl', 'y girl', 'Y_girl', 'ygirl'] }[String(n).toLowerCase()];
+  const alias = CHAR_ALIAS[String(n).toLowerCase()];
   if (alias) {
     for (const nm of alias) {
       try { const g = await gltfLoader.loadAsync(`models/${encodeURIComponent(nm)}.glb`); const o = g.scene; o.animations = g.animations; return o; } catch (e) { /* পরের নাম */ }
@@ -834,7 +932,7 @@ async function buildCharacter(gender) {
 // মডেল না পেলে সাধারণ চরিত্র (ব্যাকআপ)
 function makePrimitive(gender) {
   const g = new THREE.Group();
-  const isBoy = gender === 'boy';
+  const isBoy = gender !== 'girl';
   const skin = new THREE.MeshStandardMaterial({ color: 0xe0a97a, roughness: 0.6 });
   const shirt = new THREE.MeshStandardMaterial({ color: isBoy ? 0x2e86de : 0xff6b9d, roughness: 0.7 });
   const pants = new THREE.MeshStandardMaterial({ color: isBoy ? 0x3b3b58 : 0x2d3436, roughness: 0.8 });
@@ -954,7 +1052,22 @@ bindTap(runBtn, () => { if (!runTouch && stam < 12) { toast('স্ট্যা�
 bindTap(document.getElementById('jump'), () => doJump());
 bindTap(document.getElementById('crouch'), () => toggleStance('crouch'));
 bindTap(document.getElementById('prone'), () => toggleStance('prone'));
-function doJump() { if (jumping) return; stance = 'stand'; atk = null; setRun(false); jumping = true; vy = 7; }
+// পাঁচিলের কাছে (১.৭ মিটারের মধ্যে) লাফ দিলে উঁচু লাফ হয় — সামনে জয়স্টিক ঠেলে রাখলে পাঁচিল টপকে ওপারে যায়
+let vaulting = false, vaultHint = false;
+function nearVault() {
+  if (player.y > 0.6) return false;
+  for (const b of boxes) {
+    if (b.h === undefined || b.h > CLIMB_MAX || b.h < 1) continue;
+    if (player.x > b.minX - 1.7 && player.x < b.maxX + 1.7 && player.z > b.minZ - 1.7 && player.z < b.maxZ + 1.7) return true;
+  }
+  return false;
+}
+function doJump() {
+  if (jumping) return;
+  stance = 'stand'; atk = null;            // দৌড় বন্ধ হয় না — লাফের পরেও দৌড় চলতে থাকে
+  vaulting = nearVault(); jumping = true; vy = vaulting ? 11 : 7;
+  if (vaulting && !vaultHint) { vaultHint = true; toast('🧗 পাঁচিল টপকাচ্ছেন — জয়স্টিক সামনে ঠেলে রাখুন'); }
+}
 function toggleStance(st) { stance = stance === st ? 'stand' : st; atk = null; setRun(false); }
 
 let dragId = null, lastX = 0, lastY = 0, camYaw = 0, camPitch = 0;
@@ -993,11 +1106,25 @@ let phase = 0, amp = 0, lastStep = 0;
 let spd = 0;
 let hp = 100, armor = 100, pDead = false, deadT = 0, hurtT = 99, deaths = 0, activeProfile = null;
 
-function blocked(x, z) {
+// পাঁচিলের মতো নিচু বাধা (উচ্চতা ≤ CLIMB_MAX) — পায়ের উচ্চতা (y) মাথার ওপরে থাকলে আর আটকায় না, ওপরে দাঁড়ানোও যায়
+const CLIMB_MAX = 2.8;
+const topOf = b => b.h + 0.15;
+const canOver = (b, y) => b.h !== undefined && b.h <= CLIMB_MAX && y >= topOf(b) - 0.2;
+function blocked(x, z, y = -9) {
   for (const b of boxes) {
-    if (x > b.minX - PR && x < b.maxX + PR && z > b.minZ - PR && z < b.maxZ + PR) return true;
+    if (x > b.minX - PR && x < b.maxX + PR && z > b.minZ - PR && z < b.maxZ + PR) {
+      if (canOver(b, y)) continue;
+      return true;
+    }
   }
   return false;
+}
+function supportY(x, z, y) {
+  let g = groundY(x, z);
+  for (const b of boxes) {
+    if (b.h !== undefined && b.h <= CLIMB_MAX && x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ && y >= topOf(b) - 0.2) g = Math.max(g, topOf(b));
+  }
+  return g;
 }
 
 function update(dt) {
@@ -1022,11 +1149,11 @@ function update(dt) {
 
     if (combatT <= 0) player.yaw += wrap(Math.atan2(dx, dz) - player.yaw) * (1 - Math.exp(-dt * 12));
 
-    const speed = spd;
+    const speed = spd * (vaulting && vy > 0 && player.y < 2.4 ? 0.3 : 1);   // পাঁচিল টপকাতে ওঠার সময় একটু ধীরে সামনে যায়
     const nx = player.x + dx * speed * dt;
     const nz = player.z + dz * speed * dt;
-    if (!blocked(nx, player.z)) player.x = nx;
-    if (!blocked(player.x, nz)) player.z = nz;
+    if (!blocked(nx, player.z, player.y)) player.x = nx;
+    if (!blocked(player.x, nz, player.y)) player.z = nz;
     player.x = Math.max(-180, Math.min(180, player.x));
     player.z = Math.max(-180, Math.min(180, player.z));
 
@@ -1046,10 +1173,11 @@ function update(dt) {
   }
   // ক্যারেক্টার
   if (char) {
-    const gnd = groundY(player.x, player.z);
+    const gnd = supportY(player.x, player.z, player.y);
+    if (!jumping && player.y - gnd > 0.5) { jumping = true; vy = 0; vaulting = false; }   // পাঁচিলের ওপর থেকে নামলে পড়বে
     if (jumping) {
       vy -= 20 * dt; player.y += vy * dt;
-      if (player.y <= gnd && vy <= 0) { player.y = gnd; vy = 0; jumping = false; }
+      if (player.y <= gnd && vy <= 0) { player.y = gnd; vy = 0; jumping = false; vaulting = false; }
     } else player.y += (gnd - player.y) * (1 - Math.exp(-dt * 20));
     cr += ((stance === 'crouch' ? 1 : 0) - cr) * (1 - Math.exp(-dt * 12));
     pr += ((stance === 'prone' ? 1 : 0) - pr) * (1 - Math.exp(-dt * 10));
@@ -1130,7 +1258,7 @@ function update(dt) {
   document.getElementById('jump').classList.toggle('on', jumping);
 
   const stepIdx = Math.floor(phase / Math.PI);
-  if (moving && stepIdx !== lastStep) { lastStep = stepIdx; playStep(run); }
+  if (moving && !jumping && stepIdx !== lastStep) { lastStep = stepIdx; playStep(run); }
 
   // ক্যামেরা: yaw = ৩৬০° ঘোরা, pitch = আকাশ/নিচ দেখা (সোয়াইপ)
   const D = camDist, H = camFront ? 1.7 : Math.max(1.3, Math.min(2.2, 0.9 + D * 0.22)), cp = Math.cos(camPitch), sp = Math.sin(camPitch), eyeOff = cr * 0.55 + pr * 1.1, fr = camFront ? 1 : -1;
@@ -1151,8 +1279,6 @@ function update(dt) {
     player.z + Math.cos(camYaw) * cp * K
   );
 
-  sun.position.set(player.x + 60, 100, player.z + 40);
-  sun.target.position.set(player.x, 0, player.z);
 }
 
 // ---------- মিনিম্যাপ, পুরো ম্যাপ, মার্ক ও পথ ----------
@@ -1973,7 +2099,7 @@ function renderProfile() {
   const p = profiles[0];
   if (p) {
     const card = mk('div', '', 'slot');
-    card.append(mk('div', (p.gender === 'girl' ? '👧 ' : '👦 ') + p.name), mk('div', '💥 কিল: ' + (p.kills || 0) + ' · ☠ মৃত্যু: ' + (p.deaths || 0) + ' · ⏱ ' + fmtTime(p.playSec || 0)));
+    card.append(mk('div', ((CHARACTERS.find(c => c.id === p.gender) || CHARACTERS[0]).icon) + ' ' + p.name), mk('div', '💥 কিল: ' + (p.kills || 0) + ' · ☠ মৃত্যু: ' + (p.deaths || 0) + ' · ⏱ ' + fmtTime(p.playSec || 0)));
     const go = mk('button', '▶ খেলা শুরু'); go.onclick = () => startGame(p);
     const del = mk('button', '🗑 প্রোফাইল মুছুন'); del.style.background = '#c0392b';
     del.onclick = () => {
@@ -1984,10 +2110,10 @@ function renderProfile() {
   } else {
     const inp = mk('input'); inp.id = 'pname_in'; inp.maxLength = 16; inp.placeholder = 'আপনার নাম';
     const gr = mk('div', '', 'row'), dr = mk('div', '', 'row');
-    const gb = mk('button', '👦 ছেলে', 'opt'), gg = mk('button', '👧 মেয়ে', 'opt');
-    const setG = g => { pgender = g; gb.classList.toggle('on', g === 'boy'); gg.classList.toggle('on', g === 'girl'); };
-    gb.onclick = () => setG('boy'); gg.onclick = () => setG('girl'); setG(pgender);
-    gr.append(gb, gg);
+    const cbs = CHARACTERS.map(c => { const b = mk('button', c.icon + ' ' + c.name, 'opt'); b.onclick = () => setG(c.id); return b; });
+    const setG = g => { pgender = g; cbs.forEach((b, i) => b.classList.toggle('on', CHARACTERS[i].id === g)); };
+    setG(pgender);
+    gr.append(...cbs);
     const sws = DRESS.map(c => { const b = mk('button', '', 'sw'); b.style.background = c; b.onclick = () => { pdress = c; sws.forEach(x => x.classList.toggle('on', x === b)); }; if (c === pdress) b.classList.add('on'); return b; });
     dr.append(...sws);
     const go = mk('button', '✔ প্রোফাইল তৈরি করে শুরু');
@@ -2213,6 +2339,7 @@ function loop(now) {
   if (!paused) animateWorld(now / 1000, dt);
   if (started && !mapOpen && !editMode && !paused) { if (drv) driveStep(dt); else update(dt); }
   if (started) extra(dt);
+  updateDayNight(dt, !paused);
   renderer.render(scene, camera);
   if (snapFlag) shot();
   renderEye();
