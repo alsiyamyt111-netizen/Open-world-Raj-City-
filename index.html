@@ -115,6 +115,7 @@
 <script type="module">
 import * as THREE from 'three';
 import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/FBXLoader.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/SkeletonUtils.js';
 
 // ---------- সরাসরি landscape: ফোন portrait-এ থাকলে পুরো গেম ভেতরে ৯০° ঘুরিয়ে দেখায় (কোনো পারমিশন/ঘোরানো লাগে না) ----------
@@ -664,11 +665,21 @@ function animateWorld(t, dt) {
 
 // ---------- চরিত্র ----------
 const fbxLoader = new FBXLoader();
-const loadGLTF = url => fbxLoader.loadAsync(url).catch(() => null);
+const gltfLoader = new GLTFLoader();
+// চরিত্র (boy/girl) প্রথমে models/NAME.glb (ছোট সাইজ) খোঁজে, না পেলে .fbx; অ্যানিমেশন শুধু .fbx
+async function loadAny(n) {
+  const alias = { boy: ['boy', 'x boy', 'x_boy', 'xboy'], girl: ['girl', 'Y girl', 'y girl', 'Y_girl', 'ygirl'] }[String(n).toLowerCase()];
+  if (alias) {
+    for (const nm of alias) {
+      try { const g = await gltfLoader.loadAsync(`models/${encodeURIComponent(nm)}.glb`); const o = g.scene; o.animations = g.animations; return o; } catch (e) { /* পরের নাম */ }
+    }
+  }
+  try { return await fbxLoader.loadAsync(`models/${n}.fbx`); } catch (e) { return null; }
+}
 const assetCache = {};
 const loadAsset = name => assetCache[name] || (assetCache[name] = (async () => {
   const tries = [...new Set([name, name.toLowerCase(), name[0].toUpperCase() + name.slice(1).toLowerCase()])];
-  for (const n of tries) { const o = await loadGLTF(`models/${n}.fbx`); if (o) return o; }
+  for (const n of tries) { const o = await loadAny(n); if (o) return o; }
   return null;
 })());
 // অ্যানিমেশনের নাম -> models/ ফোল্ডারের ফাইলের নাম (.fbx ছাড়া)
@@ -1443,7 +1454,7 @@ function buildNPCs() {
 // Mixamo NPC: বক্স-চরিত্র বদলে আসল চরিত্র বসানো (ফাইল না পেলে বক্স-চরিত্রই থাকে)
 async function loadFresh(name) {
   for (const n of new Set([name, name.toLowerCase(), name[0].toUpperCase() + name.slice(1).toLowerCase()])) {
-    try { return await fbxLoader.loadAsync(`models/${n}.fbx`); } catch (e) { /* পরের নাম */ }
+    const o = await loadAny(n); if (o) return o;
   }
   return null;
 }
@@ -1671,10 +1682,10 @@ function applyOutfit(c, p) {
       o.material = Array.isArray(o.material) ? o.material.map(m => m.clone()) : o.material.clone();
       for (const m of (Array.isArray(o.material) ? o.material : [o.material])) mats.push([m, o.name]);
     });
-    const skin = /skin|head|face|hair|eye|teeth|tongue|brow|lash|beard/i, cloth = /shirt|top|tee|jacket|cloth|outfit|dress|pant|jean|trouser|shoe|boot|hoodie|body/i;
+    const skin = /skin|head|face|hair|eye|teeth|tongue|brow|lash|beard/i, cloth = /shirt|tops?\b|tee|jacket|cloth|outfit|dress|pant|jean|trouser|bottom|shoe|boot|hoodie/i;
     let n = 0;
     for (const [m, on] of mats) { const nm = (m.name || '') + ' ' + on; if (m.color && cloth.test(nm) && !skin.test(nm)) { m.color.lerp(dress, 0.55); n++; } }
-    if (!n) for (const [m] of mats) if (m.color) m.color.lerp(dress, 0.2);
+    if (!n && mats.length <= 2) for (const [m] of mats) if (m.color) m.color.lerp(dress, 0.2);   // রোবট মডেল: পুরোটায় হালকা রং; মানুষের মডেলে (বেশি অংশ) ত্বকে রং লাগে না
     let spine = model.getObjectByName('mixamorigSpine2');
     if (!spine) model.traverse(o => { if (!spine && /Spine2$/.test(o.name)) spine = o; });
     if (spine) {
