@@ -77,6 +77,54 @@
   #pcard .opt.on { background: #ffd400; color: #222; }
   #pcard .slot { background: rgba(255,255,255,.22); padding: 12px; border-radius: 12px; width: 100%; box-sizing: border-box; text-align: center; font-size: 15px; line-height: 1.6; }
   #pcard .soon { opacity: .6; font-size: 13px; }
+
+.ib{flex-direction:column;align-items:center;justify-content:center;padding:0;overflow:hidden;line-height:1;background:rgba(18,18,22,.62);border:3px solid rgba(255,255,255,.88);color:#fff;font-weight:700}
+body.playing .ib{display:flex!important}
+.ib svg{width:58%;height:58%;pointer-events:none}
+.ib span{font-size:10px;margin-top:1px;text-shadow:0 1px 2px #000;pointer-events:none}
+.ib.on{background:rgba(240,180,0,.92);color:#222;border-color:#fff}
+#atk{overflow:visible}#atk>svg{width:66%;height:66%}
+#atk .wbadge{position:absolute;left:-8px;top:-8px;width:34px;height:34px;border-radius:50%;background:#1b1b1f;border:2px solid #fff;display:flex;align-items:center;justify-content:center}
+#atk .wbadge svg{width:70%;height:70%}
+#atk .amm{position:absolute;bottom:5px;font-size:11px;text-shadow:0 1px 2px #000}
+#mini{left:auto!important;right:12px;top:10px;width:96px;height:96px}
+#gear{right:118px;top:12px;width:34px;height:34px;font-size:17px}
+#hud{right:118px;top:52px}
+#bars{left:62px;top:12px;bottom:auto;transform:none;width:170px;min-width:0;max-width:none;text-align:left}
+#bars .brow{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+#bars .brow b{width:26px;height:26px;border-radius:50%;background:#222;border:2px solid #fff;display:flex;align-items:center;justify-content:center;flex:none}
+#bars .brow b svg{width:15px;height:15px}
+#bars .bar{flex:1;height:14px;margin:0;border:2px solid #111;background:rgba(0,0,0,.65);border-radius:8px}
+#stf{background:linear-gradient(#5be35b,#14a014)}
+.cashl{color:#8dff8d;font-size:13px;font-weight:700;text-shadow:0 1px 2px #000}
+#wheel{width:min(340px,calc(var(--vh)*94));height:min(340px,calc(var(--vh)*94));margin:0;transform:translate(-50%,-50%);background:none;border:0;border-radius:0}
+#wheel svg{width:100%;height:100%;display:block}
+#wheel .seg{cursor:pointer}#wheel .seg path{fill:#2a2a2d;stroke:#0d0d10;stroke-width:3}#wheel .seg.on path{fill:#f0b400}
+#crosshair{position:fixed;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;display:none;z-index:6;pointer-events:none;border:2px solid #fff;border-radius:50%;box-shadow:0 0 3px #000}
+#crosshair::after{content:'';position:absolute;left:10px;top:10px;width:4px;height:4px;border-radius:50%;background:#f33}
+#flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:50;transition:opacity .35s}
+#toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:7px 14px;border-radius:14px;font-size:13px;z-index:51;display:none;pointer-events:none}
+#panel{position:fixed;inset:0;z-index:35;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);color:#fff}
+.pbox{background:#1c1c21;border:2px solid #666;border-radius:14px;padding:12px 14px;width:min(420px,calc(var(--vw)*92));max-height:calc(var(--vh)*88);overflow-y:auto;touch-action:pan-y}
+.pbox h3{margin:0 0 8px;text-align:center;font-size:16px}
+.prow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #333;font-size:13px}
+.pbox button{padding:6px 12px;border:0;border-radius:8px;background:#f0b400;color:#222;font-weight:700;font-size:13px}
+.pbox .pclose{display:block;margin:10px auto 0;background:#eee}
+#pausebtn{left:10px;top:10px;right:auto;bottom:auto;width:44px;height:44px;font-size:12px}
+#wsel{left:12px;top:66px;right:auto;bottom:auto;width:48px;height:48px;font-size:12px}
+#shop{left:12px;top:122px;right:auto;bottom:auto;width:48px;height:48px;font-size:12px}
+#eyebtn{left:74px;top:132px;right:auto;bottom:auto;width:40px;height:40px;font-size:12px}
+#aim{right:16px;top:118px;left:auto;bottom:auto;width:52px;height:52px;font-size:12px}
+#atk{right:24px;bottom:104px;left:auto;top:auto;width:84px;height:84px;font-size:12px}
+#nade{right:118px;bottom:168px;left:auto;top:auto;width:46px;height:46px;font-size:12px}
+#jump{right:118px;bottom:104px;left:auto;top:auto;width:56px;height:56px;font-size:12px}
+#kick{right:92px;bottom:14px;left:auto;top:auto;width:58px;height:58px;font-size:12px}
+#reload{right:22px;bottom:14px;left:auto;top:auto;width:58px;height:58px;font-size:12px}
+#veh{left:calc(var(--vw)*50 - 160px + 0px);bottom:12px;right:auto;top:auto;width:58px;height:58px;font-size:12px}
+#run{left:calc(var(--vw)*50 - 160px + 64px);bottom:12px;right:auto;top:auto;width:58px;height:58px;font-size:12px}
+#crouch{left:calc(var(--vw)*50 - 160px + 128px);bottom:12px;right:auto;top:auto;width:58px;height:58px;font-size:12px}
+#prone{left:calc(var(--vw)*50 - 160px + 192px);bottom:12px;right:auto;top:auto;width:58px;height:58px;font-size:12px}
+#cam{left:calc(var(--vw)*50 - 160px + 256px);bottom:12px;right:auto;top:auto;width:58px;height:58px;font-size:12px}
 </style>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
@@ -99,21 +147,29 @@
 </div>
 
 <div id="hud"><span id="fps">FPS: --</span><br><span id="dbg">x:0.00 y:0.00</span><br><span id="nav"></span><br><span id="ammo"></span></div>
-<div id="bars"><div class="nm" id="pname"></div><div class="bar"><i id="hpf"></i></div><div class="bar"><i id="arf"></i></div></div>
+<div id="bars"><div id="pname" style="display:none"></div><div class="brow"><b data-i="heart"></b><div class="bar"><i id="hpf"></i></div></div><div class="brow"><b data-i="shield"></b><div class="bar"><i id="arf"></i></div></div><div class="brow"><b data-i="bolt"></b><div class="bar"><i id="stf"></i></div></div><div class="cashl">💵 <span id="cashv">0</span></div></div>
 <div id="dmg"></div>
 <div id="dead">☠ আপনি আহত হয়েছেন<br>একটু পরেই আবার শুরু হবে…</div>
 <canvas id="mini" width="120" height="120"></canvas>
 <div id="joy"><div id="knob"></div></div>
-<button id="run">দৌড়</button>
-<button id="jump" class="act">লাফ</button>
-<button id="crouch" class="act">বসুন</button>
-<button id="prone" class="act">শুয়ুন</button>
-<button id="kick" class="act">🦵<br>লাথি</button>
-<button id="atk" class="act">👊</button>
-<button id="wsel" class="act">🎒</button>
-<div id="wheel"><div id="whub">অস্ত্র বাছুন</div></div>
-<button id="eyebtn" class="act">👁</button>
+<button id="pausebtn" class="act ib" data-i="pause"></button>
+<button id="wsel" class="act ib" data-i="bag"></button>
+<button id="shop" class="act ib" data-i="cart"></button>
+<button id="eyebtn" class="act ib" data-i="eye"></button>
+<button id="aim" class="act ib" data-i="aim"></button>
+<button id="atk" class="act ib"></button>
+<button id="nade" class="act ib" data-i="nade"></button>
+<button id="jump" class="act ib" data-i="jump" data-l="লাফ"></button>
+<button id="kick" class="act ib" data-i="kick" data-l="লাথি"></button>
+<button id="reload" class="act ib" data-i="reload" data-l="রিলোড"></button>
+<button id="veh" class="act ib" data-i="car" data-l="গাড়ি"></button>
+<button id="run" class="act ib" data-i="run" data-l="দৌড়"></button>
+<button id="crouch" class="act ib" data-i="crouch" data-l="বসুন"></button>
+<button id="prone" class="act ib" data-i="prone" data-l="শুয়ুন"></button>
+<button id="cam" class="act ib" data-i="cam" data-l="ক্যামেরা"></button>
+<div id="wheel"></div>
 <div id="eye"></div>
+<div id="crosshair"></div><div id="flash"></div><div id="toast"></div><div id="panel"></div>
 <button id="gear" class="act">⚙</button>
 <div id="editbar"><div id="edtxt">টেনে সরান · ট্যাপ করে বাছুন</div><div class="row"><label>সাইজ <input id="szr" type="range" min="0.5" max="2" step="0.05" value="1"></label><label>স্বচ্ছতা <input id="opr" type="range" min="0.3" max="1" step="0.05" value="1"></label></div><div class="row"><button id="edflip">⇅ উপর/নিচ</button><button id="edreset" style="background:#e67e22;color:#fff">রিসেট</button><button id="edsave" style="background:#2ecc71;color:#fff">✔ সেভ</button></div></div>
 <div id="bigmap"><canvas id="bm"></canvas><div id="bmbar"><span id="bmtxt">ম্যাপে ট্যাপ করে গন্তব্য মার্ক করুন</span><button id="bmclear" style="background:#e67e22;color:#fff">মার্ক মুছুন</button><button id="bmclose" style="background:#fff">বন্ধ</button></div></div>
@@ -893,8 +949,8 @@ function bindTap(btn, fn) {
   for (const ev of ['pointerdown', 'touchstart', 'mousedown', 'click']) btn.addEventListener(ev, h, { passive: false });
   btn.addEventListener('contextmenu', e => e.preventDefault());
 }
-function setRun(v) { runTouch = v; runBtn.classList.toggle('on', v); runBtn.textContent = v ? 'দৌড় ✓' : 'দৌড়'; }
-bindTap(runBtn, () => { if (stance !== 'stand') stance = 'stand'; setRun(!runTouch); });
+function setRun(v) { runTouch = v; runBtn.classList.toggle('on', v);  }
+bindTap(runBtn, () => { if (!runTouch && stam < 12) { toast('স্ট্যামিনা কম'); return; } if (stance !== 'stand') stance = 'stand'; setRun(!runTouch); });
 bindTap(document.getElementById('jump'), () => doJump());
 bindTap(document.getElementById('crouch'), () => toggleStance('crouch'));
 bindTap(document.getElementById('prone'), () => toggleStance('prone'));
@@ -1333,16 +1389,20 @@ function sfx(kind) {
 }
 // ---------- অস্ত্র: ঘুসি, ছুরি, পিস্তল, রাইফেল, গ্রেনেড (চাকা থেকে বাছাই, একটাই আক্রমণ বাটন) ----------
 const WEAPONS = [
+  { id: 'rifle', name: 'রাইফেল', ico: '🔫', mag: 30, cd: 0.14, auto: true, body: 25, head: 50 },
+  { id: 'pistol', name: 'পিস্তল', ico: '🔫', mag: 12, cd: 0.33, auto: false, body: 20, head: 40 },
+  { id: 'sniper', name: 'স্নাইপার', ico: '🎯', mag: 5, cd: 1.1, auto: false, body: 90, head: 200 },
+  { id: 'grenade', name: 'গ্রেনেড', ico: '💣' },
+  { id: 'mine', name: 'মাইন', ico: '🟠' },
   { id: 'fist', name: 'ঘুসি', ico: '👊', melee: true },
   { id: 'knife', name: 'ছুরি', ico: '🔪', melee: true },
-  { id: 'pistol', name: 'পিস্তল', ico: '🔫', mag: 12, cd: 0.33, auto: false, body: 20, head: 40 },
-  { id: 'rifle', name: 'রাইফেল', ico: '🔫', mag: 30, cd: 0.14, auto: true, body: 25, head: 50 },
-  { id: 'grenade', name: 'গ্রেনেড', ico: '💣' }
+  { id: 'bomb', name: 'বোমা', ico: '🧨' }
 ];
-let wIdx = 3, atkHeld = false, reloadW = 3;
-let wst = { pistol: { mag: 12, res: 48 }, rifle: { mag: 30, res: 120 }, grenade: { n: 5 } };
-function restock() { wst = { pistol: { mag: 12, res: 48 }, rifle: { mag: 30, res: 120 }, grenade: { n: 5 } }; reloadT = 0; lastHud = ''; }
-function addAmmo() { wst.pistol.res = Math.min(240, wst.pistol.res + 12); wst.rifle.res = Math.min(240, wst.rifle.res + 30); wst.grenade.n = Math.min(9, wst.grenade.n + 1); lastHud = ''; }
+let wIdx = 0, atkHeld = false, reloadW = 0;
+const freshW = () => ({ pistol: { mag: 12, res: 48 }, rifle: { mag: 30, res: 120 }, sniper: { mag: 5, res: 20 }, grenade: { n: 5 }, mine: { n: 3 }, bomb: { n: 2 } });
+let wst = freshW();
+function restock() { wst = freshW(); reloadT = 0; lastHud = ''; }
+function addAmmo() { wst.pistol.res = Math.min(240, wst.pistol.res + 12); wst.rifle.res = Math.min(240, wst.rifle.res + 30); wst.sniper.res = Math.min(60, wst.sniper.res + 3); wst.grenade.n = Math.min(9, wst.grenade.n + 1); lastHud = ''; }
 function startReload() {
   const w = WEAPONS[wIdx], s = wst[w.id];
   if (!s || !w.mag || reloadT > 0 || s.mag >= w.mag || s.res <= 0) return;
@@ -1357,6 +1417,8 @@ function useWeapon(first) {
   if (w.id === 'fist') doPunch();
   else if (w.id === 'knife') doKnife();
   else if (w.id === 'grenade') { if (first) throwGrenade(); }
+  else if (w.id === 'mine') { if (first) placeMine(); }
+  else if (w.id === 'bomb') { if (first) throwBomb(); }
   else fireHeld = true;
 }
 function attackDown() { if (pDead) return; atkHeld = true; useWeapon(true); }
@@ -1380,47 +1442,106 @@ function throwGrenade() {
   scene.add(m);
   grenades.push({ m, p: new THREE.Vector3(player.x, player.y + 1.4, player.z), v, t: 0 });
 }
-function explode(p) {
+function explode(p, k = 1) {
   for (let i = 0; i < 6; i++) spawnSpark(new THREE.Vector3(p.x + (Math.random() - 0.5) * 2, p.y + Math.random() * 1.5, p.z + (Math.random() - 0.5) * 2), i % 2 ? 0xff7a1a : 0xffd25a);
   muzzle.position.copy(p); muzzleT = 0.18; sfx('gun'); sfx('kick');
   for (const n of npcs) {
     if (n.dead) continue;
     const dx = n.g.position.x - p.x, dz = n.g.position.z - p.z, d = Math.hypot(dx, dz);
-    if (d < 7) hurtNPC(n, 15 + 85 * (1 - d / 7), dx, dz, 8);
+    if (d < 7 * k) hurtNPC(n, (15 + 85 * (1 - d / (7 * k))) * k, dx, dz, 8);
   }
   const dp = Math.hypot(player.x - p.x, player.z - p.z);
-  if (dp < 4.5) hurtPlayer(5 + 25 * (1 - dp / 4.5));
+  if (dp < 4.5 * k) hurtPlayer(5 + 25 * (1 - dp / (4.5 * k)));
 }
 function updateGrenades(dt) {
   for (let i = grenades.length - 1; i >= 0; i--) {
     const g = grenades[i];
+    if (g.mine) { g.t += dt; let hit = g.t > 60; if (g.t > 1) for (const n of npcs) if (!n.dead && Math.hypot(n.g.position.x - g.p.x, n.g.position.z - g.p.z) < 2.5) hit = true; if (hit) { explode(g.p, 1.2); scene.remove(g.m); grenades.splice(i, 1); } continue; }
     g.v.y -= 20 * dt; g.p.addScaledVector(g.v, dt); g.t += dt;
     if (g.p.y < 0.2) { g.p.y = 0.2; g.v.set(g.v.x * 0.4, Math.abs(g.v.y) * 0.3, g.v.z * 0.4); }
     if (g.p.y < 9 && blocked(g.p.x, g.p.z)) { g.p.x -= g.v.x * dt; g.p.z -= g.v.z * dt; g.v.x *= -0.3; g.v.z *= -0.3; }
     g.m.position.copy(g.p);
-    if (g.t > 1.6) { explode(g.p); scene.remove(g.m); grenades.splice(i, 1); }
+    if (g.t > (g.fuse || 1.6)) { explode(g.p, g.k || 1); scene.remove(g.m); grenades.splice(i, 1); }
   }
 }
 // অস্ত্রের চাকা
 const wheelEl = document.getElementById('wheel');
-const wbtns = WEAPONS.map((w, i) => {
-  const b = document.createElement('button'); b.className = 'wb';
-  const a = -Math.PI / 2 + i * 2 * Math.PI / WEAPONS.length;
-  b.style.left = (150 + Math.cos(a) * 100 - 38) + 'px'; b.style.top = (150 + Math.sin(a) * 100 - 38) + 'px';
-  wheelEl.appendChild(b);
-  bindTap(b, () => selectWeapon(i));
-  return b;
-});
-function renderWheel() {
+const STK = 'fill="none" stroke="currentColor" stroke-width="4"';
+const svgW = b => '<svg viewBox="0 0 48 48" fill="currentColor" stroke-linecap="round" stroke-linejoin="round">' + b + '</svg>';
+const WICO = {
+  rifle: '<path d="M3 22h12l3-4h12l2 3h10l5-3v7l-5 1h-8l-2 3h-6l-1 8h-6l1-8h-5l-2 3H3z"/>',
+  pistol: '<path d="M7 16h30v9H25l-2 4-2 12h-9l3-12h-8z"/>',
+  sniper: '<path d="M2 25h30l4-2h10v5H34l-4 4H20l-1 8h-6l1-8H2z"/><rect x="14" y="17" width="16" height="5" rx="2"/>',
+  grenade: '<circle cx="24" cy="29" r="12"/><rect x="19" y="9" width="10" height="8" rx="2"/><path d="M30 11l8-3" ' + STK + ' stroke-width="3"/>',
+  mine: '<path d="M5 34c0-6 8-10 19-10s19 4 19 10z"/><rect x="21" y="14" width="6" height="10"/><circle cx="24" cy="12" r="4"/>',
+  fist: '<path d="M12 14h18a6 6 0 0 1 6 6v2h4a4 4 0 0 1 4 4v8a8 8 0 0 1-8 8H18a8 8 0 0 1-8-8V16z"/>',
+  knife: '<path d="M10 40L36 7c2-2 5-2 6 0s1 4-1 6L16 44z"/>',
+  bomb: '<circle cx="22" cy="30" r="13"/><rect x="28" y="12" width="7" height="8" transform="rotate(35 31 16)"/><path d="M36 11q4-5 8-2" ' + STK + ' stroke-width="3"/>'
+};
+const ICONS = {
+  pause: '<path d="M14 10h7v28h-7zM27 10h7v28h-7z"/>',
+  bag: '<path d="M16 14a8 8 0 0 1 16 0" ' + STK + '/><rect x="10" y="16" width="28" height="26" rx="7"/><rect x="17" y="28" width="14" height="6" rx="2" fill="#222"/>',
+  cart: '<path d="M4 8h7l5 22h20l5-16H14" ' + STK + '/><circle cx="19" cy="38" r="3.5"/><circle cx="33" cy="38" r="3.5"/>',
+  eye: '<path d="M3 24C9 14 17 10 24 10s15 4 21 14c-6 10-14 14-21 14S9 34 3 24z"/><circle cx="24" cy="24" r="6" fill="#222"/>',
+  aim: '<circle cx="24" cy="24" r="12" ' + STK + '/><path d="M24 4v10M24 34v10M4 24h10M34 24h10" ' + STK + '/><circle cx="24" cy="24" r="2.5"/>',
+  nade: '<circle cx="22" cy="30" r="12"/><rect x="18" y="10" width="9" height="7" rx="2"/><path d="M29 12l9-3M36 16l5 2M37 22l5-1" ' + STK + ' stroke-width="3"/>',
+  jump: '<circle cx="24" cy="9" r="5"/><path d="M24 16v14M24 20l-10-6M24 20l10-6M24 30l-8 12M24 30l8 12" ' + STK + '/>',
+  kick: '<circle cx="18" cy="9" r="5"/><path d="M18 16v14M18 20l-8 8M18 20l10 4M18 30l-8 12M18 30l22-6" ' + STK + '/>',
+  reload: '<path d="M38 18a15 15 0 1 0 3 10" ' + STK + '/><path d="M42 8v12H30z"/>',
+  car: '<path d="M5 28l5-12c1-2 3-3 5-3h18c2 0 4 1 5 3l5 12v10H5z"/><circle cx="14" cy="38" r="5" fill="#222" stroke="currentColor" stroke-width="2"/><circle cx="34" cy="38" r="5" fill="#222" stroke="currentColor" stroke-width="2"/>',
+  run: '<circle cx="29" cy="8" r="5"/><path d="M27 15l-8 10 9 4-4 13M19 25l-9 3M28 29l11 4" ' + STK + '/>',
+  crouch: '<circle cx="22" cy="9" r="5"/><path d="M22 16l-4 12 10 2M18 28l-8 12M28 30l-4 10h12" ' + STK + '/>',
+  prone: '<circle cx="9" cy="28" r="5"/><path d="M15 30h26M15 30l-2 8M41 30l-2-8M20 26l14 2" ' + STK + '/>',
+  cam: '<path d="M6 16h9l3-5h12l3 5h9v24H6z"/><circle cx="24" cy="27" r="8" fill="#222"/><circle cx="24" cy="27" r="4"/>',
+  heart: '<path d="M24 41S6 30 6 18a9 9 0 0 1 18-3 9 9 0 0 1 18 3c0 12-18 23-18 23z" fill="#ff3b3b"/>',
+  shield: '<path d="M24 5l16 6v12c0 10-7 17-16 20C15 40 8 33 8 23V11z" fill="#3aa0ff"/>',
+  bolt: '<path d="M27 3L10 27h11l-3 18 20-26H27z" fill="#3de03d"/>',
+  bullet: '<g transform="rotate(-45 24 24)"><rect x="16" y="18" width="16" height="28" rx="2" fill="#e8a317"/><path d="M16 18Q24 -2 32 18z" fill="#f4f4f4"/></g>'
+};
+document.querySelectorAll('[data-i]').forEach(el => { el.innerHTML = svgW(ICONS[el.dataset.i]) + (el.dataset.l ? '<span>' + el.dataset.l + '</span>' : ''); });
+{
+  const pl = (r, a) => { const t = a * Math.PI / 180; return [(170 + r * Math.cos(t)).toFixed(1), (170 + r * Math.sin(t)).toFixed(1)]; };
+  let h = '<svg viewBox="0 0 340 340">';
   WEAPONS.forEach((w, i) => {
-    const s = wst[w.id], t = w.melee ? '' : w.id === 'grenade' ? s.n : s.mag + '/' + s.res;
-    wbtns[i].innerHTML = '<b>' + w.ico + '</b>' + w.name + (t !== '' ? '<br>' + t : '');
-    wbtns[i].classList.toggle('on', i === wIdx);
+    const c = -90 + i * 45, [x0, y0] = pl(168, c - 22), [x1, y1] = pl(168, c + 22), [u1, v1] = pl(84, c + 22), [u0, v0] = pl(84, c - 22), [cx, cy] = pl(128, c);
+    h += '<g class="seg"><path d="M' + x0 + ' ' + y0 + 'A168 168 0 0 1 ' + x1 + ' ' + y1 + 'L' + u1 + ' ' + v1 + 'A84 84 0 0 0 ' + u0 + ' ' + v0 + 'Z"/><svg x="' + (cx - 20) + '" y="' + (cy - 26) + '" width="40" height="40" viewBox="0 0 48 48" fill="#fff" color="#fff" stroke-linecap="round">' + WICO[w.id] + '</svg><text x="' + cx + '" y="' + (+cy + 28) + '" text-anchor="middle" font-size="14" font-weight="700" fill="#fff" class="cnt"></text></g>';
   });
+  h += '<circle id="whub" cx="170" cy="170" r="80" fill="#222226" stroke="#666" stroke-width="3"/><svg id="whi" x="132" y="108" width="76" height="76" viewBox="0 0 48 48" fill="#fff" color="#fff" stroke-linecap="round"></svg><text id="wht" x="170" y="226" text-anchor="middle" font-size="22" font-weight="700" fill="#fff"></text></svg>';
+  wheelEl.innerHTML = h;
 }
-function selectWeapon(i) { wIdx = i; fireHeld = false; atkHeld = false; reloadT = 0; lastHud = ''; wheelEl.style.display = 'none'; }
-bindTap(document.getElementById('wsel'), () => { renderWheel(); wheelEl.style.display = wheelEl.style.display === 'block' ? 'none' : 'block'; });
+const cntOf = w => { const q = wst[w.id]; return !q ? '' : 'n' in q ? String(q.n) : q.mag + '/' + q.res; };
+function renderWheel() {
+  const sg = wheelEl.querySelectorAll('.seg');
+  WEAPONS.forEach((w, i) => { sg[i].classList.toggle('on', i === wIdx); sg[i].querySelector('.cnt').textContent = cntOf(w); });
+  document.getElementById('whi').innerHTML = WICO[WEAPONS[wIdx].id]; document.getElementById('wht').textContent = cntOf(WEAPONS[wIdx]);
+}
+function selectWeapon(i) { wIdx = i; fireHeld = false; atkHeld = false; reloadT = 0; lastHud = ''; wheelEl.style.display = 'none'; if (aimOn && WEAPONS[i].melee) aimOn = false; }
+function toggleWheel() { renderWheel(); wheelEl.style.display = wheelEl.style.display === 'block' ? 'none' : 'block'; }
+wheelEl.querySelectorAll('.seg').forEach((g, i) => bindTap(g, () => selectWeapon(i)));
 bindTap(document.getElementById('whub'), () => { wheelEl.style.display = 'none'; });
+{ // ফায়ার বাটনের কোণার ব্যাজ চাপলে হুইল খোলে
+  const fb = document.getElementById('atk'); let lt = 0;
+  for (const ev of ['pointerdown', 'touchstart', 'mousedown']) fb.addEventListener(ev, e => {
+    if (!e.target.closest('.wbadge')) return;
+    e.stopImmediatePropagation(); e.preventDefault(); const n = performance.now(); if (n - lt > 300) { lt = n; toggleWheel(); }
+  }, true);
+}
+function setFireBtn(at) { document.getElementById('atk').innerHTML = svgW(ICONS.bullet) + '<i class="wbadge">' + svgW(WICO[WEAPONS[wIdx].id]) + '</i>' + (at ? '<span class="amm">' + at + '</span>' : ''); }
+function throwBomb() {
+  const g = wst.bomb; if (g.n <= 0) return;
+  g.n--; lastHud = ''; stance = 'stand'; startCombat(); gunT = 0;
+  const pt = Math.max(0.1, Math.min(0.8, 0.3 + camPitch * 0.5));
+  const v = new THREE.Vector3(Math.sin(camYaw) * Math.cos(pt), Math.sin(pt), Math.cos(camYaw) * Math.cos(pt)).multiplyScalar(11);
+  const m = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), new THREE.MeshStandardMaterial({ color: 0x551111 })); scene.add(m);
+  grenades.push({ m, p: new THREE.Vector3(player.x, player.y + 1.4, player.z), v, t: 0, fuse: 3, k: 1.8 });
+}
+function placeMine() {
+  const g = wst.mine; if (g.n <= 0) return;
+  g.n--; lastHud = '';
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 0.12, 12), new THREE.MeshStandardMaterial({ color: 0x333a33 })); scene.add(m);
+  const p = new THREE.Vector3(player.x + Math.sin(player.yaw) * 1.2, 0.08, player.z + Math.cos(player.yaw) * 1.2); m.position.copy(p);
+  grenades.push({ m, p, v: new THREE.Vector3(), t: 0, mine: true });
+}
 
 function startCombat() { combatT = 4; if (runTouch) setRun(false); }
 let atkLast = '';
@@ -1483,7 +1604,7 @@ function hurtNPC(n, dmg, dx, dz, kb) {
   if (n.dead) return;
   n.hp -= dmg; n.flash = 0.25; n.hitT = 0.6; n.hitKey = (n.hitKey || 0) + 1; n.hostT = 20;
   const L = Math.hypot(dx, dz) || 1; n.knock.x += dx / L * kb; n.knock.z += dz / L * kb;
-  if (n.hp <= 0) { n.dead = true; n.deadT = 0; n.hostT = 0; kills++; }
+  if (n.hp <= 0) { n.dead = true; n.deadT = 0; n.hostT = 0; kills++; cash += 100; }
 }
 function shoot() {
   const w = WEAPONS[wIdx], s = wst[w.id];
@@ -1538,11 +1659,11 @@ function updateCombat(dt) {
     if (sp.t <= 0) sp.m.visible = false;
   }
   const w = WEAPONS[wIdx], sw = wst[w.id];
-  const at = w.melee ? '' : w.id === 'grenade' ? String(sw.n) : (reloadT > 0 ? 'রিলোড…' : sw.mag + '/' + sw.res);
+  const at = w.melee ? '' : 'n' in sw ? String(sw.n) : (reloadT > 0 ? 'রিলোড…' : sw.mag + '/' + sw.res);
   const h = w.ico + ' ' + w.name + (at ? ' ' + at : '') + ' · 💥 ' + kills;
   if (h !== lastHud) {
     lastHud = h; document.getElementById('ammo').textContent = h;
-    document.getElementById('atk').innerHTML = '<div style="font-size:30px">' + w.ico + '</div><div style="font-size:11px">' + (at || w.name) + '</div>';
+    setFireBtn(at);
     renderWheel();
   }
 }
@@ -1556,6 +1677,7 @@ function holdBtn(id, on, off) {
 }
 holdBtn('atk', () => attackDown(), () => attackUp());
 holdBtn('kick', () => doKick(), () => {});
+setFireBtn('');
 
 // NPC (মার খায়, পড়ে যায়, ৬ সেকেন্ড পর আবার ওঠে)
 function buildNPCs() {
@@ -1838,7 +1960,7 @@ while (profiles.length < MAX_PROFILES) profiles.push(null);
 function saveProfiles() { try { localStorage.setItem(PKEY, JSON.stringify({ slots: profiles })); } catch (e) {} }
 function saveProgress() {
   if (!activeProfile || !started) return;
-  Object.assign(activeProfile, { kills, deaths, hp, armor, x: player.x, z: player.z, playSec: playBase + (performance.now() - playStart) / 1000 });
+  Object.assign(activeProfile, { cash, inv, kills, deaths, hp, armor, x: player.x, z: player.z, playSec: playBase + (performance.now() - playStart) / 1000 });
   saveProfiles();
 }
 setInterval(saveProgress, 5000);
@@ -1910,11 +2032,11 @@ function renderEye() {
 }
 
 // ---------- বাটন কাস্টমাইজ (টেনে সরানো, সাইজ, স্বচ্ছতা, সেভ) ----------
-const CUST = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'kick', 'eyebtn', 'mini', 'eye', 'bars'];
-const CNAME = { joy: 'জয়স্টিক', run: 'দৌড়', jump: 'লাফ', crouch: 'বসুন', prone: 'শুয়ুন', atk: 'আক্রমণ বাটন', wsel: 'অস্ত্র বাছাই', kick: 'লাথি', eyebtn: '৩য় চোখ বাটন', mini: 'মিনি ম্যাপ', eye: '৩য় চোখের জানালা', bars: 'হেলথ বার' };
-const OPAQ = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'kick', 'eyebtn'];
-let layout = { op: 1 }, editMode = false, selId = null, dragP = null, dragOff = [0, 0];
-try { const j = localStorage.getItem('wt_layout'); if (j) layout = Object.assign({ op: 1 }, JSON.parse(j)); } catch (e) {}
+const CUST = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'kick', 'eyebtn', 'mini', 'eye', 'bars', 'pausebtn', 'shop', 'aim', 'nade', 'reload', 'veh', 'cam'];
+const CNAME = { joy: 'জয়স্টিক', run: 'দৌড়', jump: 'লাফ', crouch: 'বসুন', prone: 'শুয়ুন', atk: 'আক্রমণ বাটন', wsel: 'ব্যাগ', pausebtn: 'পজ', shop: 'দোকান', aim: 'এইম', nade: 'গ্রেনেড বাটন', reload: 'রিলোড', veh: 'গাড়ি', cam: 'ক্যামেরা', kick: 'লাথি', eyebtn: '৩য় চোখ বাটন', mini: 'মিনি ম্যাপ', eye: '৩য় চোখের জানালা', bars: 'হেলথ বার' };
+const OPAQ = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'kick', 'eyebtn', 'pausebtn', 'shop', 'aim', 'nade', 'reload', 'veh', 'cam'];
+let layout = { op: 1, v: 2 }, editMode = false, selId = null, dragP = null, dragOff = [0, 0];
+try { const j = localStorage.getItem('wt_layout'); if (j) { const o = JSON.parse(j); if (o.v === 2) layout = Object.assign({ op: 1, v: 2 }, o); } } catch (e) {}
 CUST.forEach(id => { document.getElementById(id).dataset.cust = id; });
 function placeEl(id) {
   const el = document.getElementById(id), L = layout[id]; if (!L) return;
@@ -1959,7 +2081,7 @@ bindTap(document.getElementById('gear'), toggleEdit);
 document.getElementById('edsave').addEventListener('click', () => { if (editMode) toggleEdit(); });
 document.getElementById('edflip').addEventListener('click', () => document.getElementById('editbar').classList.toggle('bottom'));
 document.getElementById('edreset').addEventListener('click', () => {
-  layout = { op: 1 };
+  layout = { op: 1, v: 2 };
   CUST.forEach(id => { const st = document.getElementById(id).style; st.left = st.top = st.right = st.bottom = st.transform = st.opacity = ''; });
   document.getElementById('opr').value = 1; document.getElementById('szr').value = 1; selId = null;
   CUST.forEach(i => document.getElementById(i).classList.remove('sel'));
@@ -2001,6 +2123,86 @@ applyLayout();
 
 // ---------- লুপ (৩০ FPS সীমা) ----------
 let last = performance.now(), fpsFrames = 0, fpsTime = 0;
+
+// ---------- নতুন HUD ফিচার: স্ট্যামিনা, টাকা, দোকান, ব্যাগ, বিরতি, ক্যামেরা, এইম, গাড়ি ----------
+let cash = 300, inv = { med: 1, arm: 1 }, stam = 100, paused = false, aimOn = false, drv = null, snapFlag = false, lastCash = -1, toastT = 0;
+const parkedCars = [], panelEl = document.getElementById('panel');
+function toast(t) { const e = document.getElementById('toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => e.style.display = 'none', 1600); }
+let panelFn = null;
+function renderPanel() {
+  const d = panelFn(); if (!d) return;
+  panelEl.innerHTML = '<div class="pbox"><h3>' + d.title + '</h3>' + d.rows.map((r, i) => '<div class="prow"><span>' + r.t + '</span>' + (r.b ? '<button data-r="' + i + '">' + r.b + '</button>' : '') + '</div>').join('') + '<button class="pclose">✕ বন্ধ</button></div>';
+  panelEl.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { d.rows[b.dataset.r].f(); renderPanel(); });
+  panelEl.querySelector('.pclose').onclick = closePanel;
+}
+function openPanel(fn) { panelFn = fn; paused = true; fireHeld = false; atkHeld = false; jx = 0; jy = 0; panelEl.style.display = 'flex'; renderPanel(); }
+function closePanel() { panelFn = null; paused = false; panelEl.style.display = 'none'; }
+const buy = (cap, key, k, n) => () => { const q = wst[key]; if (k in q) q[k] = Math.min(cap, q[k] + n); lastHud = ''; };
+const SHOP = [
+  { n: '🩹 মেডকিট (+৫০ হেলথ)', p: 150, f: () => inv.med++ }, { n: '🛡 আর্মার কিট (+৫০)', p: 200, f: () => inv.arm++ },
+  { n: 'রাইফেল গুলি +৩০', p: 100, f: buy(240, 'rifle', 'res', 30) }, { n: 'পিস্তল গুলি +১২', p: 60, f: buy(240, 'pistol', 'res', 12) },
+  { n: 'স্নাইপার গুলি +৫', p: 120, f: buy(60, 'sniper', 'res', 5) }, { n: 'গ্রেনেড +১', p: 120, f: buy(9, 'grenade', 'n', 1) },
+  { n: 'মাইন +১', p: 150, f: buy(9, 'mine', 'n', 1) }, { n: 'বোমা +১', p: 250, f: buy(9, 'bomb', 'n', 1) }
+];
+bindTap(document.getElementById('shop'), () => openPanel(() => ({ title: '🛒 দোকান · 💵 ' + cash, rows: SHOP.map(it => ({ t: it.n + ' — 💵' + it.p, b: 'কিনুন', f: () => { if (cash < it.p) { toast('টাকা কম'); return; } cash -= it.p; it.f(); } })) })));
+bindTap(document.getElementById('wsel'), () => openPanel(() => ({ title: '🎒 ব্যাগ · 💵 ' + cash, rows: [
+  { t: '🩹 মেডকিট × ' + inv.med, b: 'ব্যবহার', f: () => { if (inv.med > 0 && hp < 100) { inv.med--; hp = Math.min(100, hp + 50); } else toast('এখন দরকার নেই'); } },
+  { t: '🛡 আর্মার কিট × ' + inv.arm, b: 'পরুন', f: () => { if (inv.arm > 0 && armor < 100) { inv.arm--; armor = Math.min(100, armor + 50); } else toast('এখন দরকার নেই'); } },
+  { t: '🔫 রাইফেল ' + cntOf(WEAPONS[0]) + ' · পিস্তল ' + cntOf(WEAPONS[1]) + ' · স্নাইপার ' + cntOf(WEAPONS[2]) },
+  { t: '💣 গ্রেনেড ' + wst.grenade.n + ' · মাইন ' + wst.mine.n + ' · বোমা ' + wst.bomb.n },
+  { t: '💥 কিল: ' + kills }] })));
+bindTap(document.getElementById('pausebtn'), () => openPanel(() => ({ title: '⏸ বিরতি', rows: [
+  { t: 'খেলা চালিয়ে যান', b: '▶ চালু', f: closePanel }, { t: 'বাটনের জায়গা বদলান', b: 'সাজান', f: () => { closePanel(); toggleEdit(); } }] })));
+bindTap(document.getElementById('aim'), () => { if (drv) return; aimOn = !aimOn; document.getElementById('aim').classList.toggle('on', aimOn); });
+bindTap(document.getElementById('nade'), () => { if (!pDead && !drv) throwGrenade(); });
+bindTap(document.getElementById('reload'), () => { if (!pDead && !drv) startReload(); });
+bindTap(document.getElementById('cam'), () => { snapFlag = true; });
+function shot() {
+  snapFlag = false;
+  try { const a = document.createElement('a'); a.href = renderer.domElement.toDataURL('image/png'); a.download = 'ricecity_' + Date.now() + '.png'; document.body.appendChild(a); a.click(); a.remove(); } catch (e) {}
+  const f = document.getElementById('flash'); f.style.transition = 'none'; f.style.opacity = 0.9; requestAnimationFrame(() => { f.style.transition = 'opacity .35s'; f.style.opacity = 0; });
+  sfx('kick'); toast('📸 ছবি তোলা হয়েছে');
+}
+function toggleVeh() {
+  if (pDead) return;
+  if (drv) {
+    const c = drv.c, y = c.g.rotation.y; drv = null; parkedCars.push(c);
+    let x = c.g.position.x + Math.cos(y) * 2.8, z = c.g.position.z - Math.sin(y) * 2.8;
+    if (blocked(x, z)) { x = c.g.position.x - Math.cos(y) * 2.8; z = c.g.position.z + Math.sin(y) * 2.8; }
+    player.x = x; player.z = z; player.y = 0; player.yaw = y; camYaw = y; char.group.visible = true;
+    document.getElementById('veh').classList.remove('on'); return;
+  }
+  let best = null, bd = 49;
+  for (const c of cars.concat(parkedCars)) { const d = (c.g.position.x - player.x) ** 2 + (c.g.position.z - player.z) ** 2; if (d < bd) { bd = d; best = c; } }
+  if (!best) { toast('কাছে কোনো গাড়ি নেই'); return; }
+  const i = cars.indexOf(best); if (i >= 0) cars.splice(i, 1); else parkedCars.splice(parkedCars.indexOf(best), 1);
+  stance = 'stand'; setRun(false); aimOn = false; document.getElementById('aim').classList.remove('on'); wheelEl.style.display = 'none';
+  drv = { c: best, sp: 0 }; char.group.visible = false; document.getElementById('veh').classList.add('on'); toast('🚗 জয়স্টিক: সামনে/পিছনে ও ডানে/বামে');
+}
+bindTap(document.getElementById('veh'), toggleVeh);
+function driveStep(dt) {
+  const c = drv.c;
+  drv.sp += ((jy > 0 ? jy * 15 : jy * 6) - drv.sp) * (1 - Math.exp(-dt * (Math.abs(jy) > 0.1 ? 1.4 : 2.5)));
+  c.g.rotation.y -= jx * dt * 1.9 * Math.max(-1, Math.min(1, drv.sp / 6));
+  const y = c.g.rotation.y, nx = c.g.position.x + Math.sin(y) * drv.sp * dt, nz = c.g.position.z + Math.cos(y) * drv.sp * dt;
+  if (blocked(nx, nz) || Math.abs(nx) > 195 || Math.abs(nz) > 195) drv.sp *= -0.3; else { c.g.position.x = nx; c.g.position.z = nz; }
+  if (Math.abs(drv.sp) > 5) for (const n of npcs) { if (n.dead) continue; const dx = n.g.position.x - c.g.position.x, dz = n.g.position.z - c.g.position.z; if (Math.hypot(dx, dz) < 2.2) hurtNPC(n, 45, dx, dz, 10); }
+  player.x = c.g.position.x; player.z = c.g.position.z; player.y = 0; player.yaw = y;
+  camera.position.lerp(new THREE.Vector3(player.x - Math.sin(y) * 9, 4.2, player.z - Math.cos(y) * 9), 1 - Math.exp(-dt * 5));
+  camera.lookAt(player.x, 1.2, player.z);
+}
+function extra(dt) {
+  if (paused) return;
+  const mv = Math.hypot(jx, jy) > 0.1 || runTouch;
+  if (runTouch && mv && !drv) stam = Math.max(0, stam - 16 * dt); else stam = Math.min(100, stam + 10 * dt);
+  if (stam <= 0 && runTouch) setRun(false);
+  document.getElementById('stf').style.width = stam + '%';
+  if (cash !== lastCash) { lastCash = cash; document.getElementById('cashv').textContent = cash; }
+  const tf = aimOn ? (WEAPONS[wIdx].id === 'sniper' ? 22 : 42) : 60;
+  if (Math.abs(camera.fov - tf) > 0.3) { camera.fov += (tf - camera.fov) * Math.min(1, dt * 10); camera.updateProjectionMatrix(); }
+  document.getElementById('crosshair').style.display = aimOn ? 'block' : 'none';
+}
+
 function loop(now) {
   requestAnimationFrame(loop);
   const el = now - last;
@@ -2008,9 +2210,11 @@ function loop(now) {
   last = now - (el % 33);
   const dt = Math.min(el / 1000, 0.05);
 
-  animateWorld(now / 1000, dt);
-  if (started && !mapOpen && !editMode) update(dt);
+  if (!paused) animateWorld(now / 1000, dt);
+  if (started && !mapOpen && !editMode && !paused) { if (drv) driveStep(dt); else update(dt); }
+  if (started) extra(dt);
   renderer.render(scene, camera);
+  if (snapFlag) shot();
   renderEye();
   if (started) { updateRoute(now); drawMini(); if (mapOpen) drawBig(); }
 
@@ -2039,7 +2243,8 @@ async function startGame(p) {
   scene.add(char.group);
   if (typeof p.x === 'number') { player.x = p.x; player.z = p.z; if (blocked(player.x, player.z)) player.x = Math.round(player.x / SPACING) * SPACING; }
   kills = p.kills || 0; deaths = p.deaths || 0; hp = p.hp > 0 ? p.hp : 100; armor = p.armor == null ? 100 : p.armor;
-  if (p.layout) { layout = Object.assign({ op: 1 }, p.layout); applyLayout(); }
+  cash = p.cash == null ? 300 : p.cash; if (p.inv) inv = p.inv;
+  if (p.layout && p.layout.v === 2) { layout = Object.assign({ op: 1, v: 2 }, p.layout); applyLayout(); }
   camYaw = 0; player.yaw = 0;
   started = true; playBase = p.playSec || 0; playStart = performance.now();
 
