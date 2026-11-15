@@ -154,7 +154,7 @@ body.playing .ib{display:flex!important}
 #lobby .lb-lvl { font-size: 13px; color: #ffe27a; margin-top: 2px; }
 #lobby .lb-xp { height: 10px; background: #222; border: 1px solid #fff; border-radius: 4px; margin-top: 4px; overflow: hidden; }
 #lobby .lb-xp i { display: block; height: 100%; background: linear-gradient(90deg, #f0e070, #ffd400); }
-#lobby .lb-tr { position: absolute; right: 12px; top: 12px; width: min(250px, 40vw); display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
+#lobby .lb-tr { position: absolute; right: 12px; top: 70px; width: min(250px, 40vw); display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
 #lobby .lb-cash { text-align: right; padding: 6px 10px; }
 #lobby .lb-cash b { display: block; font-size: 22px; color: #6dff6d; text-shadow: 0 1px 3px #000; letter-spacing: 1px; font-weight: 700; }
 #lobby .lb-btn { background: rgba(10,10,14,.82); border: 2px solid #fff; border-radius: 4px; color: #fff; padding: 9px 12px; font-size: 15px; font-weight: 700; text-align: right; cursor: pointer; font-family: inherit; }
@@ -231,6 +231,12 @@ body.playing .ib{display:flex!important}
 .pp-field input, .pp-field textarea { width: 100%; box-sizing: border-box; padding: 5px 6px; border-radius: 6px; border: 1px solid #f5c400; font-size: 14px; background: #0b1424; color: #fff; text-align: left; }
 .pp-field textarea { resize: none; font-style: italic; }
 .pp-val { font-size: 15px; color: #fff; font-weight: 700; }
+/* পুরো প্রোফাইল/চরিত্র স্ক্রীন স্ক্রল হবে (মাঝখানে কেটে গেলে উপর/বাম অংশ আর পৌঁছানো যেত না) */
+#start { justify-content: flex-start !important; overflow: auto !important; touch-action: pan-x pan-y; -webkit-overflow-scrolling: touch; padding: 12px 0; box-sizing: border-box; }
+#pcard { margin: auto !important; max-height: none !important; overflow: visible !important; }
+/* লবি লেআউট: স্টোর প্রোফাইলের নিচে, সেটিংস কোণায় ছোট গিয়ার */
+#lobby #lb-store { position: absolute; left: 12px; top: 116px; width: min(300px, 46vw); text-align: left; }
+#lobby .lb-gear { position: absolute; right: 12px; top: 12px; width: 46px; height: 46px; padding: 0; border-radius: 50%; font-size: 24px; line-height: 1; background: rgba(10,10,14,.85); color: #fff; border: 2px solid #fff; z-index: 2; }
 </style>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
@@ -269,8 +275,7 @@ body.playing .ib{display:flex!important}
   </div>
   <div class="lb-tr">
     <div class="lb-panel"><div class="lb-head" style="text-align:right">Currency</div><div class="lb-cash"><b id="lb-cash">$0</b></div></div>
-    <button class="lb-btn" id="lb-settings">SETTINGS ⚙</button>
-    <button class="lb-btn" id="lb-char">CHARACTER SELECT</button>
+        <button class="lb-btn" id="lb-char">CHARACTER SELECT</button>
   </div>
   <div class="lb-mid lb-panel lb-mis">
     <div class="lb-head">Mission Briefing</div>
@@ -280,11 +285,13 @@ body.playing .ib{display:flex!important}
     </div>
   </div>
   <div class="lb-br">
-    <button class="lb-btn" id="lb-store" style="text-align:left">🛒 STORE</button>
-    <button class="lb-start" id="lb-go">START MATCH</button>
+        <button class="lb-start" id="lb-go">START MATCH</button>
   </div>
   <div class="lb-msg" id="lb-msg"></div>
+  <button id="lb-settings" class="lb-gear" aria-label="Settings">⚙</button>
+  <button class="lb-btn" id="lb-store" style="text-align:left">🛒 STORE</button>
 </div>
+<div id="settings" class="scr" style="display:none;justify-content:flex-start;align-items:center;padding:12px 0;overflow:auto;touch-action:pan-x pan-y"><div class="pp-wrap" style="max-width:520px"><div class="pp-head"><button id="st-back" class="pp-exit">◀ BACK (Lobby)</button><div class="pp-title">SETTINGS</div><span></span></div><div style="padding:14px;font-size:14px;opacity:.8">Settings will be added here.</div></div></div>
 <div id="start" class="scr" style="display:none">
   <h2>Greatest Bangla Rich City<br>Open World</h2>
   <div id="pcard"></div>
@@ -318,7 +325,7 @@ body.playing .ib{display:flex!important}
 <div id="crosshair"></div><div id="flash"></div><div id="toast"></div><div id="panel"></div>
 <button id="gear" class="act">⚙</button>
 <div id="editbar"><div id="edtxt">Drag to move · tap to select</div><div class="row"><label>Size <input id="szr" type="range" min="0.5" max="2" step="0.05" value="1"></label><label>Opacity <input id="opr" type="range" min="0.3" max="1" step="0.05" value="1"></label></div><div class="row"><button id="edflip">⇅ Flip</button><button id="edreset" style="background:#e67e22;color:#fff">Reset</button><button id="edsave" style="background:#2ecc71;color:#fff">✔ Save</button></div></div>
-<div id="bigmap"><canvas id="bm"></canvas><div id="bmbar"><span id="bmtxt">Tap the map to set a destination</span><button id="bmclear" style="background:#e67e22;color:#fff">Clear mark</button><button id="bmclose" style="background:#fff">Close</button></div></div>
+<div id="bigmap"><canvas id="bm"></canvas><div id="bmbar"><span id="bmtxt">Tap the map to set a destination</span><button id="bmclear" style="background:#e67e22;color:#fff">Clear mark</button><button id="bmclose" style="background:#fff">◀ Back</button></div></div>
 
 <script type="module">
 import * as THREE from 'three';
@@ -2342,7 +2349,7 @@ function renderCharSelect(startId, onConfirm, onBack) {
   let sel = startId;
   box.append(mk('div', '🎮 Select character', 'slot'));
   const grid = mk('div', '', 'row');
-  grid.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%;max-height:calc(var(--vh)*50);overflow-y:auto;touch-action:pan-y;padding:4px';
+  grid.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%;padding:4px';
   const cards = CHARACTERS.map(c => {
     const b = mk('button', '', 'opt');
     b.style.cssText = 'min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px';
@@ -2602,10 +2609,32 @@ addEventListener('popstate', () => {
   if (navDepth > 0) navDepth--;
   if (panelEl.style.display === 'flex') { closePanelRaw(); return; }
   if (started) { returnToLobbyRaw(); return; }
+  if (document.getElementById('settings').style.display === 'flex') { showScr('lobby'); renderLobby(); return; }
   if (document.getElementById('start').style.display === 'flex') { showScr('lobby'); renderLobby(); }
 });
 const shopOpen = fn => openPanel(fn, true);
 function returnToLobby() { if (!started) return; closePanel(); navPop(); returnToLobbyRaw(); }
+// লবি থেকে চরিত্র বাছাই (সরাসরি, প্রোফাইল নয়)
+function openCharSelect() {
+  navPush(); ppDraft = null;
+  ensureProfile();
+  const cur = curP();
+  showScr('start');
+  renderCharSelect(cur.gender, id => {
+    cur.gender = id; saveProfiles();
+    navPop(); showScr('lobby'); renderLobby();
+  }, () => { navPop(); showScr('lobby'); renderLobby(); });
+}
+// লবি থেকে সেটিংস (ভবিষ্যতে এখানে নতুন অপশন যোগ হবে)
+function openSettings() {
+  navPush();
+  const box = document.getElementById('pcard'); box.innerHTML = '';
+  box.append(mk('div', '⚙ Settings', 'slot'));
+  const back = mk('button', '◀ Back to lobby'); back.style.cssText = 'background:#555;color:#fff';
+  back.onclick = () => { navPop(); showScr('lobby'); renderLobby(); };
+  box.append(back);
+  showScr('start');
+}
 function openProfileScreen() { navPush(); ppDraft = null; showScr('start'); renderProfile(); }
 // মম্যাচ থেকে লবিতে ফেরা: প্রোফাইল সেভ, গেম বন্ধ, HUD লুকানো, লবি দেখানো
 function returnToLobbyRaw() {
@@ -2869,9 +2898,10 @@ async function enterGame() {
   intro.style.display = 'none';
 }
 document.getElementById('lb-go').addEventListener('click', () => { enterGame(); });
-document.getElementById('lb-char').addEventListener('click', openProfileScreen);
+document.getElementById('lb-char').addEventListener('click', openCharSelect);
 document.querySelector('#lobby .lb-tl').addEventListener('click', openProfileScreen);
-document.getElementById('lb-settings').addEventListener('click', () => lbMsg('Settings coming soon'));
+document.getElementById('lb-settings').addEventListener('click', openSettings);
+document.getElementById('st-back').addEventListener('click', () => { navPop(); showScr('lobby'); renderLobby(); });
 document.getElementById('lb-store').addEventListener('click', () => lbMsg('Store coming soon'));
 
 // ---------- শুরুর ক্রম: লোডিং → ইন্টারফেস → গল্প → চরিত্র ----------
