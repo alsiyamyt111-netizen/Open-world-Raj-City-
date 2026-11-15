@@ -821,8 +821,14 @@ const gltfLoader = new GLTFLoader();
 // নতুন চরিত্র যোগ করতে: ফাইলটা models/ ফোল্ডারে রাখুন (যেমন models/soldier.glb), তারপর নিচে একটা লাইন যোগ করুন।
 // id = যেকোনো ইংরেজি নাম (ছোট হাতের), files = models/ ফোল্ডারের ফাইলের নাম (.glb ছাড়া; একাধিক নাম দিলে প্রথম যেটা পাবে)
 const CHARACTERS = [
-  { id: 'boy', name: 'ছেলে', icon: '👦', files: ['boy', 'x boy', 'x_boy', 'xboy'] },
-  { id: 'girl', name: 'মেয়ে', icon: '👧', files: ['girl', 'Y girl', 'y girl', 'Y_girl', 'ygirl'] },
+  { id: 'boy', gender: 'boy', name: 'ছেলে ১', icon: '👦', files: ['boy', 'x boy', 'x_boy', 'xboy'] },
+  { id: 'bc2', gender: 'boy', name: 'ছেলে ২', icon: '👦', files: ['bc2'] },
+  { id: 'bc3', gender: 'boy', name: 'ছেলে ৩', icon: '👦', files: ['bc3'] },
+  { id: 'bc4', gender: 'boy', name: 'ছেলে ৪', icon: '👦', files: ['bc4'] },
+  { id: 'girl', gender: 'girl', name: 'মেয়ে ১', icon: '👧', files: ['girl', 'Y girl', 'y girl', 'Y_girl', 'ygirl'] },
+  { id: 'gc2', gender: 'girl', name: 'মেয়ে ২', icon: '👧', files: ['gc2'] },
+  { id: 'gc3', gender: 'girl', name: 'মেয়ে ৩', icon: '👧', files: ['gc3'] },
+  { id: 'gc4', gender: 'girl', name: 'মেয়ে ৪', icon: '👧', files: ['gc4'] },
   // { id: 'soldier', name: 'সৈনিক', icon: '🪖', files: ['soldier'] },
   // { id: 'robot', name: 'রোবট', icon: '🤖', files: ['robot'] },
 ];
@@ -932,7 +938,8 @@ async function buildCharacter(gender) {
 // মডেল না পেলে সাধারণ চরিত্র (ব্যাকআপ)
 function makePrimitive(gender) {
   const g = new THREE.Group();
-  const isBoy = gender !== 'girl';
+  const entry = CHARACTERS.find(c => c.id === gender);
+  const isBoy = entry ? entry.gender !== 'girl' : gender !== 'girl';
   const skin = new THREE.MeshStandardMaterial({ color: 0xe0a97a, roughness: 0.6 });
   const shirt = new THREE.MeshStandardMaterial({ color: isBoy ? 0x2e86de : 0xff6b9d, roughness: 0.7 });
   const pants = new THREE.MeshStandardMaterial({ color: isBoy ? 0x3b3b58 : 0x2d3436, roughness: 0.8 });
@@ -2093,35 +2100,66 @@ setInterval(saveProgress, 5000);
 addEventListener('pagehide', saveProgress);
 document.addEventListener('visibilitychange', () => { if (document.hidden) saveProgress(); });
 function fmtTime(sec) { const m = Math.floor(sec / 60); return m < 60 ? m + ' মি' : Math.floor(m / 60) + ' ঘ ' + (m % 60) + ' মি'; }
+const mk = (tag, txt, cls) => { const e = document.createElement(tag); if (txt) e.textContent = txt; if (cls) e.className = cls; return e; };
+
+// ফ্রি-ফায়ার স্টাইল: বড় গ্রিডে সব চরিত্র দেখায়, ট্যাপ করে বাছাই করা যায়, তারপর "কনফার্ম" চাপলেই পাকা হয়
+function renderCharSelect(startId, onConfirm) {
+  const box = document.getElementById('pcard'); box.innerHTML = '';
+  let sel = startId;
+  box.append(mk('div', '🎮 চরিত্র বাছাই করুন', 'slot'));
+  const grid = mk('div', '', 'row');
+  grid.style.cssText = 'max-height:calc(var(--vh)*44);overflow-y:auto;touch-action:pan-y;padding:4px';
+  const cards = CHARACTERS.map(c => {
+    const b = mk('button', '', 'opt');
+    b.style.cssText = 'min-width:84px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px';
+    b.append(mk('div', c.icon), mk('div', c.name));
+    b.firstChild.style.fontSize = '30px';
+    b.onclick = () => { sel = c.id; cards.forEach((x, i) => x.classList.toggle('on', CHARACTERS[i].id === sel)); };
+    return b;
+  });
+  cards.forEach((b, i) => b.classList.toggle('on', CHARACTERS[i].id === sel));
+  grid.append(...cards);
+  const ok = mk('button', '✔ কনফার্ম করুন'); ok.style.cssText = 'background:#2ecc71;color:#fff;font-weight:700';
+  ok.onclick = () => onConfirm(sel);
+  box.append(grid, ok);
+}
+
 function renderProfile() {
   const box = document.getElementById('pcard'); box.innerHTML = ''; delArm = false;
-  const mk = (tag, txt, cls) => { const e = document.createElement(tag); if (txt) e.textContent = txt; if (cls) e.className = cls; return e; };
   const p = profiles[0];
   if (p) {
+    // হোম লবি: প্রোফাইল আগে থেকেই আছে
+    box.append(mk('div', '🏠 হোম লবি', 'slot'));
     const card = mk('div', '', 'slot');
     card.append(mk('div', ((CHARACTERS.find(c => c.id === p.gender) || CHARACTERS[0]).icon) + ' ' + p.name), mk('div', '💥 কিল: ' + (p.kills || 0) + ' · ☠ মৃত্যু: ' + (p.deaths || 0) + ' · ⏱ ' + fmtTime(p.playSec || 0)));
     const go = mk('button', '▶ খেলা শুরু'); go.onclick = () => startGame(p);
+    const chg = mk('button', '🔄 চরিত্র বদলান'); chg.style.cssText = 'background:#2980b9;color:#fff';
+    chg.onclick = () => renderCharSelect(p.gender, id => { p.gender = id; pgender = id; saveProfiles(); renderProfile(); });
     const del = mk('button', '🗑 প্রোফাইল মুছুন'); del.style.background = '#c0392b';
     del.onclick = () => {
       if (!delArm) { delArm = true; del.textContent = 'আবার চাপুন — সব অগ্রগতি মুছে যাবে'; return; }
       profiles[0] = null; saveProfiles(); renderProfile();
     };
-    box.append(card, go, del);
+    box.append(card, go, chg, del);
   } else {
-    const inp = mk('input'); inp.id = 'pname_in'; inp.maxLength = 16; inp.placeholder = 'আপনার নাম';
-    const gr = mk('div', '', 'row'), dr = mk('div', '', 'row');
-    const cbs = CHARACTERS.map(c => { const b = mk('button', c.icon + ' ' + c.name, 'opt'); b.onclick = () => setG(c.id); return b; });
-    const setG = g => { pgender = g; cbs.forEach((b, i) => b.classList.toggle('on', CHARACTERS[i].id === g)); };
-    setG(pgender);
-    gr.append(...cbs);
-    const sws = DRESS.map(c => { const b = mk('button', '', 'sw'); b.style.background = c; b.onclick = () => { pdress = c; sws.forEach(x => x.classList.toggle('on', x === b)); }; if (c === pdress) b.classList.add('on'); return b; });
-    dr.append(...sws);
-    const go = mk('button', '✔ প্রোফাইল তৈরি করে শুরু');
-    go.onclick = () => {
-      const np = { id: Date.now(), name: (inp.value || '').trim() || 'খেলোয়াড়', gender: pgender, dress: pdress, created: Date.now(), kills: 0, deaths: 0, playSec: 0, hp: 100, armor: 100 };
-      profiles[0] = np; saveProfiles(); startGame(np);
-    };
-    box.append(mk('div', 'নতুন প্রোফাইল তৈরি করুন', 'slot'), inp, gr, mk('div', 'পোশাকের রং', 'soon'), dr, go);
+    // নতুন খেলোয়াড়: আগে চরিত্র বাছাই + কনফার্ম, তারপর নাম/পোশাক দিয়ে প্রোফাইল তৈরি
+    renderCharSelect(pgender, id => {
+      pgender = id;
+      box.innerHTML = '';
+      const chosen = CHARACTERS.find(c => c.id === id);
+      const inp = mk('input'); inp.id = 'pname_in'; inp.maxLength = 16; inp.placeholder = 'আপনার নাম';
+      const dr = mk('div', '', 'row');
+      const sws = DRESS.map(c => { const b = mk('button', '', 'sw'); b.style.background = c; b.onclick = () => { pdress = c; sws.forEach(x => x.classList.toggle('on', x === b)); }; if (c === pdress) b.classList.add('on'); return b; });
+      dr.append(...sws);
+      const back = mk('button', '◀ চরিত্র বদলান'); back.style.cssText = 'background:#555;color:#fff';
+      back.onclick = () => renderProfile();
+      const go = mk('button', '✔ প্রোফাইল তৈরি করে শুরু');
+      go.onclick = () => {
+        const np = { id: Date.now(), name: (inp.value || '').trim() || 'খেলোয়াড়', gender: pgender, dress: pdress, created: Date.now(), kills: 0, deaths: 0, playSec: 0, hp: 100, armor: 100 };
+        profiles[0] = np; saveProfiles(); startGame(np);
+      };
+      box.append(mk('div', chosen.icon + ' ' + chosen.name + ' নির্বাচিত হয়েছে', 'slot'), inp, mk('div', 'পোশাকের রং', 'soon'), dr, back, go);
+    });
   }
   if (MAX_PROFILES < 2) box.append(mk('div', '➕ আরও প্রোফাইল — শীঘ্রই আসছে', 'slot soon'));
 }
