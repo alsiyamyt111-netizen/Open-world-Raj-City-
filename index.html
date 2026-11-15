@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Greatest Bangla Rich City Open World</title>
 <link rel="icon" href="branding/icon.jpg">
+<link rel="apple-touch-icon" href="branding/icon.jpg">
 <style>
   :root { --vw: 1vw; --vh: 1vh; }
   html, body { margin: 0; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; touch-action: none; user-select: none; }
@@ -126,6 +127,21 @@ body.playing .ib{display:flex!important}
 #crouch{left:calc(var(--vw)*50 - 160px + 128px);bottom:12px;right:auto;top:auto;width:58px;height:58px;font-size:12px}
 #prone{left:calc(var(--vw)*50 - 160px + 192px);bottom:12px;right:auto;top:auto;width:58px;height:58px;font-size:12px}
 #cam{left:calc(var(--vw)*50 - 160px + 256px);bottom:12px;right:auto;top:auto;width:58px;height:58px;font-size:12px}
+
+/* ---- নতুন লোডিং স্ক্রীন ---- */
+#loading { background: #05080f url('branding/splash.jpg') center/cover no-repeat; justify-content: flex-end; padding: 0 0 4vh; }
+#loading::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 30%; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(5,8,15,0) 0%, rgba(5,8,15,.85) 35%, #05080f 70%); }
+.ld-ui { position: relative; width: min(88vw, 460px); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.ld-row { display: flex; justify-content: space-between; align-items: center; width: 100%; font-size: 15px; font-weight: 700; color: #fff; letter-spacing: 1px; text-shadow: 0 1px 3px #000; }
+#loading #pct { background: none; padding: 0; font-size: 15px; color: #fff; }
+#loading #bar { width: 100%; max-width: none; height: 12px; background: #0a1424; border: 1px solid #3a7bd5; border-radius: 8px; box-shadow: 0 0 10px rgba(60,150,255,.45); }
+#loading #barfill { background: linear-gradient(90deg, #1f5fd0, #3fa9ff 60%, #9fe6ff); box-shadow: 0 0 12px #5cc8ff; border-radius: 8px; }
+.ld-tip { width: 100%; text-align: left; font-size: 13px; color: #fff; text-shadow: 0 1px 3px #000; }
+.ld-tip b { color: #ffd400; }
+.ld-soon { position: absolute; left: 4vw; bottom: 1.2vh; font-size: 13px; color: #d8e2ee; text-shadow: 0 1px 3px #000; }
+.ld-made { position: absolute; right: 3vw; bottom: 1.2vh; background: #0c0c0c; color: #fff; font-size: 13px; font-weight: 700; font-style: italic; padding: 5px 10px; border-radius: 4px; display: flex; align-items: center; gap: 6px; }
+.ld-flag { display: inline-block; width: 20px; height: 13px; background: radial-gradient(circle, #e0001b 0 40%, transparent 41%), #006a4e; border-radius: 2px; }
 </style>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
@@ -133,7 +149,15 @@ body.playing .ib{display:flex!important}
 </head>
 <body>
 
-<div id="loading" class="scr"><div class="t">লোড হচ্ছে...</div><div id="bar"><i id="barfill"></i></div><div id="pct">0%</div></div>
+<div id="loading" class="scr">
+  <div class="ld-ui">
+    <div class="ld-row"><span class="ld-lbl">LOADING...</span><span id="pct">0%</span></div>
+    <div id="bar"><i id="barfill"></i></div>
+    <div class="ld-tip"><b>Gameplay Tip:</b> <span id="tip">শহরের রাস্তায় গাড়ি চালানোর সময় সতর্ক থাকুন।</span></div>
+  </div>
+  <div class="ld-soon">More Updates Coming Soon...</div>
+  <div class="ld-made">Made in Bangladesh <span class="ld-flag"></span></div>
+</div>
 <div id="intro" class="scr">
   <div class="ttl">শহরে প্রবেশ করছেন...</div>
 </div>
@@ -2552,6 +2576,9 @@ gid('storybtn').addEventListener('click', () => { if (storyBusy) finishLine(); e
 async function introSeq() {
   showScr('loading');
   const fill = gid('barfill');
+  const TIPS = ['শহরের রাস্তায় গাড়ি চালানোর সময় সতর্ক থাকুন।', 'পুলিশের নজর এড়াতে গতি কমিয়ে চলুন।', 'ক্যাশ খরচ করার আগে ব্যাংকে জমা রাখুন।', 'মিনি-ম্যাপে লাল বিন্দু মানে শত্রু কাছে আছে।'];
+  gid('tip').textContent = TIPS[Math.floor(Math.random() * TIPS.length)];
+
   let p = 0;
   const pre = preloadAll(); let preFin = false; pre.then(() => { preFin = true; });
   await new Promise(res => {
