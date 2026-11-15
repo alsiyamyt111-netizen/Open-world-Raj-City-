@@ -91,12 +91,22 @@ body.playing .ib{display:flex!important}
 #atk .amm{position:absolute;bottom:5px;font-size:11px;text-shadow:0 1px 2px #000}
 #cardash{position:fixed;left:0;right:0;bottom:0;display:none;z-index:3;pointer-events:none;font-family:sans-serif}
 #cdbar{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(transparent,rgba(8,9,12,.92));transition:height .2s}
-#cardash.cock #cdbar{height:130px}
+#cardash.cock #cdbar{height:150px}
 #cdrow{position:relative;display:flex;justify-content:center;align-items:flex-end;gap:14px;padding-bottom:4px}
 #cdgauge{position:relative;text-align:center}
 #cdgear{position:absolute;left:50%;top:0;transform:translateX(-50%);font-size:12px;font-weight:700;color:#111;background:#2ecc71;border-radius:6px;padding:0 6px;line-height:16px}
-#cdwheel{pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;opacity:.95}
+#cdwheel{opacity:.95}
 #cdwsvg{display:block;filter:drop-shadow(0 2px 3px #000)}
+#cdbig{display:none;position:absolute;left:50%;bottom:-120px;transform:translateX(-50%);overflow:visible;pointer-events:none;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
+#cardash.cock #cdbig{display:block}
+#cardash.cock #cdwheel{display:none}
+#cardash.cock #cdrow{position:absolute;left:50%;bottom:34px;transform:translateX(-50%) scale(.8);transform-origin:50% 100%}
+#cdbtns{position:fixed;right:24px;bottom:14px;display:grid;grid-template-columns:repeat(2,58px);gap:8px;pointer-events:none}
+#cdbtns button{pointer-events:auto;width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.25);color:#fff;border:2px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;touch-action:none;-webkit-tap-highlight-color:transparent}
+#cdbtns button b{font-size:20px;line-height:1;font-style:normal}
+#cdbtns button i{font-size:9px;font-style:normal;margin-top:1px;text-shadow:0 1px 2px #000}
+#cdbtns button.on{background:rgba(240,180,0,.92);color:#222;border-color:#fff}
+body.driving #run,body.driving #crouch,body.driving #prone,body.driving #jump,body.driving #kick,body.driving #reload,body.driving #nade,body.driving #aim,body.driving #atk{display:none!important}
 #mini{left:auto;right:12px;top:10px;width:96px;height:96px}
 #gear{right:118px;top:12px;width:34px;height:34px;font-size:17px}
 #hud{right:118px;top:52px}
@@ -399,7 +409,8 @@ body.playing .ib{display:flex!important}
 <button id="cam" class="act ib" data-i="cam" data-l="Camera"></button>
 <div id="wheel"></div>
 <div id="eye"></div>
-<div id="cardash"><div id="cdbar"></div><div id="cdrow">
+<div id="cardash"><div id="cdbar"></div>
+<div id="cdrow">
   <div id="cdgauge"><svg viewBox="0 0 100 78" width="118" height="92">
     <path d="M10 52 A40 40 0 0 1 90 52" fill="none" stroke="#2b2f36" stroke-width="7" stroke-linecap="round"/>
     <path id="cdarc" d="M10 52 A40 40 0 0 1 90 52" fill="none" stroke="#2ecc71" stroke-width="7" stroke-linecap="round" stroke-dasharray="125.66" stroke-dashoffset="125.66"/>
@@ -408,7 +419,7 @@ body.playing .ib{display:flex!important}
     <circle cx="50" cy="52" r="4" fill="#ddd"/>
     <text id="cdnum" x="50" y="70" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="sans-serif">0</text>
     <text x="50" y="77" text-anchor="middle" font-size="5.5" fill="#9aa3ad" font-family="sans-serif">km/h</text>
-  </svg><div id="cdgear">N</div></div>
+  </svg><div id="cdgear">D</div></div>
   <div id="cdwheel"><svg id="cdwsvg" viewBox="0 0 100 100" width="92" height="92">
     <circle cx="50" cy="50" r="42" fill="none" stroke="#15171b" stroke-width="11"/>
     <circle cx="50" cy="50" r="42" fill="none" stroke="#3a3f47" stroke-width="3"/>
@@ -416,7 +427,36 @@ body.playing .ib{display:flex!important}
     <circle cx="50" cy="50" r="11" fill="#23262b" stroke="#6b7480" stroke-width="2"/>
     <rect x="46" y="4" width="8" height="12" rx="2" fill="#e74c3c"/>
   </svg></div>
-</div></div>
+</div>
+<svg id="cdbig" viewBox="0 0 260 260" width="260" height="260">
+  <line id="armL" stroke="#3498db" stroke-width="26" stroke-linecap="round"/><line id="armR" stroke="#3498db" stroke-width="26" stroke-linecap="round"/>
+  <line id="cuffL" stroke="#d9a074" stroke-width="17" stroke-linecap="round"/><line id="cuffR" stroke="#d9a074" stroke-width="17" stroke-linecap="round"/>
+  <g id="cdbrot">
+    <circle cx="130" cy="130" r="112" fill="none" stroke="#16181c" stroke-width="16"/>
+    <circle cx="130" cy="130" r="119" fill="none" stroke="#454b54" stroke-width="2"/>
+    <circle cx="130" cy="130" r="105" fill="none" stroke="#2b2f36" stroke-width="2"/>
+    <path d="M24 130 H236 M130 130 V236" stroke="#1c1f24" stroke-width="16" stroke-linecap="round"/>
+    <circle cx="130" cy="130" r="27" fill="#23262b" stroke="#6b7480" stroke-width="3"/>
+    <rect x="126" y="9" width="8" height="14" rx="2" fill="#e74c3c"/>
+    <g transform="translate(130 130) rotate(-52) translate(0 -112)">
+      <rect x="-17" y="-13" width="34" height="30" rx="13" fill="#d9a074" stroke="#a9744a" stroke-width="1.5"/>
+      <path d="M-6 -12V-2M0 -12V-2M6 -12V-2" stroke="#a9744a" stroke-width="1.2" fill="none"/>
+      <ellipse cx="14" cy="12" rx="9" ry="5.5" fill="#d9a074" stroke="#a9744a" stroke-width="1.5" transform="rotate(-25 14 12)"/>
+    </g>
+    <g transform="translate(130 130) rotate(52) translate(0 -112) scale(-1 1)">
+      <rect x="-17" y="-13" width="34" height="30" rx="13" fill="#d9a074" stroke="#a9744a" stroke-width="1.5"/>
+      <path d="M-6 -12V-2M0 -12V-2M6 -12V-2" stroke="#a9744a" stroke-width="1.2" fill="none"/>
+      <ellipse cx="14" cy="12" rx="9" ry="5.5" fill="#d9a074" stroke="#a9744a" stroke-width="1.5" transform="rotate(-25 14 12)"/>
+    </g>
+  </g>
+</svg>
+<div id="cdbtns">
+  <button id="cb-light"><b>💡</b><i>Light · L</i></button>
+  <button id="cb-gear"><b>D</b><i>Gear · R</i></button>
+  <button id="cb-view"><b>👁</b><i>View · V</i></button>
+  <button id="cb-horn"><b>📯</b><i>Horn · H</i></button>
+</div>
+</div>
 <div id="crosshair"></div><div id="flash"></div><div id="toast"></div><div id="panel"></div>
 <button id="gear" class="act">⚙</button>
 <div id="editbar"><div id="edtxt">Drag to move · tap to select</div><div class="row"><label>Size <input id="szr" type="range" min="0.5" max="2" step="0.05" value="1"></label><label>Opacity <input id="opr" type="range" min="0.3" max="1" step="0.05" value="1"></label></div><div class="row"><button id="edflip">⇅ Flip</button><button id="edreset" style="background:#e67e22;color:#fff">Reset</button><button id="edsave" style="background:#2ecc71;color:#fff">✔ Save</button></div></div>
@@ -1004,6 +1044,7 @@ function buildStreet() {
 
 // ---------- ট্রাফিক (বাঁ দিকে চলে) ----------
 const cars = [];
+const carBeam = new THREE.SpotLight(0xfff0d0, 0, 55, 0.5, 0.6, 1.6);   // চালকের গাড়ির হেডলাইটের আলো (একটাই, চালু থাকলে গাড়ির সাথে সরে)
 const nightMats = {};   // রাতে জ্বলা/দিনে নেভা উপকরণ (বাতির গোলক, আলোর বৃত্ত, Carর হেডলাইট)
 function buildCars() {
   // ছোট সাহায্যকারী: একই উপকরণের অনেক আকৃতি জুড়ে একটি জিওমেট্রি বানায় (যাতে গাড়ি প্রতি মাত্র ৬টি মেশ লাগে)
@@ -1033,12 +1074,24 @@ function buildCars() {
     const w = [[-xs, zf, wf], [xs, zf, wf], [-xs, zr, wr], [xs, zr, wr]];
     return { tyres: w.map(([x, z, wd]) => [cyl(r, wd, 16), x, r, z]), rims: w.map(([x, z, wd]) => [cyl(r * 0.58, wd + 0.02, 10), x, r, z]) };
   };
-  const mk = (paint, glassL, dark, chromeL, head, tail) => ({ paint: merge(paint), glass: merge(glassL), dark: merge(dark), chrome: merge(chromeL), head: merge(head), tail: merge(tail) });
+  const mk = (paint, glassL, dark, chromeL, head, tail, acc) => ({ paint: merge(paint), glass: merge(glassL), dark: merge(dark), chrome: merge(chromeL), head: merge(head), tail: merge(tail), acc: acc && acc.length ? merge(acc) : null });
+  // স্পোক-ওয়ালা অ্যালয় হুইল + ব্রেক ক্যালিপার (ছবির গাড়ির মতো): টায়ার+কালো ডিস্ক / ৫টা স্পোক / হলুদ ক্যালিপার
+  const wheelSet2 = (xs, zf, zr, r, wf, wr) => {
+    const w = [[-xs, zf, wf], [xs, zf, wf], [-xs, zr, wr], [xs, zr, wr]], tyres = [], rims = [], calipers = [];
+    for (const [x, z, wd] of w) {
+      tyres.push([cyl(r, wd, 20), x, r, z], [cyl(r * 0.8, wd + 0.012, 14), x, r, z]);
+      for (let k = 0; k < 5; k++) { const g = new THREE.BoxGeometry(wd + 0.03, r * 0.78, r * 0.17); g.translate(0, r * 0.39, 0); g.rotateX(k * Math.PI * 2 / 5); rims.push([g, x, r, z]); }
+      rims.push([cyl(r * 0.2, wd + 0.034, 10), x, r, z]);
+      calipers.push([box(0.035, r * 0.5, r * 0.55), x + Math.sign(x) * (wd / 2 + 0.006), r + r * 0.28, z + r * 0.12]);
+    }
+    return { tyres, rims, calipers };
+  };
+  const disc = (r, d) => { const g = new THREE.CylinderGeometry(r, r, d, 20); g.rotateX(Math.PI / 2); return g; };   // সামনে মুখ করা গোল বাতি
   // ---- ৪ ধরনের গাড়ির ডিজাইন (সামনে = +z). কোনো ব্র্যান্ডের লোগো নেই — শুধু আকৃতি অনুপ্রাণিত ----
   const STYLES = [];
   { // ক্লাসিক সেডান (আগের গাড়ি)
     const wh = wheelSet(0.92, 1.3, -1.3, 0.38, 0.3, 0.3);
-    STYLES.push({ name: 'Classic sedan', n: 8, colors: [0xd63031, 0x0984e3, 0xfdcb6e, 0xdfe6e9, 0x2d3436, 0x00b894, 0xe17055], rough: 0.28, metal: 0.55,
+    STYLES.push({ name: 'Classic sedan', n: 4, colors: [0xd63031, 0x0984e3, 0xfdcb6e, 0xdfe6e9, 0x2d3436, 0x00b894, 0xe17055], rough: 0.28, metal: 0.55,
       g: mk([[ext([[-1.95, 0.42], [1.95, 0.42], [1.95, 0.8], [1.4, 0.93], [0.7, 0.97], [-1.0, 0.97], [-1.8, 0.93], [-1.95, 0.82]], 1.84, 0.14)], [box(1.6, 0.07, 1.14), 0, 1.52, 0], [box(0.14, 0.1, 0.22), -1.0, 1.05, 0.6], [box(0.14, 0.1, 0.22), 1.0, 1.05, 0.6]],
         [[ext([[-1.05, 0.95], [-0.55, 1.46], [0.55, 1.46], [1.05, 0.95]], 1.6, 0.06)], [box(1.64, 0.5, 0.07), 0, 1.22, 0.05]],
         [...wh.tyres, [box(1.86, 0.2, 0.14), 0, 0.4, 2.02], [box(1.86, 0.2, 0.14), 0, 0.4, -2.02], [box(0.9, 0.2, 0.06), 0, 0.64, 2.1]],
@@ -1048,7 +1101,7 @@ function buildCars() {
   }
   { // সুপারকার (Lamborghini-স্টাইল): নিচু, চওড়া, কীলকের মতো সামনে ঢালু, বড় সাইড-ইনটেক
     const wh = wheelSet(1.0, 1.4, -1.4, 0.37, 0.3, 0.4);
-    STYLES.push({ name: 'Supercar (Lambo-style)', n: 5, colors: [0xf1c40f, 0xff6b00, 0x8bdc00, 0x6c2bd9, 0xe10600], rough: 0.18, metal: 0.65,
+    STYLES.push({ name: 'Supercar (Lambo-style)', n: 4, colors: [0xf1c40f, 0xff6b00, 0x8bdc00, 0x6c2bd9, 0xe10600], rough: 0.18, metal: 0.65,
       g: mk([[ext([[-2.25, 0.26], [2.25, 0.26], [2.25, 0.5], [1.5, 0.6], [0.7, 0.75], [-0.3, 0.88], [-1.7, 0.9], [-2.25, 0.78]], 2.0, 0.1)], [box(1.0, 0.05, 0.75), 0, 1.14, -0.25], [box(0.9, 0.05, 0.9), 0, 0.93, -1.45]],
         [[ext([[-1.35, 0.9], [-0.6, 1.1], [0.1, 1.12], [1.05, 0.72]], 1.55, 0.05)]],
         [...wh.tyres, [box(2.05, 0.1, 0.3), 0, 0.2, 2.2], [box(2.0, 0.16, 0.2), 0, 0.28, -2.25], [box(0.06, 0.22, 0.7), -1.03, 0.62, -0.95], [box(0.06, 0.22, 0.7), 1.03, 0.62, -0.95], [box(0.9, 0.12, 0.05), 0, 0.48, 2.27]],
@@ -1058,7 +1111,7 @@ function buildCars() {
   }
   { // ইলেকট্রিক সেডান (Tesla-স্টাইল): মসৃণ, কাচের ছাদ, লম্বা ঢালু পেছন, সরু বাতি
     const wh = wheelSet(0.96, 1.42, -1.42, 0.36, 0.28, 0.28);
-    STYLES.push({ name: 'Electric sedan (Tesla-style)', n: 5, colors: [0xf5f6fa, 0xb71c1c, 0xb8bec6, 0x1e5fd6, 0x16181c], rough: 0.22, metal: 0.5,
+    STYLES.push({ name: 'Electric sedan (Tesla-style)', n: 4, colors: [0xf5f6fa, 0xb71c1c, 0xb8bec6, 0x1e5fd6, 0x16181c], rough: 0.22, metal: 0.5,
       g: mk([[ext([[-2.35, 0.38], [2.35, 0.38], [2.35, 0.6], [1.8, 0.78], [1.0, 0.86], [-1.5, 0.9], [-2.35, 0.82]], 1.9, 0.16)]],
         [[ext([[-1.95, 0.88], [-0.9, 1.38], [0.35, 1.42], [1.15, 0.86]], 1.62, 0.08)]],
         [...wh.tyres, [box(1.7, 0.14, 0.1), 0, 0.42, 2.34], [box(1.7, 0.14, 0.1), 0, 0.42, -2.36]],
@@ -1068,7 +1121,7 @@ function buildCars() {
   }
   { // স্পোর্টস কুপে (Supra-স্টাইল): বাবল ক্যাবিন, বনেটে স্কুপ, পিছনে বড় উইং
     const wh = wheelSet(0.94, 1.35, -1.3, 0.38, 0.3, 0.32);
-    STYLES.push({ name: 'Sports coupe (Supra-style)', n: 4, colors: [0xff6a00, 0xf0f0f0, 0xc0151b, 0x2b6fff, 0x222428], rough: 0.2, metal: 0.6,
+    STYLES.push({ name: 'Sports coupe (Supra-style)', n: 3, colors: [0xff6a00, 0xf0f0f0, 0xc0151b, 0x2b6fff, 0x222428], rough: 0.2, metal: 0.6,
       g: mk([[ext([[-2.15, 0.4], [2.15, 0.4], [2.15, 0.68], [1.55, 0.86], [0.85, 0.92], [-1.4, 0.98], [-2.15, 0.92]], 1.86, 0.13)], [box(0.5, 0.06, 0.5), 0, 0.95, 1.2], [box(1.7, 0.05, 0.34), 0, 1.22, -2.0], [box(0.06, 0.25, 0.18), -0.6, 1.07, -2.0], [box(0.06, 0.25, 0.18), 0.6, 1.07, -2.0]],
         [[ext([[-1.15, 0.96], [-0.4, 1.4], [0.4, 1.38], [0.95, 0.9]], 1.58, 0.07)]],
         [...wh.tyres, [box(1.86, 0.18, 0.14), 0, 0.42, 2.12], [box(1.86, 0.18, 0.14), 0, 0.42, -2.14], [box(0.9, 0.16, 0.06), 0, 0.62, 2.18], [box(0.06, 0.16, 0.5), -0.93, 0.7, 1.55], [box(0.06, 0.16, 0.5), 0.93, 0.7, 1.55]],
@@ -1077,11 +1130,43 @@ function buildCars() {
         [[box(0.46, 0.12, 0.06), -0.64, 0.84, -2.17], [box(0.46, 0.12, 0.06), 0.64, 0.84, -2.17]]) });
   }
 
+  { // 911-স্টাইল কুপে (লাল ছবির মতো): উঁচু গোল ফেন্ডার, গোল হেডলাইট, ঢালু ফাস্টব্যাক ছাদ, গ্রাফাইট স্পোক হুইল, হলুদ ক্যালিপার
+    const wh = wheelSet2(0.97, 1.38, -1.4, 0.4, 0.3, 0.36);
+    const lights = [-0.64, 0.64];
+    STYLES.push({ name: 'Sports coupe (911-style)', n: 4, colors: [0xb0122a, 0xf2f2f2, 0x1b1d22, 0xaab0b8, 0x1f4fb8], rough: 0.14, metal: 0.7, rim: 0x6c7179, accent: 0xf5c518,
+      g: mk([[ext([[-2.2, 0.4], [2.15, 0.4], [2.2, 0.6], [1.6, 0.74], [1.0, 0.8], [0.7, 0.9], [-1.4, 0.94], [-2.2, 0.86]], 1.9, 0.2)],
+          [box(0.5, 0.16, 1.0), -0.66, 0.84, 1.55], [box(0.5, 0.16, 1.0), 0.66, 0.84, 1.55],               // সামনের উঁচু ফেন্ডার
+          [ext([[-2.15, 0.9], [-1.6, 1.12], [-0.95, 1.3], [-0.9, 0.9]], 1.55, 0.1)],                         // ঢালু পেছনের ছাদ
+          [box(1.4, 0.05, 0.75), 0, 1.385, -0.12], [box(0.14, 0.1, 0.22), -0.98, 1.0, 0.55], [box(0.14, 0.1, 0.22), 0.98, 1.0, 0.55]],
+        [[ext([[-1.0, 0.9], [-0.45, 1.34], [0.28, 1.36], [0.88, 0.9]], 1.56, 0.06)]],
+        [...wh.tyres, [box(1.7, 0.1, 0.36), 0, 0.2, 2.1], [box(0.8, 0.16, 0.05), 0, 0.46, 2.22], [box(0.12, 0.16, 0.05), -0.3, 0.46, 2.23], [box(0.12, 0.16, 0.05), 0.3, 0.46, 2.23], [box(1.8, 0.16, 0.12), 0, 0.42, -2.18]],
+        [...wh.rims],
+        lights.map(x => [disc(0.14, 0.07), x, 0.86, 2.08]),
+        [[box(1.5, 0.07, 0.06), 0, 0.9, -2.2]],
+        wh.calipers) });
+  }
+  { // GT-কুপে (AMG GT-স্টাইল, সাদা ছবির মতো): লম্বা বনেট, বড় উল্লম্ব-ফলার গ্রিল, সরু ধারালো বাতি, পেছনের দিকে ক্যাবিন
+    const wh = wheelSet2(1.0, 1.42, -1.4, 0.41, 0.31, 0.38);
+    const slats = []; for (let i = -4; i <= 4; i++) slats.push([box(0.03, 0.26, 0.05), i * 0.1, 0.6, 2.35]);
+    STYLES.push({ name: 'GT coupe (AMG GT-style)', n: 3, colors: [0xe9edf2, 0x2a2d33, 0xb7bcc4, 0x7f93a6, 0xc0392b], rough: 0.16, metal: 0.65, rim: 0x3d424a, accent: 0xf5a31b,
+      g: mk([[ext([[-2.3, 0.4], [2.3, 0.4], [2.3, 0.62], [1.9, 0.78], [0.9, 0.9], [-0.2, 0.96], [-1.8, 0.98], [-2.3, 0.9]], 1.98, 0.16)],
+          [box(1.4, 0.05, 0.8), 0, 1.345, -0.38], [box(1.5, 0.05, 0.22), 0, 1.0, -2.25], [box(0.14, 0.1, 0.22), -1.02, 1.05, 0.2], [box(0.14, 0.1, 0.22), 1.02, 1.05, 0.2]],
+        [[ext([[-1.6, 0.97], [-0.9, 1.3], [-0.1, 1.34], [0.65, 0.93]], 1.6, 0.06)]],
+        [...wh.tyres, [box(1.95, 0.14, 0.36), 0, 0.2, 2.2], [box(1.0, 0.3, 0.05), 0, 0.6, 2.33], [box(0.36, 0.16, 0.05), -0.78, 0.48, 2.3], [box(0.36, 0.16, 0.05), 0.78, 0.48, 2.3], [box(0.06, 0.2, 0.6), -1.0, 0.72, 0.95], [box(0.06, 0.2, 0.6), 1.0, 0.72, 0.95]],
+        [...wh.rims, ...slats],
+        [[box(0.62, 0.07, 0.06), -0.68, 0.78, 2.26], [box(0.62, 0.07, 0.06), 0.68, 0.78, 2.26]],
+        [[box(1.5, 0.07, 0.06), 0, 0.9, -2.31]],
+        wh.calipers) });
+  }
+
   const glass = new THREE.MeshStandardMaterial({ color: 0x1d2a38, roughness: 0.1, metalness: 0.7 });
   const tyre = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.9 });
   const chrome = new THREE.MeshStandardMaterial({ color: 0xcfd4d8, roughness: 0.25, metalness: 0.9 });
   const hl = new THREE.MeshBasicMaterial({ color: 0xfff2b0 }), tl = new THREE.MeshBasicMaterial({ color: 0xff2a2a });
   nightMats.hl = hl; nightMats.tl = tl;
+  nightMats.hlOff = new THREE.MeshBasicMaterial({ color: 0x8c8878 }); nightMats.tlOff = new THREE.MeshBasicMaterial({ color: 0x4a1212 });
+  nightMats.tlDim = new THREE.MeshBasicMaterial({ color: 0xa81818 }); nightMats.tlRev = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  scene.add(carBeam, carBeam.target);
   const plan = []; for (const st of STYLES) for (let k = 0; k < st.n; k++) plan.push(st);
   for (let i = plan.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [plan[i], plan[j]] = [plan[j], plan[i]]; }   // গাড়ির ধরন এলোমেলো
   for (let i = 0; i < plan.length; i++) {
@@ -1089,9 +1174,12 @@ function buildCars() {
     const mat = new THREE.MeshStandardMaterial({ color: pick(st.colors), roughness: st.rough, metalness: st.metal });
     const body = new THREE.Mesh(st.g.paint, mat); body.castShadow = true;
     const cab = new THREE.Mesh(st.g.glass, glass); cab.castShadow = true;
-    g.add(body, cab, new THREE.Mesh(st.g.dark, tyre), new THREE.Mesh(st.g.chrome, chrome), new THREE.Mesh(st.g.head, hl), new THREE.Mesh(st.g.tail, tl));
+    const headM = new THREE.Mesh(st.g.head, hl), tailM = new THREE.Mesh(st.g.tail, tl);
+    if (st.rim && !st.rimMat) st.rimMat = new THREE.MeshStandardMaterial({ color: st.rim, roughness: 0.35, metalness: 0.85 });
+    g.add(body, cab, new THREE.Mesh(st.g.dark, tyre), new THREE.Mesh(st.g.chrome, st.rimMat || chrome), headM, tailM);
+    if (st.g.acc) { if (!st.accMat) st.accMat = new THREE.MeshStandardMaterial({ color: st.accent || 0xf5c518, roughness: 0.4, metalness: 0.3 }); g.add(new THREE.Mesh(st.g.acc, st.accMat)); }
     scene.add(g);
-    cars.push({ g, name: st.name, axis: Math.random() < 0.5 ? 'x' : 'z', p: (Math.floor(Math.random() * 9) - 4) * SPACING, dir: Math.random() < 0.5 ? 1 : -1, pos: -170 + Math.random() * 340, speed: 0, vmax: 6 + Math.random() * 4 });
+    cars.push({ g, headM, tailM, name: st.name, axis: Math.random() < 0.5 ? 'x' : 'z', p: (Math.floor(Math.random() * 9) - 4) * SPACING, dir: Math.random() < 0.5 ? 1 : -1, pos: -170 + Math.random() * 340, speed: 0, vmax: 6 + Math.random() * 4 });
   }
 }
 let lampTick = 0;
@@ -1341,6 +1429,18 @@ function playStep(run) {
 const keys = new Set();
 addEventListener('keydown', e => {
   keys.add(e.code);
+  // কিবোর্ড (পিসি): E = গাড়িতে ওঠা/নামা; গাড়িতে থাকলে L = লাইট, R = গিয়ার D/R, V = ভিউ, H = হর্ন, Space = ব্রেক
+  if (e.code === 'KeyE' && started && !e.repeat) { toggleVeh(); return; }
+  if (drv) {
+    if (!e.repeat) {
+      if (e.code === 'KeyL') setLights(!drv.lights);
+      else if (e.code === 'KeyR') setGear(drv.gear === 'D' ? 'R' : 'D');
+      else if (e.code === 'KeyV') setCock(!drvCock);
+      else if (e.code === 'KeyH') sfx('horn');
+    }
+    if (e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
+    return;
+  }
   if (e.code === 'Space') doJump();
   if (e.code === 'KeyC') toggleStance('crouch');
   if (e.code === 'KeyZ') toggleStance('prone');
@@ -1893,6 +1993,14 @@ function sfx(kind) {
     for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
     const s = ac.createBufferSource(), g = ac.createGain(); s.buffer = buf; g.gain.value = 0.25;
     s.connect(g).connect(ac.destination); s.start(t);
+  } else if (kind === 'horn') {
+    const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.14, t + 0.03); g.gain.setValueAtTime(0.14, t + 0.38); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+    for (const f of [415, 523]) { const o = ac.createOscillator(); o.type = 'square'; o.frequency.value = f; o.connect(g); o.start(t); o.stop(t + 0.52); }
+    g.connect(ac.destination);
+  } else if (kind === 'beep') {
+    const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.value = 1000;
+    g.gain.setValueAtTime(0.12, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    o.connect(g).connect(ac.destination); o.start(t); o.stop(t + 0.11);
   } else {
     const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine';
     o.frequency.setValueAtTime(kind === 'kick' ? 110 : 150, t); o.frequency.exponentialRampToValueAtTime(50, t + 0.12);
@@ -2918,33 +3026,82 @@ function shot() {
   const f = document.getElementById('flash'); f.style.transition = 'none'; f.style.opacity = 0.9; requestAnimationFrame(() => { f.style.transition = 'opacity .35s'; f.style.opacity = 0; });
   sfx('kick'); toast('📸 Photo taken');
 }
-const dashEl = document.getElementById('cardash'), cdArc = document.getElementById('cdarc'), cdNeedle = document.getElementById('cdneedle'), cdNum = document.getElementById('cdnum'), cdGear = document.getElementById('cdgear'), cdW = document.getElementById('cdwsvg');
-let drvCock = false, wheelAng = 0, cdLast = '';
-{ const tk = document.getElementById('cdticks'); let h = '';
+const $id = id => document.getElementById(id);
+const dashEl = $id('cardash'), cdArc = $id('cdarc'), cdNeedle = $id('cdneedle'), cdNum = $id('cdnum'), cdGear = $id('cdgear'), cdW = $id('cdwsvg'), cdBrot = $id('cdbrot');
+const armL = $id('armL'), armR = $id('armR'), cuffL = $id('cuffL'), cuffR = $id('cuffR');
+const bLight = $id('cb-light'), bGear = $id('cb-gear'), bView = $id('cb-view'), bHorn = $id('cb-horn');
+let drvCock = false, wheelAng = 0, cdLast = '', drvX = 0, drvY = 0;
+{ const tk = $id('cdticks'); let h = '';
   for (let i = 0; i <= 6; i++) { const a = (-90 + i * 30) * Math.PI / 180, x1 = 50 + Math.sin(a) * 33, y1 = 52 - Math.cos(a) * 33, x2 = 50 + Math.sin(a) * 28, y2 = 52 - Math.cos(a) * 28; h += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '"/>'; }
   tk.innerHTML = h; }
 function setCock(v) {
   if (!drv) return; drvCock = v; drv.c.g.visible = !v; dashEl.classList.toggle('cock', v);
+  bView.classList.toggle('on', v); cdLast = '';
   toast(v ? '👁 Driver view' : '🚗 Outside view');
 }
-bindTap(document.getElementById('cdwheel'), () => setCock(!drvCock));
-function dashHide() { dashEl.style.display = 'none'; dashEl.classList.remove('cock'); drvCock = false; }
+// হেডলাইট/টেইললাইট: চালকের গাড়ির আলাদা উপকরণ (দিনে বন্ধ, রাতে চালু — বাটনে বদলানো যায়)
+function applyCarLights() {
+  const c = drv.c, M = nightMats;
+  const hm = drv.lights ? M.hl : M.hlOff;
+  const tm = drv.gear === 'R' ? M.tlRev : drv.brk ? M.tl : drv.lights ? M.tlDim : M.tlOff;
+  if (c.headM && c.headM.material !== hm) c.headM.material = hm;
+  if (c.tailM && c.tailM.material !== tm) c.tailM.material = tm;
+  carBeam.intensity = drv.lights ? 380 : 0;
+}
+function setLights(v) {
+  if (!drv) return; drv.lights = v; drv.c.lights = v; bLight.classList.toggle('on', v);
+  applyCarLights(); toast(v ? '💡 Headlights ON' : '💡 Headlights OFF');
+}
+function setGear(g) {
+  if (!drv || drv.gear === g) return;
+  if (Math.abs(drv.sp) > 2.5) { toast('Stop the car first'); return; }
+  drv.gear = g; bGear.firstChild.textContent = g; bGear.classList.toggle('on', g === 'R'); cdLast = '';
+  toast(g === 'R' ? '🔙 Reverse: push joystick up to back up' : '⬆ Drive: push joystick up to go, down to brake');
+  applyCarLights();
+}
+bindTap(bLight, () => setLights(!(drv && drv.lights)));
+bindTap(bGear, () => { if (drv) setGear(drv.gear === 'D' ? 'R' : 'D'); });
+bindTap(bView, () => setCock(!drvCock));
+bindTap(bHorn, () => { if (drv) sfx('horn'); });
+function dashShow() {
+  const sl = (activeProfile && activeProfile.dress) || '#3498db';
+  armL.setAttribute('stroke', sl); armR.setAttribute('stroke', sl);
+  dashEl.style.display = 'block'; dashEl.classList.remove('cock'); drvCock = false; cdLast = '';
+  document.body.classList.add('driving');
+  bLight.classList.toggle('on', !!drv.lights); bView.classList.remove('on'); bGear.classList.remove('on'); bGear.firstChild.textContent = 'D';
+}
+function dashHide() {
+  dashEl.style.display = 'none'; dashEl.classList.remove('cock'); drvCock = false;
+  document.body.classList.remove('driving'); carBeam.intensity = 0;
+}
+function setArm(arm, cuff, sx, sy, hx, hy) {
+  const px = hx + (sx - hx) * 0.3, py = hy + (sy - hy) * 0.3;
+  arm.setAttribute('x1', sx); arm.setAttribute('y1', sy); arm.setAttribute('x2', px.toFixed(1)); arm.setAttribute('y2', py.toFixed(1));
+  cuff.setAttribute('x1', px.toFixed(1)); cuff.setAttribute('y1', py.toFixed(1)); cuff.setAttribute('x2', hx.toFixed(1)); cuff.setAttribute('y2', hy.toFixed(1));
+}
 function dashUpdate(dt) {
   const kmh = Math.abs(drv.sp) * 5, fr = Math.min(1, kmh / 120);
-  wheelAng += (jx * 110 - wheelAng) * (1 - Math.exp(-dt * 10));
-  const key = Math.round(kmh) + '|' + Math.round(wheelAng) + '|' + (drv.sp > 0.3 ? 'D' : drv.sp < -0.3 ? 'R' : 'N');
-  if (key === cdLast) return; cdLast = key;
-  cdW.style.transform = 'rotate(' + wheelAng.toFixed(1) + 'deg)';
-  cdArc.setAttribute('stroke-dashoffset', (125.66 * (1 - fr)).toFixed(1));
-  cdArc.setAttribute('stroke', fr < 0.6 ? '#2ecc71' : fr < 0.85 ? '#f1c40f' : '#e74c3c');
-  cdNeedle.setAttribute('transform', 'rotate(' + (-90 + fr * 180).toFixed(1) + ' 50 52)');
-  cdNum.textContent = Math.round(kmh);
-  const g = key.slice(-1); cdGear.textContent = g; cdGear.style.background = g === 'R' ? '#e74c3c' : g === 'D' ? '#2ecc71' : '#9aa3ad';
+  wheelAng += (drvX * 110 - wheelAng) * (1 - Math.exp(-dt * 10));
+  const key = Math.round(kmh) + '|' + drv.gear;
+  if (key !== cdLast) {
+    cdLast = key;
+    cdArc.setAttribute('stroke-dashoffset', (125.66 * (1 - fr)).toFixed(1));
+    cdArc.setAttribute('stroke', fr < 0.6 ? '#2ecc71' : fr < 0.85 ? '#f1c40f' : '#e74c3c');
+    cdNeedle.setAttribute('transform', 'rotate(' + (-90 + fr * 180).toFixed(1) + ' 50 52)');
+    cdNum.textContent = Math.round(kmh);
+    cdGear.textContent = drv.gear; cdGear.style.background = drv.gear === 'R' ? '#e74c3c' : '#2ecc71';
+  }
+  if (drvCock) {   // চালকের দৃশ্য: স্টিয়ারিং ও দুই হাত একসাথে ঘোরে, বাহু কাঁধ থেকে টান খায়
+    cdBrot.setAttribute('transform', 'rotate(' + wheelAng.toFixed(1) + ' 130 130)');
+    const R = 112, aL = (-52 + wheelAng) * Math.PI / 180, aR = (52 + wheelAng) * Math.PI / 180;
+    setArm(armL, cuffL, 28, 340, 130 + R * Math.sin(aL), 130 - R * Math.cos(aL));
+    setArm(armR, cuffR, 232, 340, 130 + R * Math.sin(aR), 130 - R * Math.cos(aR));
+  } else cdW.style.transform = 'rotate(' + wheelAng.toFixed(1) + 'deg)';
 }
 function toggleVeh() {
   if (pDead) return;
   if (drv) {
-    const c = drv.c, y = c.g.rotation.y; c.g.visible = true; dashHide(); drv = null; parkedCars.push(c);
+    const c = drv.c, y = c.g.rotation.y; c.g.visible = true; c.lights = drv.lights; dashHide(); drv = null; parkedCars.push(c);
     let x = c.g.position.x + Math.cos(y) * 2.8, z = c.g.position.z - Math.sin(y) * 2.8;
     if (blocked(x, z)) { x = c.g.position.x - Math.cos(y) * 2.8; z = c.g.position.z + Math.sin(y) * 2.8; }
     player.x = x; player.z = z; player.y = 0; player.yaw = y; camYaw = y; char.group.visible = true;
@@ -2955,17 +3112,31 @@ function toggleVeh() {
   if (!best) { toast('No car nearby'); return; }
   const i = cars.indexOf(best); if (i >= 0) cars.splice(i, 1); else parkedCars.splice(parkedCars.indexOf(best), 1);
   stance = 'stand'; setRun(false); aimOn = false; document.getElementById('aim').classList.remove('on'); wheelEl.style.display = 'none';
-  drv = { c: best, sp: 0 }; char.group.visible = false; document.getElementById('veh').classList.add('on'); dashEl.style.display = 'block'; drvCock = false; dashEl.classList.remove('cock'); cdLast = ''; toast('🚗 ' + (best.name || 'Car') + ' · tap wheel: driver view');
+  drv = { c: best, sp: 0, gear: 'D', brk: false, beepT: 0, lights: best.lights !== undefined ? best.lights : nightK > 0.5 };
+  char.group.visible = false; document.getElementById('veh').classList.add('on');
+  dashShow(); applyCarLights();
+  toast('🚗 ' + (best.name || 'Car') + ' · WASD drive · Space brake · E exit');
 }
 bindTap(document.getElementById('veh'), toggleVeh);
 function driveStep(dt) {
   const c = drv.c;
-  drv.sp += ((jy > 0 ? jy * 15 : jy * 6) - drv.sp) * (1 - Math.exp(-dt * (Math.abs(jy) > 0.1 ? 1.4 : 2.5)));
-  c.g.rotation.y -= jx * dt * 1.9 * Math.max(-1, Math.min(1, drv.sp / 6));
+  // জয়স্টিক + কিবোর্ড (WASD / তীর চিহ্ন) মিলিয়ে ইনপুট; Space = ব্রেক
+  const kx = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
+  const ky = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0);
+  drvX = Math.max(-1, Math.min(1, kx + jx)); drvY = keys.has('Space') ? -1 : Math.max(-1, Math.min(1, ky + jy));
+  // গিয়ার D: জয়স্টিক ওপরে = চলা, নিচে = ব্রেক. গিয়ার R: ওপরে = পেছনে যাওয়া, নিচে = ব্রেক
+  const rev = drv.gear === 'R', braking = drvY < -0.1;
+  const target = drvY > 0.05 ? (rev ? -drvY * 6 : drvY * 15) : 0;
+  drv.sp += (target - drv.sp) * (1 - Math.exp(-dt * (braking ? 4.5 : Math.abs(drvY) > 0.1 ? 1.4 : 2.5)));
+  drv.brk = braking && Math.abs(drv.sp) > 0.5;
+  if (rev && drv.sp < -0.3) { drv.beepT -= dt; if (drv.beepT <= 0) { drv.beepT = 0.7; sfx('beep'); } } else drv.beepT = 0;
+  c.g.rotation.y -= drvX * dt * 1.9 * Math.max(-1, Math.min(1, drv.sp / 6));
   const y = c.g.rotation.y, nx = c.g.position.x + Math.sin(y) * drv.sp * dt, nz = c.g.position.z + Math.cos(y) * drv.sp * dt;
   if (blocked(nx, nz) || Math.abs(nx) > 195 || Math.abs(nz) > 195) drv.sp *= -0.3; else { c.g.position.x = nx; c.g.position.z = nz; }
   if (Math.abs(drv.sp) > 5) for (const n of npcs) { if (n.dead) continue; const dx = n.g.position.x - c.g.position.x, dz = n.g.position.z - c.g.position.z; if (Math.hypot(dx, dz) < 2.2) hurtNPC(n, 45, dx, dz, 10); }
   player.x = c.g.position.x; player.z = c.g.position.z; player.y = 0; player.yaw = y;
+  applyCarLights();
+  if (drv.lights) { const fx = Math.sin(y), fz = Math.cos(y); carBeam.position.set(c.g.position.x + fx * 2, 0.8, c.g.position.z + fz * 2); carBeam.target.position.set(c.g.position.x + fx * 24, 0, c.g.position.z + fz * 24); }
   dashUpdate(dt);
   if (drvCock) {   // চালকের আসনের দৃশ্য: গাড়ির ভেতর থেকে সামনে তাকানো
     camera.position.set(player.x + Math.sin(y) * 0.5, 1.25, player.z + Math.cos(y) * 0.5);
