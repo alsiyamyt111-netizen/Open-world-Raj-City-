@@ -330,8 +330,9 @@ body.playing .ib{display:flex!important}
   <div class="ld-soon">More Updates Coming Soon...</div>
   <div class="ld-made">Made in Bangladesh <span class="ld-flag"></span></div>
 </div>
-<div id="intro" class="scr">
+<div id="intro" class="scr" style="background:#05080f url('branding/splash.jpg') center/cover no-repeat;">
   <div class="ttl">Entering the city...</div>
+  <div id="intro-sub" style="position:absolute;left:0;right:0;bottom:12%;text-align:center;color:#fff;font-size:18px;font-weight:700;letter-spacing:1px;text-shadow:0 2px 6px #000,0 0 2px #000">Loading...</div>
 </div>
 <div id="story" class="scr" style="background:#06090f;flex-direction:column;justify-content:flex-end;align-items:center;padding:24px;box-sizing:border-box;gap:18px;">
   <p id="storytxt" style="font-size:19px;line-height:1.6;max-width:600px;min-height:90px;text-align:center;"></p>
@@ -1355,6 +1356,7 @@ function nearVault() {
   return best;
 }
 function doJump() {
+  if (jumping && vy <= 0 && player.y - supportY(player.x, player.z, player.y) < 0.05) jumping = false;
   if (jumping) return;
   stance = 'stand'; atk = null;
   const wall = nearVault();
@@ -1426,7 +1428,14 @@ function supportY(x, z, y) {
   return g;
 }
 
+function unstick() {
+  for (let r = 0.5; r <= 12; r += 0.5) for (let k = 0; k < 16; k++) {
+    const a = k / 16 * Math.PI * 2, x = player.x + Math.sin(a) * r, z = player.z + Math.cos(a) * r;
+    if (!blocked(x, z, player.y)) { player.x = x; player.z = z; return; }
+  }
+}
 function update(dt) {
+  if (blocked(player.x, player.z, player.y)) unstick();
   const kbX = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
   const kbY = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0);
   let ix = Math.max(-1, Math.min(1, kbX + jx));
@@ -1956,7 +1965,14 @@ function renderWheel() {
   document.getElementById('whi').innerHTML = WICO[WEAPONS[wIdx].id]; document.getElementById('wht').textContent = cntOf(WEAPONS[wIdx]);
 }
 function selectWeapon(i) { wIdx = i; fireHeld = false; atkHeld = false; reloadT = 0; lastHud = ''; wheelEl.style.display = 'none'; if (aimOn && WEAPONS[i].melee) aimOn = false; }
-function toggleWheel() { renderWheel(); wheelEl.style.display = wheelEl.style.display === 'block' ? 'none' : 'block'; }
+let wheelT = 0;
+function toggleWheel() {
+  renderWheel();
+  const open = wheelEl.style.display !== 'block';
+  wheelEl.style.display = open ? 'block' : 'none';
+  clearTimeout(wheelT);
+  if (open) wheelT = setTimeout(() => { wheelEl.style.display = 'none'; }, 2500);   // ৩ সেকেন্ড ব্যবহার না হলে নিজে বন্ধ
+}
 wheelEl.querySelectorAll('.seg').forEach((g, i) => bindTap(g, () => selectWeapon(i)));
 bindTap(document.getElementById('whub'), () => { wheelEl.style.display = 'none'; });
 { // ফায়ার বাটনের কোণার ব্যাজ চাপলে হুইল খোলে
@@ -2663,7 +2679,10 @@ function toggleEdit() {
     saveLayout();
   }
 }
-bindTap(document.getElementById('gear'), toggleEdit);
+{ const g = document.getElementById('gear'); let gT = 0;
+  g.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); clearTimeout(gT); gT = setTimeout(toggleEdit, 900); });
+  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) g.addEventListener(ev, () => clearTimeout(gT));
+  g.addEventListener('click', e => { e.stopPropagation(); }); }
 document.getElementById('edsave').addEventListener('click', () => { if (editMode) toggleEdit(); });
 document.getElementById('edflip').addEventListener('click', () => document.getElementById('editbar').classList.toggle('bottom'));
 document.getElementById('edreset').addEventListener('click', () => {
@@ -2817,7 +2836,7 @@ bindTap(document.getElementById('reload'), () => { if (!pDead && !drv) startRelo
 bindTap(document.getElementById('cam'), () => { snapFlag = true; });
 function shot() {
   snapFlag = false;
-  try { const a = document.createElement('a'); a.href = renderer.domElement.toDataURL('image/png'); a.download = 'ricecity_' + Date.now() + '.png'; document.body.appendChild(a); a.click(); a.remove(); } catch (e) {}
+  
   const f = document.getElementById('flash'); f.style.transition = 'none'; f.style.opacity = 0.9; requestAnimationFrame(() => { f.style.transition = 'opacity .35s'; f.style.opacity = 0; });
   sfx('kick'); toast('📸 Photo taken');
 }
@@ -3042,13 +3061,18 @@ async function enterGame() {
   const p = curP();
   if (!p) return;
   activeProfile = p;
-  shopScale = p.shopScale || 0.9;
+  shopScale = Math.min(1, p.shopScale || 0.8);
   navPush();
-  const intro = document.getElementById('intro');
+  const intro = document.getElementById('intro'), sub = document.getElementById('intro-sub');
   showScr('intro');
+  sub.textContent = 'Loading...';
   intro.classList.remove('go');
   requestAnimationFrame(() => requestAnimationFrame(() => intro.classList.add('go')));
-  await Promise.all([startGame(p), pause(3500)]);
+  const t0 = performance.now();
+  await startGame(p);
+  sub.textContent = 'Waiting for other players...';
+  const left = 3500 - (performance.now() - t0);
+  if (left > 0) await pause(left);
   if (!started) { showScr('lobby'); renderLobby(); lbMsg('Failed to load, please try again'); return; }
   intro.style.display = 'none';
 }
@@ -3095,6 +3119,7 @@ function nextLine() {
 }
 gid('storybtn').addEventListener('click', () => { if (storyBusy) finishLine(); else nextLine(); });
 
+const loadImgs = () => Promise.all(['branding/splash.jpg', 'branding/lobby.jpg'].map(src => new Promise(res => { const im = new Image(); im.onload = im.onerror = () => res(); im.src = src; })));
 async function introSeq() {
   showScr('loading');
   const fill = gid('barfill');
@@ -3102,7 +3127,7 @@ async function introSeq() {
   gid('tip').textContent = TIPS[Math.floor(Math.random() * TIPS.length)];
 
   let p = 0;
-  const pre = preloadAll(); let preFin = false; pre.then(() => { preFin = true; });
+  const pre = Promise.all([preloadAll(), loadImgs()]); let preFin = false; pre.then(() => { preFin = true; });
   await new Promise(res => {
     const t = setInterval(() => {
       const target = preFin ? 100 : Math.min(95, preDone / PRELOAD.length * 100);
