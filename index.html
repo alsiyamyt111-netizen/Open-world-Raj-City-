@@ -89,6 +89,14 @@ body.playing .ib{display:flex!important}
 #atk .wbadge{position:absolute;left:-8px;top:-8px;width:34px;height:34px;border-radius:50%;background:#1b1b1f;border:2px solid #fff;display:flex;align-items:center;justify-content:center}
 #atk .wbadge svg{width:70%;height:70%}
 #atk .amm{position:absolute;bottom:5px;font-size:11px;text-shadow:0 1px 2px #000}
+#cardash{position:fixed;left:0;right:0;bottom:0;display:none;z-index:3;pointer-events:none;font-family:sans-serif}
+#cdbar{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(transparent,rgba(8,9,12,.92));transition:height .2s}
+#cardash.cock #cdbar{height:130px}
+#cdrow{position:relative;display:flex;justify-content:center;align-items:flex-end;gap:14px;padding-bottom:4px}
+#cdgauge{position:relative;text-align:center}
+#cdgear{position:absolute;left:50%;top:0;transform:translateX(-50%);font-size:12px;font-weight:700;color:#111;background:#2ecc71;border-radius:6px;padding:0 6px;line-height:16px}
+#cdwheel{pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;opacity:.95}
+#cdwsvg{display:block;filter:drop-shadow(0 2px 3px #000)}
 #mini{left:auto;right:12px;top:10px;width:96px;height:96px}
 #gear{right:118px;top:12px;width:34px;height:34px;font-size:17px}
 #hud{right:118px;top:52px}
@@ -391,6 +399,24 @@ body.playing .ib{display:flex!important}
 <button id="cam" class="act ib" data-i="cam" data-l="Camera"></button>
 <div id="wheel"></div>
 <div id="eye"></div>
+<div id="cardash"><div id="cdbar"></div><div id="cdrow">
+  <div id="cdgauge"><svg viewBox="0 0 100 78" width="118" height="92">
+    <path d="M10 52 A40 40 0 0 1 90 52" fill="none" stroke="#2b2f36" stroke-width="7" stroke-linecap="round"/>
+    <path id="cdarc" d="M10 52 A40 40 0 0 1 90 52" fill="none" stroke="#2ecc71" stroke-width="7" stroke-linecap="round" stroke-dasharray="125.66" stroke-dashoffset="125.66"/>
+    <g id="cdticks" stroke="#9aa3ad" stroke-width="1.2"></g>
+    <line id="cdneedle" x1="50" y1="52" x2="50" y2="20" stroke="#ff5b4d" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="50" cy="52" r="4" fill="#ddd"/>
+    <text id="cdnum" x="50" y="70" text-anchor="middle" font-size="15" font-weight="700" fill="#fff" font-family="sans-serif">0</text>
+    <text x="50" y="77" text-anchor="middle" font-size="5.5" fill="#9aa3ad" font-family="sans-serif">km/h</text>
+  </svg><div id="cdgear">N</div></div>
+  <div id="cdwheel"><svg id="cdwsvg" viewBox="0 0 100 100" width="92" height="92">
+    <circle cx="50" cy="50" r="42" fill="none" stroke="#15171b" stroke-width="11"/>
+    <circle cx="50" cy="50" r="42" fill="none" stroke="#3a3f47" stroke-width="3"/>
+    <path d="M10 52 H90 M50 52 V92" stroke="#15171b" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="50" cy="50" r="11" fill="#23262b" stroke="#6b7480" stroke-width="2"/>
+    <rect x="46" y="4" width="8" height="12" rx="2" fill="#e74c3c"/>
+  </svg></div>
+</div></div>
 <div id="crosshair"></div><div id="flash"></div><div id="toast"></div><div id="panel"></div>
 <button id="gear" class="act">⚙</button>
 <div id="editbar"><div id="edtxt">Drag to move · tap to select</div><div class="row"><label>Size <input id="szr" type="range" min="0.5" max="2" step="0.05" value="1"></label><label>Opacity <input id="opr" type="range" min="0.3" max="1" step="0.05" value="1"></label></div><div class="row"><button id="edflip">⇅ Flip</button><button id="edreset" style="background:#e67e22;color:#fff">Reset</button><button id="edsave" style="background:#2ecc71;color:#fff">✔ Save</button></div></div>
@@ -2805,6 +2831,8 @@ function returnToLobbyRaw() {
   if (!started) return;
   saveProgress();
   closePanelRaw(); closeMap();
+  if (drv) { drv.c.g.visible = true; }
+  dashHide();
   started = false; drv = null; aimOn = false;
   if (char) { scene.remove(char.group); char = null; }
   document.body.classList.remove('playing');
@@ -2849,10 +2877,33 @@ function shot() {
   const f = document.getElementById('flash'); f.style.transition = 'none'; f.style.opacity = 0.9; requestAnimationFrame(() => { f.style.transition = 'opacity .35s'; f.style.opacity = 0; });
   sfx('kick'); toast('📸 Photo taken');
 }
+const dashEl = document.getElementById('cardash'), cdArc = document.getElementById('cdarc'), cdNeedle = document.getElementById('cdneedle'), cdNum = document.getElementById('cdnum'), cdGear = document.getElementById('cdgear'), cdW = document.getElementById('cdwsvg');
+let drvCock = false, wheelAng = 0, cdLast = '';
+{ const tk = document.getElementById('cdticks'); let h = '';
+  for (let i = 0; i <= 6; i++) { const a = (-90 + i * 30) * Math.PI / 180, x1 = 50 + Math.sin(a) * 33, y1 = 52 - Math.cos(a) * 33, x2 = 50 + Math.sin(a) * 28, y2 = 52 - Math.cos(a) * 28; h += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '"/>'; }
+  tk.innerHTML = h; }
+function setCock(v) {
+  if (!drv) return; drvCock = v; drv.c.g.visible = !v; dashEl.classList.toggle('cock', v);
+  toast(v ? '👁 Driver view' : '🚗 Outside view');
+}
+bindTap(document.getElementById('cdwheel'), () => setCock(!drvCock));
+function dashHide() { dashEl.style.display = 'none'; dashEl.classList.remove('cock'); drvCock = false; }
+function dashUpdate(dt) {
+  const kmh = Math.abs(drv.sp) * 5, fr = Math.min(1, kmh / 120);
+  wheelAng += (jx * 110 - wheelAng) * (1 - Math.exp(-dt * 10));
+  const key = Math.round(kmh) + '|' + Math.round(wheelAng) + '|' + (drv.sp > 0.3 ? 'D' : drv.sp < -0.3 ? 'R' : 'N');
+  if (key === cdLast) return; cdLast = key;
+  cdW.style.transform = 'rotate(' + wheelAng.toFixed(1) + 'deg)';
+  cdArc.setAttribute('stroke-dashoffset', (125.66 * (1 - fr)).toFixed(1));
+  cdArc.setAttribute('stroke', fr < 0.6 ? '#2ecc71' : fr < 0.85 ? '#f1c40f' : '#e74c3c');
+  cdNeedle.setAttribute('transform', 'rotate(' + (-90 + fr * 180).toFixed(1) + ' 50 52)');
+  cdNum.textContent = Math.round(kmh);
+  const g = key.slice(-1); cdGear.textContent = g; cdGear.style.background = g === 'R' ? '#e74c3c' : g === 'D' ? '#2ecc71' : '#9aa3ad';
+}
 function toggleVeh() {
   if (pDead) return;
   if (drv) {
-    const c = drv.c, y = c.g.rotation.y; drv = null; parkedCars.push(c);
+    const c = drv.c, y = c.g.rotation.y; c.g.visible = true; dashHide(); drv = null; parkedCars.push(c);
     let x = c.g.position.x + Math.cos(y) * 2.8, z = c.g.position.z - Math.sin(y) * 2.8;
     if (blocked(x, z)) { x = c.g.position.x - Math.cos(y) * 2.8; z = c.g.position.z + Math.sin(y) * 2.8; }
     player.x = x; player.z = z; player.y = 0; player.yaw = y; camYaw = y; char.group.visible = true;
@@ -2863,7 +2914,7 @@ function toggleVeh() {
   if (!best) { toast('No car nearby'); return; }
   const i = cars.indexOf(best); if (i >= 0) cars.splice(i, 1); else parkedCars.splice(parkedCars.indexOf(best), 1);
   stance = 'stand'; setRun(false); aimOn = false; document.getElementById('aim').classList.remove('on'); wheelEl.style.display = 'none';
-  drv = { c: best, sp: 0 }; char.group.visible = false; document.getElementById('veh').classList.add('on'); toast('🚗 Joystick: forward/back & left/right');
+  drv = { c: best, sp: 0 }; char.group.visible = false; document.getElementById('veh').classList.add('on'); dashEl.style.display = 'block'; drvCock = false; dashEl.classList.remove('cock'); cdLast = ''; toast('🚗 Joystick: drive · tap wheel: driver view');
 }
 bindTap(document.getElementById('veh'), toggleVeh);
 function driveStep(dt) {
@@ -2874,6 +2925,12 @@ function driveStep(dt) {
   if (blocked(nx, nz) || Math.abs(nx) > 195 || Math.abs(nz) > 195) drv.sp *= -0.3; else { c.g.position.x = nx; c.g.position.z = nz; }
   if (Math.abs(drv.sp) > 5) for (const n of npcs) { if (n.dead) continue; const dx = n.g.position.x - c.g.position.x, dz = n.g.position.z - c.g.position.z; if (Math.hypot(dx, dz) < 2.2) hurtNPC(n, 45, dx, dz, 10); }
   player.x = c.g.position.x; player.z = c.g.position.z; player.y = 0; player.yaw = y;
+  dashUpdate(dt);
+  if (drvCock) {   // চালকের আসনের দৃশ্য: গাড়ির ভেতর থেকে সামনে তাকানো
+    camera.position.set(player.x + Math.sin(y) * 0.5, 1.25, player.z + Math.cos(y) * 0.5);
+    camera.lookAt(player.x + Math.sin(y) * 20, 1.15, player.z + Math.cos(y) * 20);
+    return;
+  }
   camera.position.lerp(new THREE.Vector3(player.x - Math.sin(y) * 9, 4.2, player.z - Math.cos(y) * 9), 1 - Math.exp(-dt * 5));
   camera.lookAt(player.x, 1.2, player.z);
 }
