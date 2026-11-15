@@ -1080,21 +1080,38 @@ bindTap(runBtn, () => { if (!runTouch && stam < 12) { toast('স্ট্যা�
 bindTap(document.getElementById('jump'), () => doJump());
 bindTap(document.getElementById('crouch'), () => toggleStance('crouch'));
 bindTap(document.getElementById('prone'), () => toggleStance('prone'));
-// পাঁচিলের কাছে (১.৭ মিটারের মধ্যে) লাফ দিলে উঁচু লাফ হয় — সামনে জয়স্টিক ঠেলে রাখলে পাঁচিল টপকে ওপারে যায়
-let vaulting = false, vaultHint = false;
+// পাঁচিলের সামনে থাকলে স্বয়ংক্রিয়ভাবে WallJump করে ওপারে যাওয়ার ব্যবস্থা
+let vaulting = false, vaultHint = false, vaultT = 0, vaultDx = 0, vaultDz = 1;
 function nearVault() {
   if (player.y > 0.6) return false;
+  // ক্যামেরার সামনের দিকই লাফের দিক; কেবল সামনে থাকা নিচু বাধা WallJump ট্রিগার করবে
+  const dx = Math.sin(camYaw), dz = Math.cos(camYaw);
+  let best = null, bestDist = Infinity;
   for (const b of boxes) {
     if (b.h === undefined || b.h > CLIMB_MAX || b.h < 1) continue;
-    if (player.x > b.minX - 1.7 && player.x < b.maxX + 1.7 && player.z > b.minZ - 1.7 && player.z < b.maxZ + 1.7) return true;
+    const cx = (b.minX + b.maxX) * 0.5, cz = (b.minZ + b.maxZ) * 0.5;
+    const vx = cx - player.x, vz = cz - player.z;
+    const forward = vx * dx + vz * dz;
+    const lateral = Math.abs(vx * -dz + vz * dx);
+    const halfDepth = Math.abs(dx) * (b.maxX - b.minX) * 0.5 + Math.abs(dz) * (b.maxZ - b.minZ) * 0.5;
+    const halfWidth = Math.abs(dz) * (b.maxX - b.minX) * 0.5 + Math.abs(dx) * (b.maxZ - b.minZ) * 0.5;
+    const dist = forward - halfDepth;
+    if (forward > 0 && dist > -0.35 && dist < 1.65 && lateral < halfWidth + 0.75 && dist < bestDist) {
+      best = { dx, dz }; bestDist = dist;
+    }
   }
-  return false;
+  return best;
 }
 function doJump() {
   if (jumping) return;
-  stance = 'stand'; atk = null;            // দৌড় বন্ধ হয় না — লাফের পরেও দৌড় চলতে থাকে
-  vaulting = nearVault(); jumping = true; vy = vaulting ? 11 : 7;
-  if (vaulting && !vaultHint) { vaultHint = true; toast('🧗 পাঁচিল টপকাচ্ছেন — জয়স্টিক সামনে ঠেলে রাখুন'); }
+  stance = 'stand'; atk = null;
+  const wall = nearVault();
+  vaulting = !!wall;
+  if (vaulting) {
+    vaultDx = wall.dx; vaultDz = wall.dz; vaultT = 1.05;
+  } else vaultT = 0;
+  jumping = true; vy = vaulting ? 11 : 7;
+  if (vaulting && !vaultHint) { vaultHint = true; toast('🧗 Wall Jump! পাঁচিল টপকে যাওয়া হচ্ছে'); }
 }
 function toggleStance(st) { stance = stance === st ? 'stand' : st; atk = null; setRun(false); }
 
@@ -1188,6 +1205,16 @@ function update(dt) {
     phase += dt * (run ? 12 : 7) * mag;
   }
 
+  // WallJump চলাকালে জয়স্টিক ছাড়লেও চরিত্রকে বাধার ওপারে এগিয়ে দেয়
+  if (vaulting && jumping && vaultT > 0) {
+    vaultT = Math.max(0, vaultT - dt);
+    const vaultSpeed = 3.8;
+    const vx = player.x + vaultDx * vaultSpeed * dt;
+    const vz = player.z + vaultDz * vaultSpeed * dt;
+    if (!blocked(vx, player.z, player.y)) player.x = vx;
+    if (!blocked(player.x, vz, player.y)) player.z = vz;
+  }
+
   if (!dragId && moving && iy > 0.3 && combatT <= 0) {
     camYaw += wrap(player.yaw - camYaw) * (1 - Math.exp(-dt * 1.5));
   }
@@ -1202,10 +1229,10 @@ function update(dt) {
   // ক্যারেক্টার
   if (char) {
     const gnd = supportY(player.x, player.z, player.y);
-    if (!jumping && player.y - gnd > 0.5) { jumping = true; vy = 0; vaulting = false; }   // পাঁচিলের ওপর থেকে নামলে পড়বে
+    if (!jumping && player.y - gnd > 0.5) { jumping = true; vy = 0; vaulting = false; vaultT = 0; }   // পাঁচিলের ওপর থেকে নামলে পড়বে
     if (jumping) {
       vy -= 20 * dt; player.y += vy * dt;
-      if (player.y <= gnd && vy <= 0) { player.y = gnd; vy = 0; jumping = false; vaulting = false; }
+      if (player.y <= gnd && vy <= 0) { player.y = gnd; vy = 0; jumping = false; vaulting = false; vaultT = 0; }
     } else player.y += (gnd - player.y) * (1 - Math.exp(-dt * 20));
     cr += ((stance === 'crouch' ? 1 : 0) - cr) * (1 - Math.exp(-dt * 12));
     pr += ((stance === 'prone' ? 1 : 0) - pr) * (1 - Math.exp(-dt * 10));
