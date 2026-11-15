@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Open World Rice City BD</title>
+<title>Greatest Bangla Rich City Open World</title>
+<link rel="icon" href="branding/icon.jpg">
 <style>
   :root { --vw: 1vw; --vh: 1vh; }
   html, body { margin: 0; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; touch-action: none; user-select: none; }
@@ -48,11 +49,11 @@
   #run.on { background: rgba(255,214,0,.85); color: #222; border-color: #ffd400; }
   #joy { touch-action: none; z-index: 5; }
     .scr { position: fixed; inset: 0; z-index: 30; display: none; color: #fff; font-family: sans-serif; }
-  #loading { background: #0b1220; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
-  #loading .t { font-size: 28px; letter-spacing: 1px; animation: glow 1.6s ease-in-out infinite alternate; }
+  #loading { background: #0b1220 url('branding/splash.jpg') center/cover no-repeat; flex-direction: column; align-items: center; justify-content: flex-end; gap: 8px; padding-bottom: 7%; box-sizing: border-box; }
+  #loading .t { font-size: 14px; background: rgba(0,0,0,.55); padding: 5px 16px; border-radius: 20px; }
   #bar { width: calc(var(--vw) * 60); max-width: 320px; height: 8px; background: #243047; border-radius: 6px; overflow: hidden; }
   #barfill { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #1f7ae0, #ffd400); }
-  @keyframes glow { from { text-shadow: 0 0 4px #1f7ae0; } to { text-shadow: 0 0 18px #ffd400; } }
+  #pct { background: rgba(0,0,0,.55); padding: 3px 12px; border-radius: 20px; font-size: 13px; }
   #intro { background: radial-gradient(#2a4a6b, #0b1220); overflow: hidden; }
   #intro .hud-el { position: absolute; opacity: 0; transform: translateY(-16px) scale(.85); transition: opacity .6s, transform .6s; }
   #intro.go .hud-el { opacity: 1; transform: none; }
@@ -132,7 +133,7 @@ body.playing .ib{display:flex!important}
 </head>
 <body>
 
-<div id="loading" class="scr"><div class="t">Open World Rice City BD</div><div id="bar"><i id="barfill"></i></div><div id="pct">0%</div></div>
+<div id="loading" class="scr"><div class="t">লোড হচ্ছে...</div><div id="bar"><i id="barfill"></i></div><div id="pct">0%</div></div>
 <div id="intro" class="scr">
   <div class="ttl">শহরে প্রবেশ করছেন...</div>
 </div>
@@ -141,7 +142,7 @@ body.playing .ib{display:flex!important}
   <button id="storybtn" style="padding:12px 26px;font-size:16px;border:0;border-radius:10px;background:#1f7ae0;color:#fff;">...</button>
 </div>
 <div id="start" class="scr" style="display:none">
-  <h2>Open World Rice City BD</h2>
+  <h2>Greatest Bangla Rich City<br>Open World</h2>
   <div id="pcard"></div>
   <p id="msg"></p>
 </div>
@@ -1081,7 +1082,7 @@ bindTap(document.getElementById('jump'), () => doJump());
 bindTap(document.getElementById('crouch'), () => toggleStance('crouch'));
 bindTap(document.getElementById('prone'), () => toggleStance('prone'));
 // পাঁচিলের সামনে থাকলে স্বয়ংক্রিয়ভাবে WallJump করে ওপারে যাওয়ার ব্যবস্থা
-let vaulting = false, vaultHint = false, vaultT = 0, vaultDx = 0, vaultDz = 1;
+let vaulting = false, vaultHint = false, vaultT = 0, vaultGo = 0, vaultDx = 0, vaultDz = 1;
 function nearVault() {
   if (player.y > 0.6) return false;
   // ক্যামেরার সামনের দিকই লাফের দিক; কেবল সামনে থাকা নিচু বাধা WallJump ট্রিগার করবে
@@ -1097,7 +1098,8 @@ function nearVault() {
     const halfWidth = Math.abs(dz) * (b.maxX - b.minX) * 0.5 + Math.abs(dx) * (b.maxZ - b.minZ) * 0.5;
     const dist = forward - halfDepth;
     if (forward > 0 && dist > -0.35 && dist < 1.65 && lateral < halfWidth + 0.75 && dist < bestDist) {
-      best = { dx, dz }; bestDist = dist;
+      // clear = দেয়ালের কাছের কিনারা পর্যন্ত দূরত্ব + দেয়ালটা পুরোপুরি পার হওয়ার মোট প্রস্থ + নামার জন্য সামান্য বাফার
+      best = { dx, dz, clear: Math.max(0, dist) + halfDepth * 2 + 0.5 }; bestDist = dist;
     }
   }
   return best;
@@ -1108,8 +1110,8 @@ function doJump() {
   const wall = nearVault();
   vaulting = !!wall;
   if (vaulting) {
-    vaultDx = wall.dx; vaultDz = wall.dz; vaultT = 1.05;
-  } else vaultT = 0;
+    vaultDx = wall.dx; vaultDz = wall.dz; vaultT = 1.05; vaultGo = wall.clear;
+  } else { vaultT = 0; vaultGo = 0; }
   jumping = true; vy = vaulting ? 11 : 7;
   if (vaulting && !vaultHint) { vaultHint = true; toast('🧗 Wall Jump! পাঁচিল টপকে যাওয়া হচ্ছে'); }
 }
@@ -1206,11 +1208,12 @@ function update(dt) {
   }
 
   // WallJump চলাকালে জয়স্টিক ছাড়লেও চরিত্রকে বাধার ওপারে এগিয়ে দেয়
-  if (vaulting && jumping && vaultT > 0) {
+  if (vaulting && jumping && vaultT > 0 && vaultGo > 0) {
     vaultT = Math.max(0, vaultT - dt);
-    const vaultSpeed = 3.8;
-    const vx = player.x + vaultDx * vaultSpeed * dt;
-    const vz = player.z + vaultDz * vaultSpeed * dt;
+    const vaultSpeed = 3.8, step = Math.min(vaultGo, vaultSpeed * dt);
+    vaultGo -= step;
+    const vx = player.x + vaultDx * step;
+    const vz = player.z + vaultDz * step;
     if (!blocked(vx, player.z, player.y)) player.x = vx;
     if (!blocked(player.x, vz, player.y)) player.z = vz;
   }
@@ -1229,10 +1232,10 @@ function update(dt) {
   // ক্যারেক্টার
   if (char) {
     const gnd = supportY(player.x, player.z, player.y);
-    if (!jumping && player.y - gnd > 0.5) { jumping = true; vy = 0; vaulting = false; vaultT = 0; }   // পাঁচিলের ওপর থেকে নামলে পড়বে
+    if (!jumping && player.y - gnd > 0.5) { jumping = true; vy = 0; vaulting = false; vaultT = 0; vaultGo = 0; }   // পাঁচিলের ওপর থেকে নামলে পড়বে
     if (jumping) {
       vy -= 20 * dt; player.y += vy * dt;
-      if (player.y <= gnd && vy <= 0) { player.y = gnd; vy = 0; jumping = false; vaulting = false; vaultT = 0; }
+      if (player.y <= gnd && vy <= 0) { player.y = gnd; vy = 0; jumping = false; vaulting = false; vaultT = 0; vaultGo = 0; }
     } else player.y += (gnd - player.y) * (1 - Math.exp(-dt * 20));
     cr += ((stance === 'crouch' ? 1 : 0) - cr) * (1 - Math.exp(-dt * 12));
     pr += ((stance === 'prone' ? 1 : 0) - pr) * (1 - Math.exp(-dt * 10));
