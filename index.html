@@ -46,7 +46,7 @@
   body.editing [data-cust] { outline: 2px dashed #ffd400; outline-offset: 2px; }
   body.editing [data-cust].sel { outline: 3px solid #2ecc71; }
   #eye { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); width: calc(var(--vw) * 36); min-width: 140px; max-width: 300px; height: calc(var(--vw) * 21); min-height: 84px; max-height: 180px; border: 2px solid #fff; box-shadow: 0 0 0 2px rgba(0,0,0,.4); display: none; z-index: 6; touch-action: none; }
-  #eye::after { content: '৩য় চোখ · টেনে ঘোরান'; position: absolute; left: 4px; top: 2px; font-size: 10px; color: #fff; text-shadow: 0 1px 2px #000; pointer-events: none; }
+  #eye::after { content: '3rd eye · drag to rotate'; position: absolute; left: 4px; top: 2px; font-size: 10px; color: #fff; text-shadow: 0 1px 2px #000; pointer-events: none; }
   #run.on { background: rgba(255,214,0,.85); color: #222; border-color: #ffd400; }
   #joy { touch-action: none; z-index: 5; }
     .scr { position: fixed; inset: 0; z-index: 30; display: none; color: #fff; font-family: sans-serif; }
@@ -65,12 +65,12 @@
   #bars .nm { text-align: center; margin-bottom: 2px; }
   #bars .bar { height: 10px; background: rgba(0,0,0,.5); border: 1px solid #fff; border-radius: 6px; overflow: hidden; margin-top: 3px; }
   #bars .bar i { display: block; height: 100%; width: 100%; }
-  #hpf { background: linear-gradient(#ff6b6b,#d63031); }
+  #hpf { background: linear-gradient(#ffffff,#dfe6e9); }
   #arf { background: linear-gradient(#74b9ff,#0984e3); }
   #dmg { position: fixed; inset: 0; z-index: 7; pointer-events: none; opacity: 0; background: radial-gradient(transparent 40%, rgba(220,0,0,.75)); }
   #dead { position: fixed; inset: 0; z-index: 8; display: none; align-items: center; justify-content: center; background: rgba(120,0,0,.55); color: #fff; font-size: 22px; text-align: center; pointer-events: none; line-height: 1.6; }
   #start h2 { text-align: center; margin: 0 12px; }
-  #pcard { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 90%; max-width: 380px; }
+  #pcard { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 90%; max-width: 380px; max-height: calc(100% - 24px); overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; padding: 4px; box-sizing: border-box; }
   #pcard input { padding: 10px; font-size: 16px; border-radius: 10px; border: 0; width: 100%; box-sizing: border-box; text-align: center; }
   #pcard .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
   #pcard .sw { width: 36px; height: 36px; min-width: 0; border-radius: 50%; border: 3px solid transparent; padding: 0; }
@@ -97,7 +97,7 @@ body.playing .ib{display:flex!important}
 #bars .brow b{width:26px;height:26px;border-radius:50%;background:#222;border:2px solid #fff;display:flex;align-items:center;justify-content:center;flex:none}
 #bars .brow b svg{width:15px;height:15px}
 #bars .bar{flex:1;height:14px;margin:0;border:2px solid #111;background:rgba(0,0,0,.65);border-radius:8px}
-#stf{background:linear-gradient(#5be35b,#14a014)}
+#stf{background:linear-gradient(#7fd8ff,#1e90ff)}
 .cashl{color:#8dff8d;font-size:13px;font-weight:700;text-shadow:0 1px 2px #000}
 #wheel{width:min(340px,calc(var(--vh)*94));height:min(340px,calc(var(--vh)*94));margin:0;transform:translate(-50%,-50%);background:none;border:0;border-radius:0}
 #wheel svg{width:100%;height:100%;display:block}
@@ -128,7 +128,7 @@ body.playing .ib{display:flex!important}
 #prone{left:calc(var(--vw)*50 - 160px + 192px);bottom:12px;right:auto;top:auto;width:58px;height:58px;font-size:12px}
 #cam{left:calc(var(--vw)*50 - 160px + 256px);bottom:12px;right:auto;top:auto;width:58px;height:58px;font-size:12px}
 
-/* ---- নতুন লোডিং স্ক্রীন ---- */
+/* ---- নতুন Loadিং স্ক্রীন ---- */
 #loading { background: #05080f url('branding/splash.jpg') center/cover no-repeat; justify-content: flex-end; padding: 0 0 4vh; }
 #loading::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 30%; pointer-events: none;
   background: linear-gradient(to bottom, rgba(5,8,15,0) 0%, rgba(5,8,15,.85) 35%, #05080f 70%); }
@@ -170,17 +170,67 @@ body.playing .ib{display:flex!important}
 #lobby .lb-start:active { transform: scale(.98); }
 #lobby .lb-msg { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); color: #fff; background: rgba(0,0,0,.7); padding: 6px 14px; border-radius: 8px; font-size: 13px; display: none; }
 
-/* ---- কোণার দোকান ও বিরতি মেনু ---- */
+/* ---- কোণার Shop ও বিরতি মেনু ---- */
 #panel.corner { background: transparent; pointer-events: none; align-items: flex-start; justify-content: flex-start; padding: 170px 0 0 8px; box-sizing: border-box; }
-#panel.corner .pbox { pointer-events: auto; width: calc(230px * var(--ps, 1)); font-size: calc(12px * var(--ps, 1)); padding: 8px 10px; background: rgba(20,20,26,.94); border: 1px solid #888; }
+#panel.corner .pbox { pointer-events: auto; width: calc(330px * var(--ps, 1)); font-size: calc(12px * var(--ps, 1)); padding: 8px 10px; background: rgba(20,20,26,.94); border: 1px solid #888; }
 #panel.corner .pbox h3 { font-size: calc(13px * var(--ps, 1)); margin: 0 0 6px; }
 #panel.corner .pbox button { font-size: calc(11px * var(--ps, 1)); padding: 4px 8px; }
 #panel.corner .pclose { display: none; }
 #panel.corner .pbox { display: flex; flex-direction: column; max-height: calc(100% - 190px); overflow: hidden; }
-#panel.corner .plist { flex: 1; min-height: 0; overflow-y: auto; touch-action: pan-x pan-y; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding-right: 4px; }
+#panel.corner .plist { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; flex: 1; min-height: 0; overflow-y: auto; touch-action: pan-x pan-y; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding-right: 4px; }
 .pctl { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 6px; }
 .pctl button { padding: 4px 8px; font-size: 12px; background: #fff; color: #222; }
 .pctl .pback { background: #e67e22; color: #fff; }
+#panel.corner .prow { flex-direction: column; align-items: stretch; gap: 4px; border: 1px solid #555; border-radius: 8px; padding: 6px; border-bottom: 1px solid #555; }
+#panel.corner .prow button { width: 100%; }
+#bars .bar { width: 110px !important; height: 9px !important; }
+#bars .brow b svg { width: 14px; height: 14px; }
+#medbtn { left: 12px; top: 250px; right: auto; bottom: auto; width: 48px; height: 48px; font-size: 12px; padding: 0; }
+#pcard .slot button { padding: 8px 10px; font-size: 14px; }
+
+/* ---- প্রোফাইল স্ক্রীন ---- */
+#pcard { max-width: 520px; }
+.pp-wrap { width: 100%; background: linear-gradient(160deg, rgba(14,28,52,.96), rgba(8,14,28,.96)); border: 2px solid #1e4f86; border-radius: 10px; color: #fff; overflow: hidden; box-sizing: border-box; font-family: 'Trebuchet MS', sans-serif; }
+.pp-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: linear-gradient(90deg, #1b4f96, #0d2b57); border-bottom: 2px solid #f5c400; }
+.pp-title { font-weight: 900; font-style: italic; font-size: 17px; }
+.pp-exit { background: #e67e22; color: #fff; border: 0; border-radius: 6px; padding: 6px 10px; font-weight: 700; }
+.pp-top { display: flex; gap: 10px; padding: 10px; align-items: center; }
+.pp-av { position: relative; width: 96px; height: 96px; border: 3px solid #f5c400; border-radius: 10px; background: #1a2a44; display: flex; align-items: center; justify-content: center; flex: none; }
+.pp-av .pp-edit { position: absolute; right: -6px; bottom: -6px; }
+.pp-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.pp-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pp-flag { font-size: 14px; }
+.pp-name { font-weight: 900; font-size: 17px; font-style: italic; }
+.pp-small { font-size: 12px; color: #cfd8e6; }
+.pp-edit { width: auto; padding: 2px 8px; font-size: 13px; background: rgba(255,255,255,.15); color: #fff; border: 1px solid #fff; border-radius: 6px; }
+.pp-edit2 { padding: 4px 10px; font-size: 12px; background: #f5c400; color: #111; border: 0; border-radius: 6px; }
+.pp-lv { font-weight: 900; font-size: 18px; color: #f5c400; font-style: italic; }
+.pp-xp { flex: 1; min-width: 80px; height: 10px; background: #0b1424; border: 1px solid #f5c400; border-radius: 6px; overflow: hidden; }
+.pp-xp i { display: block; height: 100%; background: linear-gradient(90deg, #f5c400, #ffe27a); }
+.pp-stats { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid #1e4f86; border-bottom: 1px solid #1e4f86; background: rgba(0,0,0,.25); }
+.pp-stat { padding: 8px 4px; text-align: center; border-right: 1px solid #1e4f86; }
+.pp-stat:last-child { border-right: 0; }
+.pp-stat small { display: block; font-size: 11px; color: #cfd8e6; font-style: italic; }
+.pp-stat b { font-size: 15px; font-weight: 900; }
+.pp-about, .pp-social { padding: 8px 10px; }
+.pp-sec { font-weight: 900; font-style: italic; color: #f5c400; font-size: 14px; margin-bottom: 4px; }
+.pp-text { font-size: 14px; margin-bottom: 6px; }
+.pp-links { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.pp-link { padding: 8px 4px; font-size: 13px; font-weight: 700; color: #fff; border: 0; border-radius: 6px; }
+#pcard .pp-wrap input { width: auto; flex: 1; min-width: 0; padding: 4px 6px; font-size: 14px; border-radius: 6px; border: 1px solid #f5c400; text-align: left; }
+
+/* ---- প্রোফাইল (ওয়্যারফ্রেম অনুযায়ী) ---- */
+.pp-save { background: #2ecc71; color: #fff; border: 0; border-radius: 6px; padding: 6px 12px; font-weight: 900; }
+.pp-body { display: grid; grid-template-columns: 38% 1fr; gap: 10px; padding: 10px; }
+.pp-left { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.pp-left .pp-av { width: 100%; height: auto; aspect-ratio: 1 / 1; border: 2px solid #f5c400; }
+.pp-wide { width: 100%; padding: 6px; background: #f5c400; color: #111; border: 0; border-radius: 6px; font-weight: 700; font-size: 13px; }
+.pp-right { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pp-field { display: flex; flex-direction: column; gap: 2px; }
+.pp-field .lbl { font-size: 12px; color: #cfd8e6; font-style: italic; }
+.pp-field input, .pp-field textarea { width: 100%; box-sizing: border-box; padding: 5px 6px; border-radius: 6px; border: 1px solid #f5c400; font-size: 14px; background: #0b1424; color: #fff; text-align: left; }
+.pp-field textarea { resize: none; font-style: italic; }
+.pp-val { font-size: 15px; color: #fff; font-weight: 700; }
 </style>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
@@ -192,13 +242,13 @@ body.playing .ib{display:flex!important}
   <div class="ld-ui">
     <div class="ld-row"><span class="ld-lbl">LOADING...</span><span id="pct">0%</span></div>
     <div id="bar"><i id="barfill"></i></div>
-    <div class="ld-tip"><b>Gameplay Tip:</b> <span id="tip">শহরের রাস্তায় গাড়ি চালানোর সময় সতর্ক থাকুন।</span></div>
+    <div class="ld-tip"><b>Gameplay Tip:</b> <span id="tip">Stay alert when driving on city roads.</span></div>
   </div>
   <div class="ld-soon">More Updates Coming Soon...</div>
   <div class="ld-made">Made in Bangladesh <span class="ld-flag"></span></div>
 </div>
 <div id="intro" class="scr">
-  <div class="ttl">শহরে প্রবেশ করছেন...</div>
+  <div class="ttl">Entering the city...</div>
 </div>
 <div id="story" class="scr" style="background:#06090f;flex-direction:column;justify-content:flex-end;align-items:center;padding:24px;box-sizing:border-box;gap:18px;">
   <p id="storytxt" style="font-size:19px;line-height:1.6;max-width:600px;min-height:90px;text-align:center;"></p>
@@ -211,7 +261,7 @@ body.playing .ib{display:flex!important}
     <div class="lb-prof">
       <div class="lb-av">🎧</div>
       <div style="flex:1;min-width:0">
-        <div class="lb-name" id="lb-name">খেলোয়াড়</div>
+        <div class="lb-name" id="lb-name">Player</div>
         <div class="lb-lvl" id="lb-lvl">Level 1</div>
         <div class="lb-xp"><i id="lb-xp" style="width:0%"></i></div>
       </div>
@@ -226,7 +276,7 @@ body.playing .ib{display:flex!important}
     <div class="lb-head">Mission Briefing</div>
     <div class="lb-mis-body">
       <div class="lb-mis-ico">!</div>
-      <div class="lb-mis-t" id="lb-mis">Mission 1:<small>প্রথম কাজ</small></div>
+      <div class="lb-mis-t" id="lb-mis">Mission 1:<small>First job</small></div>
     </div>
   </div>
   <div class="lb-br">
@@ -242,32 +292,33 @@ body.playing .ib{display:flex!important}
 </div>
 
 <div id="hud"><span id="fps">FPS: --</span><br><span id="dbg">x:0.00 y:0.00</span><br><span id="nav"></span><br><span id="ammo"></span></div>
-<div id="bars"><div id="pname" style="display:none"></div><div class="brow"><b data-i="heart"></b><div class="bar"><i id="hpf"></i></div></div><div class="brow"><b data-i="shield"></b><div class="bar"><i id="arf"></i></div></div><div class="brow"><b data-i="bolt"></b><div class="bar"><i id="stf"></i></div></div><div class="cashl">💵 <span id="cashv">0</span></div></div>
+<div id="bars"><div id="pname" style="display:none"></div><div class="brow"><b data-i="heart"></b><div class="bar"><i id="hpf"></i></div></div><div class="brow" style="display:none"><b data-i="shield"></b><div class="bar"><i id="arf"></i></div></div><div class="brow"><b data-i="drop"></b><div class="bar"><i id="stf"></i></div></div><div class="cashl">💵 <span id="cashv">0</span></div></div>
 <div id="dmg"></div>
-<div id="dead">☠ আপনি আহত হয়েছেন<br>একটু পরেই আবার শুরু হবে…</div>
+<div id="dead">☠ You were wounded<br>Restarting shortly…</div>
 <canvas id="mini" width="120" height="120"></canvas>
 <div id="joy"><div id="knob"></div></div>
 <button id="pausebtn" class="act ib" data-i="pause"></button>
 <button id="wsel" class="act ib" data-i="bag"></button>
-<button id="shop" class="act ib" data-i="cart"></button>
+<button id="medbtn" class="act ib" data-i="cross"></button>
+<button id="shop" class="act ib" data-i="bag"></button>
 <button id="eyebtn" class="act ib" data-i="eye"></button>
 <button id="aim" class="act ib" data-i="aim"></button>
 <button id="atk" class="act ib"></button>
 <button id="nade" class="act ib" data-i="nade"></button>
-<button id="jump" class="act ib" data-i="jump" data-l="লাফ"></button>
-<button id="kick" class="act ib" data-i="kick" data-l="লাথি"></button>
-<button id="reload" class="act ib" data-i="reload" data-l="রিলোড"></button>
-<button id="veh" class="act ib" data-i="car" data-l="গাড়ি"></button>
-<button id="run" class="act ib" data-i="run" data-l="দৌড়"></button>
-<button id="crouch" class="act ib" data-i="crouch" data-l="বসুন"></button>
-<button id="prone" class="act ib" data-i="prone" data-l="শুয়ুন"></button>
-<button id="cam" class="act ib" data-i="cam" data-l="ক্যামেরা"></button>
+<button id="jump" class="act ib" data-i="jump" data-l="Jump"></button>
+<button id="kick" class="act ib" data-i="kick" data-l="Kick"></button>
+<button id="reload" class="act ib" data-i="reload" data-l="Reload"></button>
+<button id="veh" class="act ib" data-i="car" data-l="Car"></button>
+<button id="run" class="act ib" data-i="run" data-l="Run"></button>
+<button id="crouch" class="act ib" data-i="crouch" data-l="Crouch"></button>
+<button id="prone" class="act ib" data-i="prone" data-l="Prone"></button>
+<button id="cam" class="act ib" data-i="cam" data-l="Camera"></button>
 <div id="wheel"></div>
 <div id="eye"></div>
 <div id="crosshair"></div><div id="flash"></div><div id="toast"></div><div id="panel"></div>
 <button id="gear" class="act">⚙</button>
-<div id="editbar"><div id="edtxt">টেনে সরান · ট্যাপ করে বাছুন</div><div class="row"><label>সাইজ <input id="szr" type="range" min="0.5" max="2" step="0.05" value="1"></label><label>স্বচ্ছতা <input id="opr" type="range" min="0.3" max="1" step="0.05" value="1"></label></div><div class="row"><button id="edflip">⇅ উপর/নিচ</button><button id="edreset" style="background:#e67e22;color:#fff">রিসেট</button><button id="edsave" style="background:#2ecc71;color:#fff">✔ সেভ</button></div></div>
-<div id="bigmap"><canvas id="bm"></canvas><div id="bmbar"><span id="bmtxt">ম্যাপে ট্যাপ করে গন্তব্য মার্ক করুন</span><button id="bmclear" style="background:#e67e22;color:#fff">মার্ক মুছুন</button><button id="bmclose" style="background:#fff">বন্ধ</button></div></div>
+<div id="editbar"><div id="edtxt">Drag to move · tap to select</div><div class="row"><label>Size <input id="szr" type="range" min="0.5" max="2" step="0.05" value="1"></label><label>Opacity <input id="opr" type="range" min="0.3" max="1" step="0.05" value="1"></label></div><div class="row"><button id="edflip">⇅ Flip</button><button id="edreset" style="background:#e67e22;color:#fff">Reset</button><button id="edsave" style="background:#2ecc71;color:#fff">✔ Save</button></div></div>
+<div id="bigmap"><canvas id="bm"></canvas><div id="bmbar"><span id="bmtxt">Tap the map to set a destination</span><button id="bmclear" style="background:#e67e22;color:#fff">Clear mark</button><button id="bmclose" style="background:#fff">Close</button></div></div>
 
 <script type="module">
 import * as THREE from 'three';
@@ -497,7 +548,7 @@ function addCompound(cx, cz, gs, w, d, shop, hasGarage) {
   }
   // গ্যারেজ + ড্রাইভওয়ে
   if (hasGarage) {
-    box(-11.2, 5.0, -6.2, 10.0, 0, 3.2, '#e4dccb', true, 'গ্যারেজ');
+    box(-11.2, 5.0, -6.2, 10.0, 0, 3.2, '#e4dccb', true, 'Garage');
     box(-10.6, 10.0, -6.8, 10.07, 0, 2.4, '#3a3f46', false);
     box(-11.4, 4.8, -6.0, 10.2, 3.2, 3.45, '#5b4a42', false);
     box(-9.5, 10.2, 1.2, 12.2, 0, 0.03, '#8f8f8b', false);
@@ -588,7 +639,7 @@ function buildWorld() {
       mesh.castShadow = true; mesh.receiveShadow = true;
       scene.add(mesh);
       const shop = Math.random() < 0.6;
-      boxes.push({ minX: bx - ww / 2, maxX: bx + ww / 2, minZ: bz - dd / 2, maxZ: bz + dd / 2, h, name: shop ? 'দোকান' : h > 22 ? 'অফিস টাওয়ার' : 'বাসা' });
+      boxes.push({ minX: bx - ww / 2, maxX: bx + ww / 2, minZ: bz - dd / 2, maxZ: bz + dd / 2, h, name: shop ? 'Shop' : h > 22 ? 'Office Tower' : 'Home' });
 
       // দোকানের ছাউনি (বিল্ডিংয়ের সামনের দিকে)
       if (shop) {
@@ -827,7 +878,7 @@ function buildStreet() {
 
 // ---------- ট্রাফিক (বাঁ দিকে চলে) ----------
 const cars = [];
-const nightMats = {};   // রাতে জ্বলা/দিনে নেভা উপকরণ (বাতির গোলক, আলোর বৃত্ত, গাড়ির হেডলাইট)
+const nightMats = {};   // রাতে জ্বলা/দিনে নেভা উপকরণ (বাতির গোলক, আলোর বৃত্ত, Carর হেডলাইট)
 function buildCars() {
   // ছোট সাহায্যকারী: একই উপকরণের অনেক আকৃতি জুড়ে একটি জিওমেট্রি বানায় (যাতে গাড়ি প্রতি মাত্র ৬টি মেশ লাগে)
   const merge = list => {
@@ -911,19 +962,19 @@ function animateWorld(t, dt) {
 // ---------- চরিত্র ----------
 const fbxLoader = new FBXLoader();
 const gltfLoader = new GLTFLoader();
-// চরিত্র (boy/girl) প্রথমে models/NAME.glb (ছোট সাইজ) খোঁজে, না পেলে .fbx; অ্যানিমেশন শুধু .fbx
+// চরিত্র (boy/girl) প্রথমে models/NAME.glb (ছোট Size) খোঁজে, না পেলে .fbx; অ্যানিমেশন শুধু .fbx
 // ===== চরিত্রের তালিকা =====
 // নতুন চরিত্র যোগ করতে: ফাইলটা models/ ফোল্ডারে রাখুন (যেমন models/soldier.glb), তারপর নিচে একটা লাইন যোগ করুন।
 // id = যেকোনো ইংরেজি নাম (ছোট হাতের), files = models/ ফোল্ডারের ফাইলের নাম (.glb ছাড়া; একাধিক নাম দিলে প্রথম যেটা পাবে)
 const CHARACTERS = [
-  { id: 'boy', gender: 'boy', name: 'ছেলে ১', icon: '👦', files: ['boy', 'x boy', 'x_boy', 'xboy'] },
-  { id: 'bc2', gender: 'boy', name: 'ছেলে ২', icon: '👦', files: ['bc2'] },
-  { id: 'bc3', gender: 'boy', name: 'ছেলে ৩', icon: '👦', files: ['bc3'] },
-  { id: 'bc4', gender: 'boy', name: 'ছেলে ৪', icon: '👦', files: ['bc4'] },
-  { id: 'girl', gender: 'girl', name: 'মেয়ে ১', icon: '👧', files: ['girl', 'Y girl', 'y girl', 'Y_girl', 'ygirl'] },
-  { id: 'gc2', gender: 'girl', name: 'মেয়ে ২', icon: '👧', files: ['gc2'] },
-  { id: 'gc3', gender: 'girl', name: 'মেয়ে ৩', icon: '👧', files: ['gc3'] },
-  { id: 'gc4', gender: 'girl', name: 'মেয়ে ৪', icon: '👧', files: ['gc4'] },
+  { id: 'boy', gender: 'boy', name: 'Boy 1', icon: '👦', files: ['boy', 'x boy', 'x_boy', 'xboy'] },
+  { id: 'bc2', gender: 'boy', name: 'Boy 2', icon: '👦', files: ['bc2'] },
+  { id: 'bc3', gender: 'boy', name: 'Boy 3', icon: '👦', files: ['bc3'] },
+  { id: 'bc4', gender: 'boy', name: 'Boy 4', icon: '👦', files: ['bc4'] },
+  { id: 'girl', gender: 'girl', name: 'Girl 1', icon: '👧', files: ['girl', 'Y girl', 'y girl', 'Y_girl', 'ygirl'] },
+  { id: 'gc2', gender: 'girl', name: 'Girl 2', icon: '👧', files: ['gc2'] },
+  { id: 'gc3', gender: 'girl', name: 'Girl 3', icon: '👧', files: ['gc3'] },
+  { id: 'gc4', gender: 'girl', name: 'Girl 4', icon: '👧', files: ['gc4'] },
   // { id: 'soldier', name: 'সৈনিক', icon: '🪖', files: ['soldier'] },
   // { id: 'robot', name: 'রোবট', icon: '🤖', files: ['robot'] },
 ];
@@ -963,7 +1014,8 @@ async function buildCharacter(gender) {
   const gltf = await loadAsset(gender);
   if (!gltf) return makePrimitive(gender);
 
-  const model = gltf;
+  const model = SkeletonUtils.clone(gltf);
+  model.scale.set(1, 1, 1); model.position.set(0, 0, 0);
   model.rotation.y = MODEL_YAW;
   let box = new THREE.Box3().setFromObject(model);
   const rawHeight = box.max.y - box.min.y;   // মডেলটার নিজের (স্কেল করার আগের) আসল উচ্চতা — বসা/শোয়ার গভীরতা ঠিক করতে লাগবে
@@ -991,7 +1043,7 @@ async function buildCharacter(gender) {
   for (const [n, f] of Object.entries(ANIMS)) {
     const a = await loadAsset(f);
     if (!(a && a.animations.length)) continue;
-    const clip = a.animations[0].clone();   // ক্যাশ হওয়া ক্লিপটা একাধিক চরিত্র শেয়ার করে, তাই নিজের কপিতে বদলানো হলো (নইলে চরিত্র বদলালে হাড়ের নাম এলোমেলো হয়ে যেত)
+    const clip = a.animations[0].clone();   // Cash হওয়া ক্লিপটা একাধিক চরিত্র শেয়ার করে, তাই নিজের কপিতে বদলানো হলো (নইলে চরিত্র বদলালে হাড়ের নাম এলোমেলো হয়ে যেত)
     // ক্রাউচ/প্রোন ক্লিপ যেই মূল (সোর্স) চরিত্র দিয়ে বানানো, তার নিজের উচ্চতা ও দাঁড়ানো Hips-উচ্চতা বের করা —
     // যাতে এই ক্লিপ অন্য উচ্চতা/অনুপাতের মডেলে লাগালেও বসা/শোয়ার গভীরতাটা মাটির সাপেক্ষে ঠিক থাকে, মাটির নিচে না ঢুকে যায়
     let srcHipsRestY = null, srcRawHeight = 0;
@@ -1009,10 +1061,10 @@ async function buildCharacter(gender) {
       t.name = bone + t.name.slice(dot);
       return t;
     }).filter(Boolean);
-    if (!clip.tracks.length) { console.warn('অ্যানিমেশন "' + f + '" এর হাড়ের নাম মডেলের সাথে মেলেনি, বাদ দেওয়া হলো'); continue; }
+    if (!clip.tracks.length) { console.warn('Animation "' + f + '" bone names did not match the model, skipped'); continue; }
     clip.tracks = clip.tracks.filter(t => {
       if (!t.name.endsWith('.position')) return true;
-      if (KEEP_Y.includes(n) && /Hips\.position$/.test(t.name)) {   // শুধু উচ্চতা (Y) রাখো, সামনে-পিছনে সরা বন্ধ
+      if (KEEP_Y.includes(n) && /Hips\.position$/.test(t.name)) {   // শুধু উচ্চতা (Y) রাখো, সামনে-পিছনে সরা Close
         const v = t.values, x0 = v[0], z0 = v[2];
         const canNorm = srcHipsRestY !== null && srcRawHeight > 0.01 && rawHeight > 0.01;
         for (let i = 0; i < v.length; i += 3) {
@@ -1031,7 +1083,7 @@ async function buildCharacter(gender) {
     if (ONCE[n]) { const d = Math.min(clip.duration, ONCE[n]); act.setLoop(THREE.LoopOnce, 1); act.clampWhenFinished = true; speed[n] = clip.duration / d; dur[n] = d; }
     actions[n] = act;
   }
-  if (!actions.idle && !actions.walk && !actions.run) { console.warn('অ্যানিমেশন ফাইল পাওয়া যায়নি, ব্যাকআপ চরিত্র ব্যবহার হচ্ছে'); return makePrimitive(gender); }
+  if (!actions.idle && !actions.walk && !actions.run) { console.warn('Animation file not found, using backup character'); return makePrimitive(gender); }
   // বন্দুক: ডান হাতের হাড়ে জোড়া
   let gun = null;
   let hand = model.getObjectByName('mixamorigRightHand');
@@ -1046,8 +1098,8 @@ async function buildCharacter(gender) {
     gun.rotation.set(...GUN_ROT);
     gun.visible = false; hand.add(gun);
   }
-  console.log('লোড হওয়া অ্যানিমেশন:', Object.keys(actions).join(', '));
-  for (const k of Object.keys(ANIMS)) if (!actions[k]) console.warn('অ্যানিমেশন লোড হয়নি:', k);
+  console.log('Loaded animations:', Object.keys(actions).join(', '));
+  for (const k of Object.keys(ANIMS)) if (!actions[k]) console.warn('Animation failed to load:', k);
   return { group, mixer, actions, speed, dur, gun, current: null, state: null, key: null };
 }
 
@@ -1151,7 +1203,7 @@ joy.addEventListener('pointermove', e => { if (e.pointerId === joyId) moveJoy(e)
 const endJoy = e => {
   if (e.pointerId !== joyId) return;
   joyId = null; jx = 0; jy = 0;
-  if (runTouch) setRun(false);   // জয়স্টিক ছাড়লে দৌড় বন্ধ
+  if (runTouch) setRun(false);   // Joystick ছাড়লে Run Close
   knob.style.left = '35px'; knob.style.top = '35px';
 };
 joy.addEventListener('pointerup', endJoy);
@@ -1171,7 +1223,7 @@ function bindTap(btn, fn) {
   btn.addEventListener('contextmenu', e => e.preventDefault());
 }
 function setRun(v) { runTouch = v; runBtn.classList.toggle('on', v);  }
-bindTap(runBtn, () => { if (!runTouch && stam < 12) { toast('স্ট্যামিনা কম'); return; } if (stance !== 'stand') stance = 'stand'; setRun(!runTouch); });
+bindTap(runBtn, () => { if (!runTouch && stam < 60) { toast('Low stamina'); return; } if (stance !== 'stand') stance = 'stand'; setRun(!runTouch); });
 bindTap(document.getElementById('jump'), () => doJump());
 bindTap(document.getElementById('crouch'), () => toggleStance('crouch'));
 bindTap(document.getElementById('prone'), () => toggleStance('prone'));
@@ -1207,7 +1259,7 @@ function doJump() {
     vaultDx = wall.dx; vaultDz = wall.dz; vaultT = 1.05; vaultGo = wall.clear;
   } else { vaultT = 0; vaultGo = 0; }
   jumping = true; vy = vaulting ? 11 : 7;
-  if (vaulting && !vaultHint) { vaultHint = true; toast('🧗 Wall Jump! পাঁচিল টপকে যাওয়া হচ্ছে'); }
+  if (vaulting && !vaultHint) { vaultHint = true; toast('🧗 Wall Jump! Climbing over the wall'); }
 }
 function toggleStance(st) { stance = stance === st ? 'stand' : st; atk = null; setRun(false); }
 
@@ -1245,7 +1297,9 @@ let stance = 'stand', jumping = false, vy = 0, cr = 0, pr = 0;
 let char = null, started = false;
 let phase = 0, amp = 0, lastStep = 0;
 let spd = 0;
-let hp = 100, armor = 100, pDead = false, deadT = 0, hurtT = 99, deaths = 0, activeProfile = null;
+const HP_MAX = 300, HP_SCALE = 3;
+let medLeft = 0;
+let hp = HP_MAX, armor = 100, pDead = false, deadT = 0, hurtT = 99, deaths = 0, activeProfile = null;
 
 // পাঁচিলের মতো নিচু বাধা (উচ্চতা ≤ CLIMB_MAX) — পায়ের উচ্চতা (y) মাথার ওপরে থাকলে আর আটকায় না, ওপরে দাঁড়ানোও যায়
 const CLIMB_MAX = 2.8;
@@ -1275,7 +1329,7 @@ function update(dt) {
   let iy = Math.max(-1, Math.min(1, kbY + jy));
   if (pDead) { ix = 0; iy = 0; }
   const run = (runTouch || keys.has('ShiftLeft') || keys.has('ShiftRight')) && stance === 'stand' && combatT <= 0 && !pDead;
-  if (run && Math.hypot(ix, iy) < 0.1) { ix = 0; iy = 1; }   // দৌড় চালু থাকলে জয়স্টিক ছাড়াই সামনে দৌড়ায়
+  if (run && Math.hypot(ix, iy) < 0.1) { ix = 0; iy = 1; }   // Run চালু থাকলে Joystick ছাড়াই সামনে Runায়
   const mag = Math.min(1, Math.hypot(ix, iy));
   const moving = mag > 0.1;
 
@@ -1334,7 +1388,7 @@ function update(dt) {
     cr += ((stance === 'crouch' ? 1 : 0) - cr) * (1 - Math.exp(-dt * 12));
     pr += ((stance === 'prone' ? 1 : 0) - pr) * (1 - Math.exp(-dt * 10));
     char.group.rotation.order = 'YXZ';
-    if (char.mixer) {            // Mixamo: অ্যানিমেশনই শোয়া/বসা দেখায়, তাই কাত/চ্যাপ্টা নয়
+    if (char.mixer) {            // Mixamo: Animationই শোয়া/বসা দেখায়, তাই কাত/চ্যাপ্টা নয়
       char.group.position.set(player.x, player.y, player.z);
       char.group.rotation.set(0, player.yaw, 0);
     } else {
@@ -1358,7 +1412,7 @@ function update(dt) {
       else if (moving) state = run ? 'run' : 'walk';
       else state = A.idle ? 'idle' : 'walk';
       if (!A[state]) state = A.idle ? 'idle' : Object.keys(A)[0];
-      const key = (state === 'punch' || state === 'kick') ? atk : state;   // নতুন ঘুসি = নতুন করে শুরু
+      const key = (state === 'punch' || state === 'kick') ? atk : state;   // নতুন Punch = নতুন করে Start
       if (key !== char.key) {
         const next = A[state];
         if (char.current && char.current !== next) char.current.fadeOut(0.15);
@@ -1469,7 +1523,7 @@ function drawLayer(c, T, big, size) {
     c.font = 'bold 11px sans-serif'; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.7)'; c.fillStyle = '#fff';
     const lab = (t, x, z) => { const q = T(x, z); c.strokeText(t, q[0], q[1] + 4); c.fillText(t, q[0], q[1] + 4); };
     for (const b of boxes) if (b.name) lab(b.name, (b.minX + b.maxX) / 2, (b.minZ + b.maxZ) / 2);
-    for (const k of parks) lab('পার্ক', k.x, k.z);
+    for (const k of parks) lab('Park', k.x, k.z);
   }
 }
 function drawRoute(c, T, lw) {
@@ -1531,13 +1585,13 @@ function snapOut(pt) {
 }
 function setMarker(x, z) {
   x = Math.max(-175, Math.min(175, x)); z = Math.max(-175, Math.min(175, z));
-  let name = 'রাস্তা/ফুটপাত';
+  let name = 'Road/sidewalk';
   for (const b of boxes) if (b.name && x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ) name = b.name;
-  for (const k of parks) if (Math.abs(x - k.x) < 13 && Math.abs(z - k.z) < 13) name = 'পার্ক';
-  for (const k of compounds) if (Math.abs(x - k.cx) < 12.6 && Math.abs(z - k.cz) < 12.6) { if (name === 'রাস্তা/ফুটপাত') name = 'বাড়ির উঠান'; x = k.out[0]; z = k.out[1]; }
+  for (const k of parks) if (Math.abs(x - k.x) < 13 && Math.abs(z - k.z) < 13) name = 'Park';
+  for (const k of compounds) if (Math.abs(x - k.cx) < 12.6 && Math.abs(z - k.cz) < 12.6) { if (name === 'Road/sidewalk') name = 'House yard'; x = k.out[0]; z = k.out[1]; }
   const pt = { x, z, name }; snapOut(pt);
   marker = pt; lastRoute = 0; updateRoute(performance.now());
-  document.getElementById('bmtxt').textContent = 'গন্তব্য: ' + name + ' · ' + Math.round(routeLen) + ' মি';
+  document.getElementById('bmtxt').textContent = 'Destination: ' + name + ' · ' + Math.round(routeLen) + ' m';
 }
 bm.addEventListener('pointerup', e => {
   const r = bm.getBoundingClientRect(), f = bmSide / r.width;
@@ -1548,7 +1602,7 @@ document.getElementById('mini').addEventListener('pointerdown', e => { e.prevent
 document.getElementById('bmclose').addEventListener('click', closeMap);
 document.getElementById('bmclear').addEventListener('click', () => {
   marker = null; route = []; routeLen = 0; lastRoute = 0; updateRoute(performance.now());
-  document.getElementById('bmtxt').textContent = 'ম্যাপে ট্যাপ করে গন্তব্য মার্ক করুন';
+  document.getElementById('bmtxt').textContent = 'Tap the map to set a destination';
 });
 addEventListener('keydown', e => { if (e.code === 'KeyM') mapOpen ? closeMap() : openMap(); });
 
@@ -1611,9 +1665,9 @@ function updateRoute(now) {
   if (now - lastRoute < 400) return;
   lastRoute = now;
   if (Math.hypot(player.x - marker.x, player.z - marker.z) < 4) {
-    marker = null; nav.textContent = 'গন্তব্যে পৌঁছে গেছেন ✓'; nav.dataset.keep = '1';
+    marker = null; nav.textContent = 'Arrived at destination ✓'; nav.dataset.keep = '1';
     setTimeout(() => { nav.dataset.keep = ''; nav.textContent = ''; }, 3000);
-    document.getElementById('bmtxt').textContent = 'ম্যাপে ট্যাপ করে গন্তব্য মার্ক করুন';
+    document.getElementById('bmtxt').textContent = 'Tap the map to set a destination';
     return;
   }
   route = planRoute(player, marker);
@@ -1627,7 +1681,7 @@ function updateRoute(now) {
   }
   ribGeo.attributes.position.needsUpdate = true; ribGeo.setDrawRange(0, n * 6);
   beacon.position.set(marker.x, 20, marker.z); beacon.visible = true;
-  nav.textContent = '🎯 ' + marker.name + ' · ' + Math.round(routeLen) + ' মি';
+  nav.textContent = '🎯 ' + marker.name + ' · ' + Math.round(routeLen) + ' m';
 }
 
 // ---------- যুদ্ধ: ফায়ার, ঘুসি, লাথি, NPC ----------
@@ -1668,14 +1722,14 @@ function sfx(kind) {
 }
 // ---------- অস্ত্র: ঘুসি, ছুরি, পিস্তল, রাইফেল, গ্রেনেড (চাকা থেকে বাছাই, একটাই আক্রমণ বাটন) ----------
 const WEAPONS = [
-  { id: 'rifle', name: 'রাইফেল', ico: '🔫', mag: 30, cd: 0.14, auto: true, body: 25, head: 50 },
-  { id: 'pistol', name: 'পিস্তল', ico: '🔫', mag: 12, cd: 0.33, auto: false, body: 20, head: 40 },
-  { id: 'sniper', name: 'স্নাইপার', ico: '🎯', mag: 5, cd: 1.1, auto: false, body: 90, head: 200 },
-  { id: 'grenade', name: 'গ্রেনেড', ico: '💣' },
-  { id: 'mine', name: 'মাইন', ico: '🟠' },
-  { id: 'fist', name: 'ঘুসি', ico: '👊', melee: true },
-  { id: 'knife', name: 'ছুরি', ico: '🔪', melee: true },
-  { id: 'bomb', name: 'বোমা', ico: '🧨' }
+  { id: 'rifle', name: 'Rifle', ico: '🔫', mag: 30, cd: 0.14, auto: true, body: 25, head: 50 },
+  { id: 'pistol', name: 'Pistol', ico: '🔫', mag: 12, cd: 0.33, auto: false, body: 20, head: 40 },
+  { id: 'sniper', name: 'Sniper', ico: '🎯', mag: 5, cd: 1.1, auto: false, body: 90, head: 200 },
+  { id: 'grenade', name: 'Grenade', ico: '💣' },
+  { id: 'mine', name: 'Mine', ico: '🟠' },
+  { id: 'fist', name: 'Punch', ico: '👊', melee: true },
+  { id: 'knife', name: 'Knife', ico: '🔪', melee: true },
+  { id: 'bomb', name: 'Bomb', ico: '🧨' }
 ];
 let wIdx = 0, atkHeld = false, reloadW = 0;
 const freshW = () => ({ pistol: { mag: 12, res: 48 }, rifle: { mag: 30, res: 120 }, sniper: { mag: 5, res: 20 }, grenade: { n: 5 }, mine: { n: 3 }, bomb: { n: 2 } });
@@ -1759,8 +1813,11 @@ const WICO = {
 };
 const ICONS = {
   pause: '<path d="M14 10h7v28h-7zM27 10h7v28h-7z"/>',
+  cross: '<path d="M19 8h10v11h11v10H29v11H19V29H8V19h11z" ' + STK + '/>',
+  drop: '<path d="M24 6C24 6 12 22 12 31a12 12 0 0 0 24 0C36 22 24 6 24 6z" ' + STK + '/>',
   bag: '<path d="M16 14a8 8 0 0 1 16 0" ' + STK + '/><rect x="10" y="16" width="28" height="26" rx="7"/><rect x="17" y="28" width="14" height="6" rx="2" fill="#222"/>',
   cart: '<path d="M4 8h7l5 22h20l5-16H14" ' + STK + '/><circle cx="19" cy="38" r="3.5"/><circle cx="33" cy="38" r="3.5"/>',
+  bag: '<path d="M18 14v-5a6 6 0 0 1 12 0v5" ' + STK + '/><rect x="10" y="14" width="28" height="30" rx="8" ' + STK + '/><path d="M10 26h28M18 26v8h12v-8" ' + STK + '/>',
   eye: '<path d="M3 24C9 14 17 10 24 10s15 4 21 14c-6 10-14 14-21 14S9 34 3 24z"/><circle cx="24" cy="24" r="6" fill="#222"/>',
   aim: '<circle cx="24" cy="24" r="12" ' + STK + '/><path d="M24 4v10M24 34v10M4 24h10M34 24h10" ' + STK + '/><circle cx="24" cy="24" r="2.5"/>',
   nade: '<circle cx="22" cy="30" r="12"/><rect x="18" y="10" width="9" height="7" rx="2"/><path d="M29 12l9-3M36 16l5 2M37 22l5-1" ' + STK + ' stroke-width="3"/>',
@@ -1938,7 +1995,7 @@ function updateCombat(dt) {
     if (sp.t <= 0) sp.m.visible = false;
   }
   const w = WEAPONS[wIdx], sw = wst[w.id];
-  const at = w.melee ? '' : 'n' in sw ? String(sw.n) : (reloadT > 0 ? 'রিলোড…' : sw.mag + '/' + sw.res);
+  const at = w.melee ? '' : 'n' in sw ? String(sw.n) : (reloadT > 0 ? 'Reload…' : sw.mag + '/' + sw.res);
   const h = w.ico + ' ' + w.name + (at ? ' ' + at : '') + ' · 💥 ' + kills;
   if (h !== lastHud) {
     lastHud = h; document.getElementById('ammo').textContent = h;
@@ -2048,7 +2105,7 @@ async function upgradeNPCs() {
       n.phase = Math.random() * 6;
       setNPCAnim(n, 'walk');
     }
-  } catch (e) { console.warn('NPC আপগ্রেড হয়নি, বক্স-চরিত্র থাকছে', e); }
+  } catch (e) { console.warn('NPC upgrade not applied, keeping box character', e); }
 }
 function setNPCAnim(n, st, force) {
   const next = n.acts[st];
@@ -2130,7 +2187,7 @@ function updateNPCs(dt) {
         } else walkAnim();
       }
     }
-    if (n.mixer && Math.hypot(n.g.position.x - player.x, n.g.position.z - player.z) < 90) n.mixer.update(dt);   // দূরের NPC-র অ্যানিমেশন বন্ধ (ফোন হালকা রাখতে)
+    if (n.mixer && Math.hypot(n.g.position.x - player.x, n.g.position.z - player.z) < 90) n.mixer.update(dt);   // দূরের NPC-র Animation Close (ফোন হালকা রাখতে)
     if (n.flash > 0) n.flash -= dt;
     const f = Math.max(0, n.flash) / 0.25 * 0.6;
     for (const m of n.mats) m.emissive.setRGB(f, 0, 0);
@@ -2164,7 +2221,7 @@ function hurtPlayer(dmg) {
   hurtT = 0;
   let ab = 0;
   if (armor > 0) { ab = Math.min(armor, dmg * 0.7); armor -= ab; }   // ভেস্ট ক্ষতির ৭০% শুষে নেয়
-  hp -= dmg - ab;
+  hp -= (dmg - ab) * HP_SCALE;
   const e = document.getElementById('dmg');
   e.style.transition = 'none'; e.style.opacity = armor > 0 ? 0.3 : 0.6;
   requestAnimationFrame(() => { e.style.transition = 'opacity .35s'; e.style.opacity = 0; });
@@ -2172,13 +2229,25 @@ function hurtPlayer(dmg) {
   if (hp <= 0) { hp = 0; pDead = true; deadT = 0; deaths++; document.getElementById('dead').style.display = 'flex'; setRun(false); saveProgress(); }
 }
 function respawnPlayer() {
-  pDead = false; hp = 100; armor = 100; restock(); player.x = 0; player.z = 20; player.y = 0; stance = 'stand'; jumping = false;
+  pDead = false; hp = HP_MAX; armor = 100; restock(); player.x = 0; player.z = 20; player.y = 0; stance = 'stand'; jumping = false;
   document.getElementById('dead').style.display = 'none'; saveProgress();
+}
+function useMed() {
+  if (!(inv.med > 0)) { toast('No medkit'); return; }
+  if (hp >= HP_MAX && medLeft <= 0) { toast('Not needed now'); return; }
+  inv.med--; medLeft += 45; toast('Healing +45 HP');
+}
+function drinkWater() {
+  if (!((inv.water || 0) > 0)) { toast('No water'); return; }
+  if (stam >= 500) { toast('Not needed now'); return; }
+  inv.water--; stam = Math.min(500, stam + 150);
 }
 let lastBars = '';
 function updateVitals(dt) {
   hurtT += dt;
-  if (!pDead) { if (hp < 100 && hurtT > 8) hp = Math.min(100, hp + 2 * dt); }   // ৮ সেকেন্ড মার না খেলে ধীরে ধীরে সেরে ওঠে
+  if (!pDead) { if (hp < HP_MAX && hurtT > 8) hp = Math.min(HP_MAX, hp + 6 * dt); }   // ৮ সেকেন্ড মার না খেলে ধীরে ধীরে সেরে ওঠে
+  // মেডকিট: ৪৫ HP, ৫ সেকেন্ডে ধীরে ধীরে
+  if (!pDead && medLeft > 0) { const st = Math.min(medLeft, 9 * dt); hp = Math.min(HP_MAX, hp + st); medLeft -= st; if (hp >= HP_MAX) medLeft = 0; }
   else {
     deadT += dt; fireHeld = false; atkHeld = false; fireCD = 1; atkCD = 1; atk = null; gunT = 0; combatT = 0;
     if (deadT > 3.5) respawnPlayer();
@@ -2188,7 +2257,7 @@ function updateVitals(dt) {
     if (pk.t > 0) { pk.t -= dt; if (pk.t <= 0) pk.g.visible = true; continue; }
     pk.g.rotation.y += dt * 2; pk.g.position.y = 0.9 + Math.sin(tm * 2 + pk.x) * 0.12;
     if (!pDead && Math.hypot(pk.x - player.x, pk.z - player.z) < 1.4) {
-      if (pk.type === 'med') hp = Math.min(100, hp + 50); else armor = Math.min(100, armor + 50);
+      if (pk.type === 'med') medLeft += 45; else armor = Math.min(100, armor + 50);
       addAmmo();
       pk.g.visible = false; pk.t = 40; sfx('kick');
     }
@@ -2196,7 +2265,7 @@ function updateVitals(dt) {
   const b = Math.round(hp) + '/' + Math.round(armor);
   if (b !== lastBars) {
     lastBars = b;
-    document.getElementById('hpf').style.width = Math.max(0, hp) + '%';
+    document.getElementById('hpf').style.width = (Math.max(0, hp) / HP_MAX * 100) + '%';
     document.getElementById('arf').style.width = Math.max(0, armor) + '%';
   }
 }
@@ -2211,7 +2280,7 @@ function makeVest(k) {
   }
   return g;
 }
-const VEST_POS = [0, 0.05, 0];   // ভেস্ট ঠিক জায়গায় না বসলে এই সংখ্যাগুলো বদলান (মিটার)
+const VEST_POS = [0, 0.05, 0];   // ভেস্ট ঠিক জায়গায় না বসলে এই সংখ্যাগুলো বদলান (mটার)
 function applyOutfit(c, p) {
   const dress = new THREE.Color(p.dress || '#3498db');
   if (c.mixer) {
@@ -2224,14 +2293,14 @@ function applyOutfit(c, p) {
     const skin = /skin|head|face|hair|eye|teeth|tongue|brow|lash|beard/i, cloth = /shirt|tops?\b|tee|jacket|cloth|outfit|dress|pant|jean|trouser|bottom|shoe|boot|hoodie/i;
     let n = 0;
     for (const [m, on] of mats) { const nm = (m.name || '') + ' ' + on; if (m.color && cloth.test(nm) && !skin.test(nm)) { m.color.lerp(dress, 0.55); n++; } }
-    if (!n && mats.length <= 2) for (const [m] of mats) if (m.color) m.color.lerp(dress, 0.2);   // রোবট মডেল: পুরোটায় হালকা রং; মানুষের মডেলে (বেশি অংশ) ত্বকে রং লাগে না
+    if (!n && mats.length <= 2) for (const [m] of mats) if (m.color) m.color.lerp(dress, 0.2);   // Robot মডেল: পুরোটায় হালকা রং; মানুষের মডেলে (বেশি অংশ) ত্বকে রং লাগে না
   } else {
     c.group.children[0].material.color.set(dress);
   }
 }
 
 // ---------- প্রোফাইল (প্রত্যেকের আলাদা: নাম, পোশাক, কিল/মৃত্যু/সময়, অবস্থান, বাটন সাজানো) ----------
-const MAX_PROFILES = 1, PKEY = 'orcb_profiles';
+const MAX_PROFILES = 3, PKEY = 'orcb_profiles';
 const DRESS = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#ecf0f1'];
 let profiles = [], pgender = 'boy', pdress = DRESS[1], playStart = 0, playBase = 0, delArm = false;
 try { const j = JSON.parse(localStorage.getItem(PKEY) || 'null'); if (j && Array.isArray(j.slots)) profiles = j.slots; } catch (e) {}
@@ -2245,7 +2314,7 @@ function saveProgress() {
 setInterval(saveProgress, 5000);
 addEventListener('pagehide', saveProgress);
 document.addEventListener('visibilitychange', () => { if (document.hidden) saveProgress(); });
-function fmtTime(sec) { const m = Math.floor(sec / 60); return m < 60 ? m + ' মি' : Math.floor(m / 60) + ' ঘ ' + (m % 60) + ' মি'; }
+function fmtTime(sec) { const m = Math.floor(sec / 60); return m < 60 ? m + ' min' : Math.floor(m / 60) + ' h ' + (m % 60) + ' m'; }
 const mk = (tag, txt, cls) => { const e = document.createElement(tag); if (txt) e.textContent = txt; if (cls) e.className = cls; return e; };
 
 // চরিত্রের ছবি (thumbs/<id>.jpg) — ছবি না পেলে ইমোজিতে ফিরে যায়
@@ -2266,71 +2335,111 @@ function charThumb(c, size) {
 }
 
 // ফ্রি-ফায়ার স্টাইল: বড় গ্রিডে সব চরিত্র দেখায়, ট্যাপ করে বাছাই করা যায়, তারপর "কনফার্ম" চাপলেই পাকা হয়
-function renderCharSelect(startId, onConfirm) {
+let selSlot = 0;
+function curP() { return profiles[selSlot] || profiles.find(Boolean) || null; }
+function renderCharSelect(startId, onConfirm, onBack) {
   const box = document.getElementById('pcard'); box.innerHTML = '';
   let sel = startId;
-  box.append(mk('div', '🎮 চরিত্র বাছাই করুন', 'slot'));
+  box.append(mk('div', '🎮 Select character', 'slot'));
   const grid = mk('div', '', 'row');
-  grid.style.cssText = 'max-height:calc(var(--vh)*44);overflow-y:auto;touch-action:pan-y;padding:4px';
+  grid.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%;max-height:calc(var(--vh)*50);overflow-y:auto;touch-action:pan-y;padding:4px';
   const cards = CHARACTERS.map(c => {
     const b = mk('button', '', 'opt');
-    b.style.cssText = 'min-width:84px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px';
-    b.append(charThumb(c, 60), mk('div', c.name));
+    b.style.cssText = 'min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px';
+    b.append(charThumb(c, 48), mk('div', c.name));
     b.onclick = () => { sel = c.id; cards.forEach((x, i) => x.classList.toggle('on', CHARACTERS[i].id === sel)); };
     return b;
   });
   cards.forEach((b, i) => b.classList.toggle('on', CHARACTERS[i].id === sel));
   grid.append(...cards);
-  const ok = mk('button', '✔ কনফার্ম করুন'); ok.style.cssText = 'background:#2ecc71;color:#fff;font-weight:700';
+  const ok = mk('button', '✔ Confirm'); ok.style.cssText = 'background:#2ecc71;color:#fff;font-weight:700';
   ok.onclick = () => onConfirm(sel);
-  box.append(grid, ok);
+  const bk = mk('button', '◀ Back'); bk.style.cssText = 'background:#555;color:#fff';
+  bk.onclick = () => (onBack ? onBack() : renderProfile());
+  box.append(grid, ok, bk);
 }
 
+let ppDraft = null;
 function renderProfile() {
-  const box = document.getElementById('pcard'); box.innerHTML = ''; delArm = false;
-  const p = profiles[0];
-  if (p) {
-    // হোম লবি: প্রোফাইল আগে থেকেই আছে
-    box.append(mk('div', '👤 প্রোফাইল ও চরিত্র', 'slot'));
-    const card = mk('div', '', 'slot');
-    const pc = CHARACTERS.find(c => c.id === p.gender) || CHARACTERS[0];
-    const head = mk('div'); head.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px';
-    head.append(charThumb(pc, 44), mk('div', p.name));
-    card.append(head, mk('div', '💥 কিল: ' + (p.kills || 0) + ' · ☠ মৃত্যু: ' + (p.deaths || 0) + ' · ⏱ ' + fmtTime(p.playSec || 0)));
-    const go = mk('button', '◀ লবিতে ফিরুন'); go.onclick = () => { showScr('lobby'); renderLobby(); };
-    const chg = mk('button', '🔄 চরিত্র বদলান'); chg.style.cssText = 'background:#2980b9;color:#fff';
-    chg.onclick = () => renderCharSelect(p.gender, id => { p.gender = id; pgender = id; saveProfiles(); renderProfile(); });
-    const del = mk('button', '🗑 প্রোফাইল মুছুন'); del.style.background = '#c0392b';
-    del.onclick = () => {
-      if (!delArm) { delArm = true; del.textContent = 'আবার চাপুন — সব অগ্রগতি মুছে যাবে'; return; }
-      profiles[0] = null; saveProfiles(); renderProfile();
+  ensureProfile();
+  const p = curP(); if (!p) return;
+  if (!ppDraft || ppDraft.id !== p.id) ppDraft = { id: p.id, gender: p.gender, name: p.name, career: p.career || '', address: p.address || '', bio: p.about || '' };
+  const d = ppDraft;
+  const box = document.getElementById('pcard'); box.innerHTML = '';
+  const pc = CHARACTERS.find(c => c.id === d.gender) || CHARACTERS[0];
+  const xp = p.xp || 0, lvl = p.level || (Math.floor(xp / 100) + 1);
+
+  const wrap = mk('div', '', 'pp-wrap');
+  const head = mk('div', '', 'pp-head');
+  const back = mk('button', '◀ BACK (Lobby)', 'pp-exit');
+  back.onclick = () => { ppDraft = null; navPop(); showScr('lobby'); renderLobby(); };
+  const title = mk('div', 'PLAYER PROFILE', 'pp-title');
+  const save = mk('button', 'SAVE', 'pp-save');
+  save.onclick = () => {
+    p.name = (d.name || '').trim() || p.name;
+    p.gender = d.gender;
+    p.career = (d.career || '').trim();
+    p.address = (d.address || '').trim();
+    p.about = (d.bio || '').trim().slice(0, 120);
+    saveProfiles(); ppDraft = null;
+    renderProfile(); toast('Saved');
+  };
+  head.append(back, title, save);
+
+  const body = mk('div', '', 'pp-body');
+  // left: avatar
+  const left = mk('div', '', 'pp-left');
+  const av = mk('div', '', 'pp-av');
+  av.append(charThumb(pc, 110));
+  const chg = mk('button', 'Change Avatar', 'pp-wide');
+  chg.onclick = () => renderCharSelect(d.gender, id => { d.gender = id; renderProfile(); });
+  left.append(av, chg);
+
+  // right: fields
+  const right = mk('div', '', 'pp-right');
+  const field = (label, el) => { const f = mk('div', '', 'pp-field'); f.append(mk('span', label, 'lbl'), el); return f; };
+  const nameIn = mk('input'); nameIn.value = d.name; nameIn.maxLength = 16;
+  nameIn.oninput = () => { d.name = nameIn.value; };
+  const careerIn = mk('input'); careerIn.value = d.career; careerIn.maxLength = 30; careerIn.placeholder = 'None';
+  careerIn.oninput = () => { d.career = careerIn.value; };
+  const addrIn = mk('input'); addrIn.value = d.address; addrIn.maxLength = 40; addrIn.placeholder = 'Not set';
+  addrIn.oninput = () => { d.address = addrIn.value; };
+  const bioIn = mk('textarea'); bioIn.value = d.bio; bioIn.maxLength = 120; bioIn.rows = 3; bioIn.placeholder = 'Write something…';
+  bioIn.oninput = () => { d.bio = bioIn.value; };
+  const nameField = field('Player Name: ✎', nameIn);
+  right.append(
+    nameField,
+    field('Level:', mk('b', String(lvl), 'pp-val')),
+    field('Career:', careerIn),
+    field('Bank Balance:', mk('b', '$' + (p.bank || 0).toLocaleString('en-US'), 'pp-val')),
+    field('Home Address:', addrIn),
+    field('Bio:', bioIn)
+  );
+  body.append(left, right);
+  wrap.append(head, body);
+  box.append(wrap);
+}
+
+function newProfileFlow(slot) {
+  renderCharSelect(pgender, id => {
+    pgender = id;
+    const box = document.getElementById('pcard'); box.innerHTML = '';
+    const chosen = CHARACTERS.find(c => c.id === id);
+    const inp = mk('input'); inp.id = 'pname_in'; inp.maxLength = 16; inp.placeholder = 'Your name';
+    const dr = mk('div', '', 'row');
+    const sws = DRESS.map(c => { const b = mk('button', '', 'sw'); b.style.background = c; b.onclick = () => { pdress = c; sws.forEach(x => x.classList.toggle('on', x === b)); }; if (c === pdress) b.classList.add('on'); return b; });
+    dr.append(...sws);
+    const back = mk('button', '◀ Change character'); back.style.cssText = 'background:#555;color:#fff';
+    back.onclick = () => newProfileFlow(slot);
+    const go = mk('button', '✔ Create profile');
+    go.onclick = () => {
+      const np = { id: Date.now(), name: (inp.value || '').trim() || 'Player', gender: pgender, dress: pdress, created: Date.now(), kills: 0, deaths: 0, playSec: 0, hp: 100, armor: 100 };
+      profiles[slot] = np; selSlot = slot; saveProfiles(); navPop(); showScr('lobby'); renderLobby();
     };
-    const nin = mk('input'); nin.value = p.name; nin.maxLength = 16; nin.placeholder = 'আপনার নাম';
-    const nsv = mk('button', '✏ নাম সেভ'); nsv.onclick = () => { p.name = (nin.value || '').trim() || p.name; nin.value = p.name; saveProfiles(); nsv.textContent = '✔ সেভ হয়েছে'; setTimeout(() => nsv.textContent = '✏ নাম সেভ', 1200); };
-    box.append(card, nin, nsv, go, chg, del);
-  } else {
-    // নতুন খেলোয়াড়: আগে চরিত্র বাছাই + কনফার্ম, তারপর নাম/পোশাক দিয়ে প্রোফাইল তৈরি
-    renderCharSelect(pgender, id => {
-      pgender = id;
-      box.innerHTML = '';
-      const chosen = CHARACTERS.find(c => c.id === id);
-      const inp = mk('input'); inp.id = 'pname_in'; inp.maxLength = 16; inp.placeholder = 'আপনার নাম';
-      const dr = mk('div', '', 'row');
-      const sws = DRESS.map(c => { const b = mk('button', '', 'sw'); b.style.background = c; b.onclick = () => { pdress = c; sws.forEach(x => x.classList.toggle('on', x === b)); }; if (c === pdress) b.classList.add('on'); return b; });
-      dr.append(...sws);
-      const back = mk('button', '◀ চরিত্র বদলান'); back.style.cssText = 'background:#555;color:#fff';
-      back.onclick = () => renderProfile();
-      const go = mk('button', '✔ প্রোফাইল তৈরি করে শুরু');
-      go.onclick = () => {
-        const np = { id: Date.now(), name: (inp.value || '').trim() || 'খেলোয়াড়', gender: pgender, dress: pdress, created: Date.now(), kills: 0, deaths: 0, playSec: 0, hp: 100, armor: 100 };
-        profiles[0] = np; saveProfiles(); showScr('lobby'); renderLobby();
-      };
-      const chead = mk('div', '', 'slot'); chead.style.cssText += 'display:flex;align-items:center;justify-content:center;gap:8px';
-      chead.append(charThumb(chosen, 44), mk('div', chosen.name + ' নির্বাচিত হয়েছে'));
-      box.append(chead, inp, mk('div', 'পোশাকের রং', 'soon'), dr, back, go);
-    });
-  }
-  if (MAX_PROFILES < 2) box.append(mk('div', '➕ আরও প্রোফাইল — শীঘ্রই আসছে', 'slot soon'));
+    const chead = mk('div', '', 'slot'); chead.style.cssText += 'display:flex;align-items:center;justify-content:center;gap:8px';
+    chead.append(charThumb(chosen, 44), mk('div', chosen.name + ' selected'));
+    box.append(chead, inp, mk('div', 'Outfit color', 'soon'), dr, back, go);
+  }, () => renderProfile());
 }
 
 // ---------- ৩য় চোখ (পেছনের দৃশ্য, ঘোরানো যায়) ----------
@@ -2364,10 +2473,10 @@ function renderEye() {
   renderer.setScissorTest(false); renderer.setViewport(0, 0, innerWidth, innerHeight);
 }
 
-// ---------- বাটন কাস্টমাইজ (টেনে সরানো, সাইজ, স্বচ্ছতা, সেভ) ----------
-const CUST = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'kick', 'eyebtn', 'mini', 'eye', 'bars', 'pausebtn', 'shop', 'aim', 'nade', 'reload', 'veh', 'cam'];
-const CNAME = { joy: 'জয়স্টিক', run: 'দৌড়', jump: 'লাফ', crouch: 'বসুন', prone: 'শুয়ুন', atk: 'আক্রমণ বাটন', wsel: 'ব্যাগ', pausebtn: 'পজ', shop: 'দোকান', aim: 'এইম', nade: 'গ্রেনেড বাটন', reload: 'রিলোড', veh: 'গাড়ি', cam: 'ক্যামেরা', kick: 'লাথি', eyebtn: '৩য় চোখ বাটন', mini: 'মিনি ম্যাপ', eye: '৩য় চোখের জানালা', bars: 'হেলথ বার' };
-const OPAQ = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'kick', 'eyebtn', 'pausebtn', 'shop', 'aim', 'nade', 'reload', 'veh', 'cam'];
+// ---------- বাটন কাস্টমাইজ (টেনে সরানো, Size, Opacity, সেভ) ----------
+const CUST = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'medbtn', 'kick', 'eyebtn', 'mini', 'eye', 'bars', 'pausebtn', 'shop', 'aim', 'nade', 'reload', 'veh', 'cam'];
+const CNAME = { joy: 'Joystick', run: 'Run', jump: 'Jump', crouch: 'Crouch', prone: 'Prone', atk: 'Attack button', wsel: 'Bag', medbtn: 'Medkit', pausebtn: 'Pause', shop: 'Shop', aim: 'Aim', nade: 'Grenade button', reload: 'Reload', veh: 'Car', cam: 'Camera', kick: 'Kick', eyebtn: '3rd eye button', mini: 'Mini map', eye: '3rd eye window', bars: 'Health bar' };
+const OPAQ = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'medbtn', 'kick', 'eyebtn', 'pausebtn', 'shop', 'aim', 'nade', 'reload', 'veh', 'cam'];
 let layout = { op: 1, v: 2 }, editMode = false, selId = null, dragP = null, dragOff = [0, 0];
 try { const j = localStorage.getItem('wt_layout'); if (j) { const o = JSON.parse(j); if (o.v === 2) layout = Object.assign({ op: 1, v: 2 }, o); } } catch (e) {}
 CUST.forEach(id => { document.getElementById(id).dataset.cust = id; });
@@ -2391,7 +2500,7 @@ function selectEl(id) {
   CUST.forEach(i => document.getElementById(i).classList.toggle('sel', i === id));
   const L = ensureLayout(id);
   document.getElementById('szr').value = L.s || 1;
-  document.getElementById('edtxt').textContent = 'বাছাই: ' + CNAME[id] + ' · টেনে সরান, সাইজ বদলান';
+  document.getElementById('edtxt').textContent = 'Selected: ' + CNAME[id] + ' · drag to move, resize';
 }
 function saveLayout() { if (activeProfile) { activeProfile.layout = layout; saveProfiles(); return; } try { localStorage.setItem('wt_layout', JSON.stringify(layout)); } catch (e) {} }
 function toggleEdit() {
@@ -2403,7 +2512,7 @@ function toggleEdit() {
     jx = 0; jy = 0; fireHeld = false; selId = null; dragP = null;
     document.getElementById('eye').style.display = 'block';
     document.getElementById('opr').value = layout.op || 1;
-    document.getElementById('edtxt').textContent = 'টেনে সরান · ট্যাপ করে বাছুন';
+    document.getElementById('edtxt').textContent = 'Drag to move · tap to select';
   } else {
     document.getElementById('eye').style.display = eyeOn ? 'block' : 'none';
     CUST.forEach(i => document.getElementById(i).classList.remove('sel'));
@@ -2458,22 +2567,22 @@ applyLayout();
 let last = performance.now(), fpsFrames = 0, fpsTime = 0;
 
 // ---------- নতুন HUD ফিচার: স্ট্যামিনা, টাকা, দোকান, ব্যাগ, বিরতি, ক্যামেরা, এইম, গাড়ি ----------
-let cash = 300, bank = 0, inv = { med: 1, arm: 1 }, stam = 100, paused = false, aimOn = false, drv = null, snapFlag = false, lastCash = -1, toastT = 0;
+let cash = 300, bank = 0, inv = { med: 1, arm: 1, water: 0 }, stam = 500, paused = false, aimOn = false, drv = null, snapFlag = false, lastCash = -1, toastT = 0;
 const parkedCars = [], panelEl = document.getElementById('panel');
 function toast(t) { const e = document.getElementById('toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => e.style.display = 'none', 1600); }
 let panelFn = null;
-let shopScale = 0.85;
+let shopScale = 1.1;
 function renderPanel() {
   if (!panelFn) return;
   const dd = panelFn(); if (!dd) return;
   const corner = panelEl.classList.contains('corner');
-  const ctl = corner ? '<div class="pctl"><button class="pback">◀ ফিরুন</button><span><button class="psz" data-d="-1">A−</button> <button class="psz" data-d="1">A+</button></span></div>' : '';
+  const ctl = '<div class="pctl"><button class="pback">◀ Back</button>' + (corner ? '<span><button class="psz" data-d="-1">A−</button> <button class="psz" data-d="1">A+</button></span>' : '') + '</div>';
   panelEl.style.setProperty('--ps', shopScale);
-  panelEl.innerHTML = '<div class="pbox">' + ctl + '<h3>' + dd.title + '</h3><div class="plist">' + dd.rows.map((r, i) => '<div class="prow"><span>' + r.t + '</span>' + (r.b ? '<button data-r="' + i + '">' + r.b + '</button>' : '') + '</div>').join('') + '</div><button class="pclose">✕ বন্ধ</button></div>';
+  panelEl.innerHTML = '<div class="pbox">' + ctl + '<h3>' + dd.title + '</h3><div class="plist">' + dd.rows.map((r, i) => '<div class="prow"><span>' + r.t + '</span>' + (r.b ? '<button data-r="' + i + '">' + r.b + '</button>' : '') + '</div>').join('') + '</div><button class="pclose">✕ Close</button></div>';
   panelEl.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { dd.rows[b.dataset.r].f(); renderPanel(); });
   panelEl.querySelector('.pclose').onclick = closePanel;
+  panelEl.querySelector('.pback').onclick = closePanel;
   if (corner) {
-    panelEl.querySelector('.pback').onclick = closePanel;
     panelEl.querySelectorAll('.psz').forEach(b => b.onclick = () => {
       shopScale = Math.max(0.6, Math.min(1.6, +(shopScale + (+b.dataset.d) * 0.15).toFixed(2)));
       if (activeProfile) { activeProfile.shopScale = shopScale; saveProfiles(); }
@@ -2481,14 +2590,28 @@ function renderPanel() {
     });
   }
 }
-function openPanel(fn, corner) { panelEl.classList.toggle('corner', !!corner); panelFn = fn; paused = true; fireHeld = false; atkHeld = false; jx = 0; jy = 0; panelEl.style.display = 'flex'; renderPanel(); }
-function closePanel() { panelFn = null; paused = false; panelEl.style.display = 'none'; panelEl.classList.remove('corner'); }
+function openPanel(fn, corner) { if (panelEl.style.display !== 'flex') navPush(); panelEl.classList.toggle('corner', !!corner); panelFn = fn; paused = true; fireHeld = false; atkHeld = false; jx = 0; jy = 0; panelEl.style.display = 'flex'; renderPanel(); }
+function closePanelRaw() { panelFn = null; paused = false; panelEl.style.display = 'none'; panelEl.classList.remove('corner'); }
+function closePanel() { if (panelEl.style.display === 'flex') navPop(); closePanelRaw(); }
+let navDepth = 0, navIgnore = 0;
+function navPush() { history.pushState({ g: 1 }, ''); navDepth++; }
+function navPop() { if (navDepth > 0) { navDepth--; navIgnore++; history.back(); } }
+// ফোনের ব্যাক বাটন: উপরের মেনু বন্ধ → ম্যাচ থাকলে লবি → প্রোফাইল স্ক্রীন থেকে লবি
+addEventListener('popstate', () => {
+  if (navIgnore > 0) { navIgnore--; return; }
+  if (navDepth > 0) navDepth--;
+  if (panelEl.style.display === 'flex') { closePanelRaw(); return; }
+  if (started) { returnToLobbyRaw(); return; }
+  if (document.getElementById('start').style.display === 'flex') { showScr('lobby'); renderLobby(); }
+});
 const shopOpen = fn => openPanel(fn, true);
+function returnToLobby() { if (!started) return; closePanel(); navPop(); returnToLobbyRaw(); }
+function openProfileScreen() { navPush(); ppDraft = null; showScr('start'); renderProfile(); }
 // মম্যাচ থেকে লবিতে ফেরা: প্রোফাইল সেভ, গেম বন্ধ, HUD লুকানো, লবি দেখানো
-function returnToLobby() {
+function returnToLobbyRaw() {
   if (!started) return;
   saveProgress();
-  closePanel(); closeMap();
+  closePanelRaw(); closeMap();
   started = false; drv = null; aimOn = false;
   if (char) { scene.remove(char.group); char = null; }
   document.body.classList.remove('playing');
@@ -2498,30 +2621,31 @@ function returnToLobby() {
 }
 const buy = (cap, key, k, n) => () => { const q = wst[key]; if (k in q) q[k] = Math.min(cap, q[k] + n); lastHud = ''; };
 const SHOP = [
-  { n: '🩹 মেডকিট (+৫০ হেলথ)', p: 150, f: () => inv.med++ }, { n: '🛡 আর্মার কিট (+৫০)', p: 200, f: () => inv.arm++ },
-  { n: 'রাইফেল গুলি +৩০', p: 100, f: buy(240, 'rifle', 'res', 30) }, { n: 'পিস্তল গুলি +১২', p: 60, f: buy(240, 'pistol', 'res', 12) },
-  { n: 'স্নাইপার গুলি +৫', p: 120, f: buy(60, 'sniper', 'res', 5) }, { n: 'গ্রেনেড +১', p: 120, f: buy(9, 'grenade', 'n', 1) },
-  { n: 'মাইন +১', p: 150, f: buy(9, 'mine', 'n', 1) }, { n: 'বোমা +১', p: 250, f: buy(9, 'bomb', 'n', 1) }
+  { n: '🩹 Medkit (+45 HP)', p: 150, f: () => inv.med++ }, { n: '💧 Water (+150 EP)', p: 40, f: () => inv.water = (inv.water || 0) + 1 }, { n: '🛡 Armor kit (+50)', p: 200, f: () => inv.arm++ },
+  { n: 'Rifle ammo +30', p: 100, f: buy(240, 'rifle', 'res', 30) }, { n: 'Pistol ammo +12', p: 60, f: buy(240, 'pistol', 'res', 12) },
+  { n: 'Sniper ammo +5', p: 120, f: buy(60, 'sniper', 'res', 5) }, { n: 'Grenade +1', p: 120, f: buy(9, 'grenade', 'n', 1) },
+  { n: 'Mine +1', p: 150, f: buy(9, 'mine', 'n', 1) }, { n: 'Bomb +1', p: 250, f: buy(9, 'bomb', 'n', 1) }
 ];
 // ব্যাংক: হাতের নগদ টাকা জমা/তোলা — শপ ও পজ মেনু দুই জায়গা থেকেই খোলা যায়
 function bankPanel() {
-  return { title: '🏦 ব্যাংক', rows: [
-    { t: '👛 হাতে নগদ: 💵 ' + cash },
-    { t: '🏦 ব্যাংকে জমা: 💵 ' + bank },
-    { t: 'হাতের সব টাকা ব্যাংকে জমা দিন', b: '⬇ জমা করুন', f: () => { if (cash <= 0) { toast('হাতে টাকা নেই'); return; } bank += cash; cash = 0; toast('জমা হয়েছে'); } },
-    { t: 'ব্যাংক থেকে সব টাকা তুলে নিন', b: '⬆ তুলুন', f: () => { if (bank <= 0) { toast('ব্যাংকে টাকা নেই'); return; } cash += bank; bank = 0; toast('তোলা হয়েছে'); } }
+  return { title: '🏦 Bank', rows: [
+    { t: '👛 Cash on hand: 💵 ' + cash },
+    { t: '🏦 Deposited: 💵 ' + bank },
+    { t: 'Deposit all cash in the bank', b: '⬇ Deposit', f: () => { if (cash <= 0) { toast('No cash on hand'); return; } bank += cash; cash = 0; toast('Deposited'); } },
+    { t: 'Withdraw all money from bank', b: '⬆ Withdraw', f: () => { if (bank <= 0) { toast('No money in bank'); return; } cash += bank; bank = 0; toast('Withdrawn'); } }
   ] };
 }
-bindTap(document.getElementById('shop'), () => shopOpen(() => ({ title: '🛒 দোকান · 💵 ' + cash, rows: [...SHOP.map(it => ({ t: it.n + ' — 💵' + it.p, b: 'কিনুন', f: () => { if (cash < it.p) { toast('টাকা কম'); return; } cash -= it.p; it.f(); } })), { t: '🏦 ব্যাংকে টাকা জমা/তোলা (ব্যাংকে: 💵' + bank + ')', b: 'খুলুন', f: () => openPanel(bankPanel, true) }] })));
-bindTap(document.getElementById('wsel'), () => openPanel(() => ({ title: '🎒 ব্যাগ · 💵 ' + cash, rows: [
-  { t: '🩹 মেডকিট × ' + inv.med, b: 'ব্যবহার', f: () => { if (inv.med > 0 && hp < 100) { inv.med--; hp = Math.min(100, hp + 50); } else toast('এখন দরকার নেই'); } },
-  { t: '🛡 আর্মার কিট × ' + inv.arm, b: 'পরুন', f: () => { if (inv.arm > 0 && armor < 100) { inv.arm--; armor = Math.min(100, armor + 50); } else toast('এখন দরকার নেই'); } },
-  { t: '🔫 রাইফেল ' + cntOf(WEAPONS[0]) + ' · পিস্তল ' + cntOf(WEAPONS[1]) + ' · স্নাইপার ' + cntOf(WEAPONS[2]) },
-  { t: '💣 গ্রেনেড ' + wst.grenade.n + ' · মাইন ' + wst.mine.n + ' · বোমা ' + wst.bomb.n },
-  { t: '💥 কিল: ' + kills }] })));
-bindTap(document.getElementById('pausebtn'), () => openPanel(() => ({ title: '⚙ সেটিংস', rows: [
-  { t: 'খেলা চালিয়ে যান', b: '▶ চালু', f: closePanel }, { t: 'মূল লবিতে ফিরে যান', b: '🏠 লবি', f: () => returnToLobby() }, { t: 'বাটনের জায়গা বদলান', b: 'সাজান', f: () => { closePanel(); toggleEdit(); } },
-  { t: '🏦 ব্যাংক (হাতে 💵' + cash + ' · ব্যাংকে 💵' + bank + ')', b: 'খুলুন', f: () => openPanel(bankPanel) }] })));
+bindTap(document.getElementById('shop'), () => shopOpen(() => ({ title: '🎒 Backpack · 💵 ' + cash, rows: [...SHOP.map(it => ({ t: it.n + ' — 💵' + it.p, b: 'Buy', f: () => { if (cash < it.p) { toast('Not enough money'); return; } cash -= it.p; it.f(); } })), { t: '🏦 Deposit/withdraw (bank: 💵' + bank + ')', b: 'Open', f: () => openPanel(bankPanel, true) }] })));
+bindTap(document.getElementById('medbtn'), useMed);
+bindTap(document.getElementById('wsel'), () => openPanel(() => ({ title: '🎒 Bag · 💵 ' + cash, rows: [
+  { t: '🩹 Medkit × ' + inv.med, b: 'Use', f: useMed }, { t: '💧 Water × ' + (inv.water || 0), b: 'Drink', f: drinkWater },
+  { t: '🛡 Armor kit × ' + inv.arm, b: 'Wear', f: () => { if (inv.arm > 0 && armor < 100) { inv.arm--; armor = Math.min(100, armor + 50); } else toast('Not needed now'); } },
+  { t: '🔫 Rifle ' + cntOf(WEAPONS[0]) + ' · Pistol ' + cntOf(WEAPONS[1]) + ' · Sniper ' + cntOf(WEAPONS[2]) },
+  { t: '💣 Grenade ' + wst.grenade.n + ' · Mine ' + wst.mine.n + ' · Bomb ' + wst.bomb.n },
+  { t: '💥 Kills: ' + kills }] })));
+bindTap(document.getElementById('pausebtn'), () => openPanel(() => ({ title: '⚙ Settings', rows: [
+  { t: 'Resume game', b: '▶ Resume', f: closePanel }, { t: 'Return to lobby', b: '🏠 Lobby', f: () => returnToLobby() }, { t: 'Move buttons', b: 'Customize', f: () => { closePanel(); toggleEdit(); } },
+  { t: '🏦 Bank (cash 💵' + cash + ' · Bank 💵' + bank + ')', b: 'Open', f: () => openPanel(bankPanel) }] })));
 bindTap(document.getElementById('aim'), () => { if (drv) return; aimOn = !aimOn; document.getElementById('aim').classList.toggle('on', aimOn); });
 bindTap(document.getElementById('nade'), () => { if (!pDead && !drv) throwGrenade(); });
 bindTap(document.getElementById('reload'), () => { if (!pDead && !drv) startReload(); });
@@ -2530,7 +2654,7 @@ function shot() {
   snapFlag = false;
   try { const a = document.createElement('a'); a.href = renderer.domElement.toDataURL('image/png'); a.download = 'ricecity_' + Date.now() + '.png'; document.body.appendChild(a); a.click(); a.remove(); } catch (e) {}
   const f = document.getElementById('flash'); f.style.transition = 'none'; f.style.opacity = 0.9; requestAnimationFrame(() => { f.style.transition = 'opacity .35s'; f.style.opacity = 0; });
-  sfx('kick'); toast('📸 ছবি তোলা হয়েছে');
+  sfx('kick'); toast('📸 Photo taken');
 }
 function toggleVeh() {
   if (pDead) return;
@@ -2543,10 +2667,10 @@ function toggleVeh() {
   }
   let best = null, bd = 49;
   for (const c of cars.concat(parkedCars)) { const d = (c.g.position.x - player.x) ** 2 + (c.g.position.z - player.z) ** 2; if (d < bd) { bd = d; best = c; } }
-  if (!best) { toast('কাছে কোনো গাড়ি নেই'); return; }
+  if (!best) { toast('No car nearby'); return; }
   const i = cars.indexOf(best); if (i >= 0) cars.splice(i, 1); else parkedCars.splice(parkedCars.indexOf(best), 1);
   stance = 'stand'; setRun(false); aimOn = false; document.getElementById('aim').classList.remove('on'); wheelEl.style.display = 'none';
-  drv = { c: best, sp: 0 }; char.group.visible = false; document.getElementById('veh').classList.add('on'); toast('🚗 জয়স্টিক: সামনে/পিছনে ও ডানে/বামে');
+  drv = { c: best, sp: 0 }; char.group.visible = false; document.getElementById('veh').classList.add('on'); toast('🚗 Joystick: forward/back & left/right');
 }
 bindTap(document.getElementById('veh'), toggleVeh);
 function driveStep(dt) {
@@ -2563,9 +2687,9 @@ function driveStep(dt) {
 function extra(dt) {
   if (paused) return;
   const mv = Math.hypot(jx, jy) > 0.1 || runTouch;
-  if (runTouch && mv && !drv) stam = Math.max(0, stam - 16 * dt); else stam = Math.min(100, stam + 10 * dt);
+  if (runTouch && mv && !drv) stam = Math.max(0, stam - 80 * dt); else stam = Math.min(500, stam + 50 * dt);
   if (stam <= 0 && runTouch) setRun(false);
-  document.getElementById('stf').style.width = stam + '%';
+  document.getElementById('stf').style.width = (stam / 500 * 100) + '%';
   if (cash !== lastCash) { lastCash = cash; document.getElementById('cashv').textContent = cash; }
   const tf = aimOn ? (WEAPONS[wIdx].id === 'sniper' ? 22 : 42) : 60;
   if (Math.abs(camera.fov - tf) > 0.3) { camera.fov += (tf - camera.fov) * Math.min(1, dt * 10); camera.updateProjectionMatrix(); }
@@ -2605,15 +2729,15 @@ async function startGame(p) {
   exitLobby();
   activeProfile = p;
   document.querySelectorAll('#start button').forEach(b => b.disabled = true);
-  document.getElementById('msg').textContent = 'লোড হচ্ছে...';
+  document.getElementById('msg').textContent = 'Loading...';
   if (!ac) initAudio();
   if (ac.state === 'suspended') ac.resume();
 
   try { char = await buildCharacter(p.gender); applyOutfit(char, p); }
-  catch (e) { document.getElementById('msg').textContent = 'ত্রুটি হয়েছে, আবার চেষ্টা করুন'; document.querySelectorAll('#start button').forEach(b => b.disabled = false); return; }
+  catch (e) { document.getElementById('msg').textContent = 'Error occurred, please try again'; document.querySelectorAll('#start button').forEach(b => b.disabled = false); return; }
   scene.add(char.group);
   if (typeof p.x === 'number') { player.x = p.x; player.z = p.z; if (blocked(player.x, player.z)) player.x = Math.round(player.x / SPACING) * SPACING; }
-  kills = p.kills || 0; deaths = p.deaths || 0; hp = p.hp > 0 ? p.hp : 100; armor = p.armor == null ? 100 : p.armor;
+  kills = p.kills || 0; deaths = p.deaths || 0; hp = p.hp > 0 ? p.hp : HP_MAX; armor = p.armor == null ? 100 : p.armor;
   cash = p.cash == null ? 300 : p.cash; bank = p.bank == null ? 0 : p.bank; if (p.inv) inv = p.inv;
   if (p.layout && p.layout.v === 2) { layout = Object.assign({ op: 1, v: 2 }, p.layout); applyLayout(); }
   camYaw = 0; player.yaw = 0;
@@ -2714,38 +2838,41 @@ lbDragEl.addEventListener('pointerup', lbDragEnd); lbDragEl.addEventListener('po
 // ---------- হোম লবি ----------
 function lbMsg(t) { const m = document.getElementById('lb-msg'); m.textContent = t; m.style.display = 'block'; clearTimeout(lbMsg.t); lbMsg.t = setTimeout(() => m.style.display = 'none', 1600); }
 function renderLobby() {
-  const p = profiles[0];
+  const p = curP();
   if (!p) return;
   activeProfile = p;
   const xp = p.xp || 0, lvl = p.level || (Math.floor(xp / 100) + 1);
-  document.getElementById('lb-name').textContent = p.name || 'খেলোয়াড়';
+  document.getElementById('lb-name').textContent = p.name || 'Player';
   document.getElementById('lb-lvl').textContent = 'Level ' + lvl;
   document.getElementById('lb-xp').style.width = (xp % 100) + '%';
   document.getElementById('lb-cash').textContent = '$' + (p.cash == null ? 300 : p.cash).toLocaleString('en-US');
   enterLobby(p);
 }
 function ensureProfile() {
-  if (profiles[0]) return;
-  profiles[0] = { id: Date.now(), name: 'খেলোয়াড়', gender: pgender, dress: pdress, created: Date.now(), kills: 0, deaths: 0, playSec: 0, hp: 100, armor: 100 };
-  saveProfiles();
+  if (curP()) return;
+  const i = profiles.findIndex(x => !x); if (i < 0) return;
+  profiles[i] = { id: Date.now(), name: 'Player', gender: pgender, dress: pdress, created: Date.now(), kills: 0, deaths: 0, playSec: 0, hp: 100, armor: 100 };
+  selSlot = i; saveProfiles();
 }
 async function enterGame() {
-  const p = profiles[0];
+  const p = curP();
   if (!p) return;
   activeProfile = p;
-  shopScale = p.shopScale || 0.85;
+  shopScale = p.shopScale || 1.1;
+  navPush();
   const intro = document.getElementById('intro');
   showScr('intro');
   intro.classList.remove('go');
   requestAnimationFrame(() => requestAnimationFrame(() => intro.classList.add('go')));
   await Promise.all([startGame(p), pause(3500)]);
-  if (!started) { showScr('lobby'); renderLobby(); lbMsg('লোড হয়নি, আবার চেষ্টা করুন'); return; }
+  if (!started) { showScr('lobby'); renderLobby(); lbMsg('Failed to load, please try again'); return; }
   intro.style.display = 'none';
 }
 document.getElementById('lb-go').addEventListener('click', () => { enterGame(); });
-document.getElementById('lb-char').addEventListener('click', () => { showScr('start'); renderProfile(); });
-document.getElementById('lb-settings').addEventListener('click', () => lbMsg('সেটিংস শীঘ্রই আসছে'));
-document.getElementById('lb-store').addEventListener('click', () => lbMsg('স্টোর শীঘ্রই আসছে'));
+document.getElementById('lb-char').addEventListener('click', openProfileScreen);
+document.querySelector('#lobby .lb-tl').addEventListener('click', openProfileScreen);
+document.getElementById('lb-settings').addEventListener('click', () => lbMsg('Settings coming soon'));
+document.getElementById('lb-store').addEventListener('click', () => lbMsg('Store coming soon'));
 
 // ---------- শুরুর ক্রম: লোডিং → ইন্টারফেস → গল্প → চরিত্র ----------
 const gid = id => document.getElementById(id);
@@ -2755,17 +2882,17 @@ function showScr(id) {
   gid(id).style.display = 'flex';
 }
 const STORY = [
-  'এক সময় এই শহর ছিল নদীর তীরের ছোট একটি জনপদ।',
-  'আজ সে বড় হয়েছে, কিন্তু তার রাস্তায় এখনো হারিয়ে যায় অনেক স্বপ্ন।',
-  'তুমি এখানে এসেছ নিজের পথ খুঁজতে।',
-  'এখন বেছে নাও, তুমি কে হবে।'
+  'Once, this city was a small settlement on the riverbank.',
+  'He has grown up, but on his streets many dreams are still lost.',
+  'You came here to find your own path.',
+  'Choose now: who will you become?'
 ];
 let storyIdx = 0, storyTimer = null, storyFull = '', storyBusy = false;
 function finishLine() {
   clearInterval(storyTimer);
   gid('storytxt').textContent = storyFull;
   storyBusy = false;
-  gid('storybtn').textContent = storyIdx >= STORY.length ? 'চরিত্র বাছাই' : 'পরবর্তী';
+  gid('storybtn').textContent = storyIdx >= STORY.length ? 'Character select' : 'Next';
 }
 function nextLine() {
   if (storyIdx >= STORY.length) { ensureProfile(); showScr('lobby'); renderLobby(); return; }
@@ -2773,7 +2900,7 @@ function nextLine() {
   const el = gid('storytxt');
   el.textContent = '';
   storyBusy = true;
-  gid('storybtn').textContent = 'থামান';
+  gid('storybtn').textContent = 'Pause';
   let i = 0;
   clearInterval(storyTimer);
   storyTimer = setInterval(() => {
@@ -2786,7 +2913,7 @@ gid('storybtn').addEventListener('click', () => { if (storyBusy) finishLine(); e
 async function introSeq() {
   showScr('loading');
   const fill = gid('barfill');
-  const TIPS = ['শহরের রাস্তায় গাড়ি চালানোর সময় সতর্ক থাকুন।', 'পুলিশের নজর এড়াতে গতি কমিয়ে চলুন।', 'ক্যাশ খরচ করার আগে ব্যাংকে জমা রাখুন।', 'মিনি-ম্যাপে লাল বিন্দু মানে শত্রু কাছে আছে।'];
+  const TIPS = ['Stay alert when driving on city roads.', 'Slow down to avoid police attention.', 'Deposit cash in the bank before spending it.', 'A red dot on the mini map means an enemy is nearby.'];
   gid('tip').textContent = TIPS[Math.floor(Math.random() * TIPS.length)];
 
   let p = 0;
@@ -2804,7 +2931,7 @@ async function introSeq() {
   showScr('intro');
   requestAnimationFrame(() => requestAnimationFrame(() => gid('intro').classList.add('go')));
   await pause(3200);
-  if (profiles[0]) { showScr('lobby'); renderLobby(); return; }   // ফিরে আসা খেলোয়াড়: গল্প বাদ
+  if (curP()) { showScr('lobby'); renderLobby(); return; }   // ফিরে আসা Player: গল্প বাদ
   showScr('story');
   nextLine();
 }
