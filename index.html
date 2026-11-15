@@ -851,7 +851,8 @@ const loadAsset = name => assetCache[name] || (assetCache[name] = (async () => {
 // অ্যানিমেশনের নাম -> models/ ফোল্ডারের ফাইলের নাম (.fbx ছাড়া)
 const ANIMS = {
   idle: 'Idle', walk: 'Walk', run: 'Run',
-  jump: 'Jump', crouchidle: 'crouchidle', crouchwalk: 'crouch', prone: 'prone',
+  jump: 'Jump', walljump: 'WallJump',
+  crouchidle: 'crouchidle', crouchwalk: 'crouch', prone: 'prone',
   punch: 'punch', kick: 'kick', fire: 'firing', fightidle: 'fightidel'
 };
 // NPC-দের অ্যানিমেশন (মার খাওয়া, মরা, ওঠা) — পরিস্থিতি অনুযায়ী নিজে চলে
@@ -890,7 +891,7 @@ async function buildCharacter(gender) {
   let modelHipsRestY = 0;
   { const hn = boneMap.get('hips'); if (hn) { const hb = model.getObjectByName(hn); if (hb) modelHipsRestY = hb.position.y; } }
   const KEEP_Y = ['crouchidle', 'crouchwalk', 'prone'];      // এগুলোতে নিতম্বের উচ্চতা রাখতে হবে (নইলে শূন্যে ভাসবে)
-  const ONCE = { jump: 0.75, punch: 0.9, kick: 1.1 };        // একবার চলবে, সর্বোচ্চ এত সেকেন্ডে শেষ হবে (ক্লিপ ছোট হলে নিজের স্বাভাবিক সময়ে)
+  const ONCE = { jump: 0.75, walljump: 0.9, punch: 0.9, kick: 1.1 };        // একবার চলবে, সর্বোচ্চ এত সেকেন্ডে শেষ হবে (ক্লিপ ছোট হলে নিজের স্বাভাবিক সময়ে)
   const dur = {};
   for (const [n, f] of Object.entries(ANIMS)) {
     const a = await loadAsset(f);
@@ -1224,7 +1225,8 @@ function update(dt) {
       // Mixamo অ্যানিমেশন বাছাই (অগ্রাধিকার ওপর থেকে নিচে)
       const A = char.actions;
       let state;
-      if (jumping && A.jump) state = 'jump';
+      if (jumping && vaulting && A.walljump) state = 'walljump';
+      else if (jumping && A.jump) state = 'jump';
       else if (stance === 'prone' && A.prone) state = 'prone';
       else if (stance === 'crouch' && (A.crouchidle || A.crouchwalk)) state = (moving && A.crouchwalk) || !A.crouchidle ? 'crouchwalk' : 'crouchidle';
       else if (atk && A[atk.type]) state = atk.type;
