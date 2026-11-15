@@ -89,7 +89,7 @@ body.playing .ib{display:flex!important}
 #atk .wbadge{position:absolute;left:-8px;top:-8px;width:34px;height:34px;border-radius:50%;background:#1b1b1f;border:2px solid #fff;display:flex;align-items:center;justify-content:center}
 #atk .wbadge svg{width:70%;height:70%}
 #atk .amm{position:absolute;bottom:5px;font-size:11px;text-shadow:0 1px 2px #000}
-#mini{left:auto!important;right:12px;top:10px;width:96px;height:96px}
+#mini{left:auto;right:12px;top:10px;width:96px;height:96px}
 #gear{right:118px;top:12px;width:34px;height:34px;font-size:17px}
 #hud{right:118px;top:52px}
 #bars{left:62px;top:12px;bottom:auto;transform:none;width:170px;min-width:0;max-width:none;text-align:left}
@@ -2375,7 +2375,7 @@ function updateVitals(dt) {
   if (!pDead) { if (hp < HP_MAX && hurtT > 8) hp = Math.min(HP_MAX, hp + 6 * dt); }   // ৮ সেকেন্ড মার না খেলে ধীরে ধীরে সেরে ওঠে
   // মেডকিট: ৪৫ HP, ৫ সেকেন্ডে ধীরে ধীরে
   if (!pDead && medLeft > 0) { const st = Math.min(medLeft, 9 * dt); hp = Math.min(HP_MAX, hp + st); medLeft -= st; if (hp >= HP_MAX) medLeft = 0; }
-  else {
+  if (pDead) {
     deadT += dt; fireHeld = false; atkHeld = false; fireCD = 1; atkCD = 1; atk = null; gunT = 0; combatT = 0;
     if (deadT > 3.5) respawnPlayer();
   }
