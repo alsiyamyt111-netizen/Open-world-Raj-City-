@@ -235,8 +235,85 @@ body.playing .ib{display:flex!important}
 #start { justify-content: flex-start !important; overflow: auto !important; touch-action: pan-x pan-y; -webkit-overflow-scrolling: touch; padding: 12px 0; box-sizing: border-box; }
 #pcard { margin: auto !important; max-height: none !important; overflow: visible !important; }
 /* লবি লেআউট: স্টোর প্রোফাইলের নিচে, সেটিংস কোণায় ছোট গিয়ার */
-#lobby #lb-store { position: absolute; left: 12px; top: 116px; width: min(300px, 46vw); text-align: left; }
 #lobby .lb-gear { position: absolute; right: 12px; top: 12px; width: 46px; height: 46px; padding: 0; border-radius: 50%; font-size: 24px; line-height: 1; background: rgba(10,10,14,.85); color: #fff; border: 2px solid #fff; z-index: 2; }
+/* লবি v3: ছোট প্রোফাইল, তার নিচে ডান ঘেঁষে স্টোর, মেনু শুধু লেখা */
+#lobby .lb-tl { width: min(190px, 40vw); }
+#lobby .lb-prof { padding: 5px; gap: 6px; }
+#lobby .lb-av { width: 44px; height: 44px; font-size: 22px; }
+#lobby .lb-name { font-size: 13px; }
+#lobby .lb-lvl { font-size: 12px; }
+#lobby .lb-xp { height: 6px; }
+#lobby .lb-head { font-size: 11px; padding: 3px 8px; }
+#lobby .lb-btn { background: transparent; border: none; box-shadow: none; color: #fff; font-size: 18px; font-weight: 900; font-style: italic; letter-spacing: 2px; text-shadow: 0 2px 0 #000, 0 0 12px rgba(255,210,80,.7); padding: 6px 4px; }
+#lobby .lb-btn:active { color: #ffd400; background: transparent; }
+/* লবি: স্টোর প্রোফাইলের বাঁ পাশে (স্ক্রিনে নিচে), প্রোফাইলে "GAME PROFILE" লেখা নেই */
+#lobby .lb-tl .lb-head { display: none; }
+/* লবি: মকআপ অনুযায়ী জায়গা; বক্স নেই, শুধু সুন্দর ফন্ট ও রং */
+#lobby .lm { position: absolute; background: none; border: none; box-shadow: none; padding: 0; margin: 0; color: #fff; font-family: 'Trebuchet MS', 'Hind Siliguri', sans-serif; font-weight: 900; font-size: 20px; white-space: nowrap; text-align: left; text-shadow: 0 2px 6px rgba(0,0,0,.7), 0 0 2px #000; cursor: pointer; }
+#lobby .lm:active { opacity: .7; }
+#lobby .p-balance b { color: #6dff6d; margin-left: 6px; }
+#lobby .lb-prof { display: flex; gap: 10px; align-items: center; }
+#lobby .lb-av { width: 48px; height: 48px; border-radius: 50%; border: 2px solid #f5c400; background: #1a2a44; display: flex; align-items: center; justify-content: center; font-size: 24px; flex: none; }
+#lobby .lb-info { min-width: 110px; }
+#lobby .lb-name { font-size: 18px; color: #fff; }
+#lobby .lb-lvl { font-size: 13px; color: #ffe27a; }
+#lobby .lb-xp { height: 5px; width: 110px; background: rgba(0,0,0,.5); border-radius: 4px; overflow: hidden; margin-top: 3px; }
+#lobby .lb-xp i { display: block; height: 100%; background: linear-gradient(90deg, #f5c400, #ffe27a); }
+/* ক্যারেক্টার মেনু (নতুন ডিজাইন) */
+#start:has(#pcard.cmenu) { background: linear-gradient(#0b1a2e, #05080f); justify-content: flex-start !important; padding: 0 !important; }
+#pcard.cmenu { max-width: none !important; width: 100% !important; margin: 0 !important; padding: 0 !important; gap: 0; align-items: stretch; box-sizing: border-box; }
+.cm-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: linear-gradient(90deg, #0d2b57, #0a1f3d); border-bottom: 2px solid #f5c400; }
+.cm-title { font-weight: 900; font-style: italic; font-size: 22px; color: #fff; }
+.cm-right { display: flex; gap: 12px; align-items: center; }
+.cm-confirm { background: none; border: none; color: #fff; font-size: 17px; font-weight: 700; }
+.cm-back { background: #1a3b66; color: #fff; border: 2px solid #4fc3ff; border-radius: 6px; padding: 6px 14px; font-weight: 900; font-style: italic; }
+.cm-sec { color: #9fb6d0; font-style: italic; font-size: 14px; padding: 10px 14px 4px; }
+.cm-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 0 14px; }
+.cm-card { position: relative; background: rgba(14,40,70,.85); border: 2px solid #2fb8e0; border-radius: 10px; padding: 24px 8px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; min-height: 150px; box-sizing: border-box; }
+.cm-card.on { border-color: #7ff0ff; box-shadow: 0 0 14px rgba(127,240,255,.6); }
+.cm-status { position: absolute; top: 6px; right: 8px; font-size: 11px; font-weight: 700; font-style: italic; }
+.cm-status.on { color: #7ff0ff; }
+.cm-status.av { color: #9be36b; }
+.cm-name { color: #fff; font-size: 13px; font-weight: 700; }
+.cm-select { position: absolute; bottom: 6px; right: 10px; font-size: 11px; color: #c7d7e8; font-style: italic; }
+.cm-card.on .cm-select { color: #7ff0ff; font-weight: 700; }
+/* ক্যারেক্টার মেনু: পুরো ছবি, ট্যাপে সিলেক্ট, উপরে Confirm/Back */
+#pcard.cs-box { width: 96% !important; max-width: none !important; background: rgba(8,14,28,.94); border: 2px solid #1e4f86; border-radius: 6px; padding: 0; overflow: hidden; }
+.cs-top { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: linear-gradient(90deg, #1b4f96, #0d2b57); border-bottom: 2px solid #f5c400; box-sizing: border-box; width: 100%; }
+.cs-title { color: #fff; font-weight: 900; font-style: italic; font-size: 18px; }
+.cs-right { display: flex; gap: 10px; align-items: center; }
+.cs-confirm { background: none; border: none; color: #fff; font-weight: 700; font-size: 16px; padding: 6px 4px; }
+.cs-back { background: #1b4f96; color: #fff; border: 2px solid #7fd8ff; border-radius: 6px; padding: 6px 12px; font-weight: 900; font-style: italic; }
+.cs-sec { color: #9fb3c8; font-size: 12px; font-style: italic; padding: 8px 12px 0; width: 100%; box-sizing: border-box; }
+.cs-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 6px 10px 10px; width: 100%; box-sizing: border-box; }
+.cs-card { background: rgba(20,40,70,.85); border: 2px solid #2fb8d8; border-radius: 8px; padding: 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; box-sizing: border-box; }
+.cs-card.on { border-color: #ffd400; box-shadow: 0 0 12px rgba(255,212,0,.7); }
+.cs-pic { width: 100%; aspect-ratio: 3 / 5; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 40%, #1d3555, #0b1424); border-radius: 6px; overflow: hidden; font-size: 40px; }
+.cs-img { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; display: block; }
+.cs-name { color: #fff; font-size: 13px; font-weight: 700; }
+.cs-tag { align-self: flex-end; font-size: 11px; color: #7fd8ff; font-style: italic; font-weight: 700; }
+.cs-card.on .cs-tag { color: #ffd400; }
+
+/* লবি (landscape): আপনার দাগ অনুযায়ী জায়গা */
+#lobby .p-profile { right: 1%; top: 3%; display: flex; }            /* ডান উপরে প্রোফাইল */
+#lobby .p-settings { left: 1%; top: 3%; font-size: 26px; padding: 0; }   /* বাম উপরে গিয়ার */
+#lobby .p-balance { left: 50%; top: 3%; transform: translateX(-50%); font-size: 15px; color: #fff; background: rgba(230,90,90,.9); padding: 3px 10px; border-radius: 12px; }
+#lobby .p-balance b { color: #6dff6d; margin-left: 6px; }
+#lobby .p-invite { right: 1%; top: 19%; font-size: 15px; color: #fff; }
+#lobby .p-store { left: 1%; top: 22%; font-size: 26px; color: #ff6b6b; }
+#lobby .p-char { left: 1%; top: 37%; font-size: 24px; color: #fff; }
+#lobby .p-vault { left: 1%; top: 52%; font-size: 24px; color: #f5c451; }
+#lobby .p-mission { left: 1%; top: 66%; font-size: 24px; color: #fff; }
+#lobby .p-mods { right: 14%; bottom: 0; font-size: 36px; color: #fff; background: #fff; color: #111; padding: 10px 22px; border-radius: 6px 6px 0 0; }
+#lobby .p-start { right: 0; bottom: 0; font-size: 30px; color: #fff; background: #111; padding: 12px 24px; border-radius: 6px 0 0 0; }
+/* ছোট বর্গাকার ব্যাকপ্যাক: তালিকা ভেতরে স্ক্রল */
+#panel.corner .pbox { width: calc(210px * var(--ps, 1)) !important; max-height: calc(230px * var(--ps, 1)) !important; font-size: calc(11px * var(--ps, 1)); padding: 6px 8px; }
+#panel.corner .pbox h3 { font-size: calc(12px * var(--ps, 1)); margin: 0 0 4px; }
+#panel.corner .plist { grid-template-columns: 1fr; gap: 4px; }
+#panel.corner .prow { padding: 4px; }
+#panel.corner .prow button { font-size: calc(10px * var(--ps, 1)); padding: 3px 6px; }
+#bars .bar { width: 70px !important; height: 6px !important; }
+#bars .brow b svg { width: 12px; height: 12px; }
 </style>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
@@ -262,36 +339,27 @@ body.playing .ib{display:flex!important}
 </div>
 <div id="lobby" class="scr">
   <div id="lb-drag" style="position:absolute;inset:0;z-index:0"></div>
-  <div class="lb-panel lb-tl">
-    <div class="lb-head">Game Profile</div>
+  <div class="lm p-profile" role="button">
     <div class="lb-prof">
       <div class="lb-av">🎧</div>
-      <div style="flex:1;min-width:0">
+      <div class="lb-info">
         <div class="lb-name" id="lb-name">Player</div>
         <div class="lb-lvl" id="lb-lvl">Level 1</div>
         <div class="lb-xp"><i id="lb-xp" style="width:0%"></i></div>
       </div>
     </div>
   </div>
-  <div class="lb-tr">
-    <div class="lb-panel"><div class="lb-head" style="text-align:right">Currency</div><div class="lb-cash"><b id="lb-cash">$0</b></div></div>
-        <button class="lb-btn" id="lb-char">CHARACTER SELECT</button>
-  </div>
-  <div class="lb-mid lb-panel lb-mis">
-    <div class="lb-head">Mission Briefing</div>
-    <div class="lb-mis-body">
-      <div class="lb-mis-ico">!</div>
-      <div class="lb-mis-t" id="lb-mis">Mission 1:<small>First job</small></div>
-    </div>
-  </div>
-  <div class="lb-br">
-        <button class="lb-start" id="lb-go">START MATCH</button>
-  </div>
+  <div class="lm p-balance">Balance <b id="lb-cash">$0</b></div>
+  <button class="lm p-settings" id="lb-settings" aria-label="Settings">⚙</button>
+  <button class="lm p-invite lb-soon">Invite</button>
+  <button class="lm p-store" id="lb-store">Store</button>
+  <button class="lm p-char" id="lb-char">Character</button>
+  <button class="lm p-vault lb-soon">Vault</button>
+  <button class="lm p-mission lb-soon">Mission</button>
+  <button class="lm p-mods lb-soon">Mods</button>
+  <button class="lm p-start" id="lb-go">Start</button>
   <div class="lb-msg" id="lb-msg"></div>
-  <button id="lb-settings" class="lb-gear" aria-label="Settings">⚙</button>
-  <button class="lb-btn" id="lb-store" style="text-align:left">🛒 STORE</button>
 </div>
-<div id="settings" class="scr" style="display:none;justify-content:flex-start;align-items:center;padding:12px 0;overflow:auto;touch-action:pan-x pan-y"><div class="pp-wrap" style="max-width:520px"><div class="pp-head"><button id="st-back" class="pp-exit">◀ BACK (Lobby)</button><div class="pp-title">SETTINGS</div><span></span></div><div style="padding:14px;font-size:14px;opacity:.8">Settings will be added here.</div></div></div>
 <div id="start" class="scr" style="display:none">
   <h2>Greatest Bangla Rich City<br>Open World</h2>
   <div id="pcard"></div>
@@ -375,7 +443,7 @@ scene.background = new THREE.Color(0x8fb6e0);
 scene.fog = new THREE.Fog(0x8fb6e0, 90, 280);
 
 const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 400);
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.domElement.id = 'game';
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 renderer.setSize(innerWidth, innerHeight);
@@ -398,10 +466,12 @@ scene.add(sun, sun.target);
 
 
 // ---------- দিন-রাত: দিনে বাতি বন্ধ, রাতে বাতি জ্বলে + আকাশে চাঁদ ও তারা ----------
-const DAY_LEN = 360;      // একটা পূর্ণ দিন-রাত কত সেকেন্ডে (কম দিলে দ্রুত বদলায়)
+const DAY_LEN = 1260;     // ভোর/গোধূলি ১ মি → পূর্ণ দিন ১৬ মি → বিকেল-গোধূলি ২ মি → রাত ২ মি
 let dayP = 0.3;           // 0.25 = দুপুর, 0.75 = মাঝরাত
 let nightK = 0;           // 0 = পুরো দিন, 1 = গভীর রাত
 const sstep = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const interp1 = (x, xs, ys) => { for (let i = 0; i < xs.length - 1; i++) if (x <= xs[i + 1]) { const t = (x - xs[i]) / (xs[i + 1] - xs[i]); return ys[i] + (ys[i + 1] - ys[i]) * t; } return ys[ys.length - 1]; };
+const roadMats = [], wallMats = [];
 const skyDay = new THREE.Color(0x8fb6e0), skyDusk = new THREE.Color(0xe8905a), skyNight = new THREE.Color(0x050914), skyTmp = new THREE.Color();
 const hemiSkyD = new THREE.Color(0xcfe3ff), hemiSkyN = new THREE.Color(0x2a3a66), hemiGrD = new THREE.Color(0x6a8a50), hemiGrN = new THREE.Color(0x141a14);
 const sunDayCol = new THREE.Color(0xffd9a8), sunDuskCol = new THREE.Color(0xff8a4a), moonLightCol = new THREE.Color(0x8fa8ff);
@@ -428,20 +498,25 @@ const moon = (() => {
 })();
 function updateDayNight(dt, advance) {
   if (advance) dayP = (dayP + dt / DAY_LEN) % 1;
-  const a = dayP * Math.PI * 2, el = Math.sin(a), dx = Math.cos(a);
-  nightK = 1 - sstep(-0.12, 0.18, el);
+  const tt = dayP * DAY_LEN;               // 0 = ভোর শুরু; ভোর(0–60) · দিন(60–1020) · বিকেল-গোধূলি(1020–1140) · রাত(1140–1260)
+  const el = interp1(tt, [0, 60, 540, 1020, 1140, 1260], [-0.9, 0, 1, 0, -0.9, -0.9]);
+  nightK = Math.max(sstep(1120, 1150, tt), 1 - sstep(0, 40, tt));
+  const a = dayP * Math.PI * 2, dx = Math.cos(a);
+  // ভেজা রাস্তা: রাতে রাস্তা চকচকে হয়ে বাতির আলো প্রতিফলিত করে; বাড়ির জানালা জ্বলে
+  for (const m of roadMats) { m.roughness = 0.95 - 0.8 * nightK; m.metalness = 0.2 * nightK; }
+  for (const m of wallMats) m.emissiveIntensity = 1.3 * nightK;
   const day = 1 - nightK;
   // আকাশ ও কুয়াশার রং
-  if (el > 0) skyTmp.copy(skyDusk).lerp(skyDay, sstep(0, 0.4, el)); else skyTmp.copy(skyDusk).lerp(skyNight, sstep(0, 0.3, -el));
+  if (el > 0) skyTmp.copy(skyDusk).lerp(skyDay, sstep(0, 0.4, el)); else skyTmp.copy(skyDay).lerp(skyDusk, sstep(-0.5, 0, el)).lerp(skyNight, nightK);
   scene.background.copy(skyTmp); scene.fog.color.copy(skyTmp);
   // চারপাশের আলো
   hemi.intensity = 0.16 + 0.59 * day; hemi.color.copy(hemiSkyN).lerp(hemiSkyD, day); hemi.groundColor.copy(hemiGrN).lerp(hemiGrD, day);
   // সূর্য (দিনে) / চাঁদের আলো (রাতে) — ছায়াও এর সাথে বদলায়
   if (el >= 0) { sun.intensity = 1.6 * sstep(0, 0.3, el); sun.color.copy(sunDuskCol).lerp(sunDayCol, sstep(0, 0.4, el)); sun.position.set(player.x + dx * 100, player.y + 20 + el * 80, player.z + 40); }
-  else { sun.intensity = 0.35 * sstep(0, 0.3, -el); sun.color.copy(moonLightCol); sun.position.set(player.x - dx * 100, player.y + 20 - el * 80, player.z - 40); }
+  else { sun.intensity = 0.35 * nightK; sun.color.copy(moonLightCol); sun.position.set(player.x - dx * 100, player.y + 20 - el * 80, player.z - 40); }
   sun.target.position.set(player.x, 0, player.z);
   // বাতি: রাতে জ্বলে, দিনে বন্ধ
-  for (const l of lampLights) l.intensity = 60 * nightK;
+  for (const l of lampLights) l.intensity = 150 * nightK;
   if (nightMats.globe) nightMats.globe.color.copy(globeDay).lerp(globeNight, nightK);
   if (nightMats.pool) nightMats.pool.opacity = 0.55 * nightK;
   if (nightMats.hl) { nightMats.hl.color.copy(hlDay).lerp(hlNight, nightK); nightMats.tl.color.copy(tlDay).lerp(tlNight, nightK); }
@@ -492,6 +567,21 @@ roadTexV.repeat.set(1, MAP * 2 / 8);
 
 // জানালাওয়ালা দেয়াল (প্রতিটি রঙের জন্য একবার তৈরি)
 const facadeCache = {};
+let facadeEmisT = null;
+function facadeEmis() {
+  if (facadeEmisT) return facadeEmisT;
+  facadeEmisT = canvasTex(256, 256, (g, w, h) => {
+    g.fillStyle = '#000'; g.fillRect(0, 0, w, h);
+    for (let r = 0; r < 2; r++) for (let c = 0; c < 2; c++) {
+      const x = 28 + c * 112, y = 36 + r * 100;
+      g.fillStyle = Math.random() < 0.7 ? '#ffc56b' : '#1a1a1a';   // বেশিরভাগ ঘরে আলো, কিছু অন্ধকার
+      g.fillRect(x + 6, y + 6, 60, 22);
+      g.fillStyle = Math.random() < 0.5 ? '#ffb24d' : '#1a1a1a';
+      g.fillRect(x + 6, y + 36, 60, 22);
+    }
+  });
+  return facadeEmisT;
+}
 function facadeTex(base) {
   if (facadeCache[base]) return facadeCache[base];
   const t = canvasTex(256, 256, (g, w, h) => {
@@ -608,12 +698,12 @@ function buildWorld() {
     roadCenters.push(p);
     const h = new THREE.Mesh(
       new THREE.PlaneGeometry(MAP * 2, ROAD_W),
-      new THREE.MeshStandardMaterial({ map: roadTexH, roughness: 0.95 })
+      roadMats.push(new THREE.MeshStandardMaterial({ map: roadTexH, roughness: 0.95 })) && roadMats[roadMats.length - 1]
     );
     h.rotation.x = -Math.PI / 2; h.position.set(0, 0.02, p); h.receiveShadow = true;
     const v = new THREE.Mesh(
       new THREE.PlaneGeometry(ROAD_W, MAP * 2),
-      new THREE.MeshStandardMaterial({ map: roadTexV, roughness: 0.95 })
+      roadMats.push(new THREE.MeshStandardMaterial({ map: roadTexV, roughness: 0.95 })) && roadMats[roadMats.length - 1]
     );
     v.rotation.x = -Math.PI / 2; v.position.set(p, 0.03, 0); v.receiveShadow = true;
     scene.add(h, v);
@@ -640,7 +730,9 @@ function buildWorld() {
       const base = pick(palette);
       const wallTex = facadeTex(base).clone();
       wallTex.repeat.set(Math.max(1, Math.round(w / 8)), Math.max(1, Math.round(h / 8)));
-      const wall = new THREE.MeshStandardMaterial({ map: wallTex, roughness: 0.85 });
+      const emisT = facadeEmis().clone(); emisT.repeat.copy(wallTex.repeat); emisT.needsUpdate = true;
+      const wall = new THREE.MeshStandardMaterial({ map: wallTex, roughness: 0.85, emissive: 0xffffff, emissiveMap: emisT, emissiveIntensity: 0 });
+      wallMats.push(wall);
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(ww, h, dd), [wall, wall, roofMat, wall, wall, wall]);
       mesh.position.set(bx, h / 2, bz);
       mesh.castShadow = true; mesh.receiveShadow = true;
@@ -879,7 +971,7 @@ function buildStreet() {
   const sg = new THREE.SphereGeometry(0.17, 8, 6);
   sigH = makeInst(sg, new THREE.MeshBasicMaterial({ color: 0xe74c3c }), sH);
   sigV = makeInst(sg, new THREE.MeshBasicMaterial({ color: 0xe74c3c }), sV);
-  for (let i = 0; i < 4; i++) { const l = new THREE.PointLight(0xffd9a0, 60, 24, 2); scene.add(l); lampLights.push(l); }
+  for (let i = 0; i < 4; i++) { const l = new THREE.PointLight(0xffd9a0, 150, 30, 2); scene.add(l); lampLights.push(l); }
   buildCars();
 }
 
@@ -985,6 +1077,11 @@ const CHARACTERS = [
   // { id: 'soldier', name: 'সৈনিক', icon: '🪖', files: ['soldier'] },
   // { id: 'robot', name: 'রোবট', icon: '🤖', files: ['robot'] },
 ];
+// ক্যারেক্টার মেনুতে যে নাম দেখাবে সেটা এখানে বদলান (শুধু মেনুতে দেখায়)
+const MENU_NAMES = {
+  boy: 'Siyam', bc2: 'Ryan', bc3: 'Ronni', bc4: 'Alamin',
+  girl: 'Sathe', gc2: 'Afrin', gc3: 'Lila', gc4: 'Sadiya',
+};
 const CHAR_ALIAS = Object.fromEntries(CHARACTERS.map(c => [c.id.toLowerCase(), c.files]));
 async function loadAny(n) {
   const alias = CHAR_ALIAS[String(n).toLowerCase()];
@@ -2249,6 +2346,13 @@ function drinkWater() {
   if (stam >= 500) { toast('Not needed now'); return; }
   inv.water--; stam = Math.min(500, stam + 150);
 }
+function hudPref(k) { return !(activeProfile && activeProfile.hud && activeProfile.hud[k] === false); }
+function setHud(k, v) { if (!activeProfile) return; activeProfile.hud = Object.assign({}, activeProfile.hud || {}, { [k]: v }); saveProfiles(); applyHud(); }
+function applyHud() {
+  const h = document.getElementById('hpf'), e = document.getElementById('stf');
+  if (h) h.closest('.brow').style.display = hudPref('hp') ? '' : 'none';
+  if (e) e.closest('.brow').style.display = hudPref('ep') ? '' : 'none';
+}
 let lastBars = '';
 function updateVitals(dt) {
   hurtT += dt;
@@ -2346,33 +2450,55 @@ let selSlot = 0;
 function curP() { return profiles[selSlot] || profiles.find(Boolean) || null; }
 function renderCharSelect(startId, onConfirm, onBack) {
   const box = document.getElementById('pcard'); box.innerHTML = '';
+  box.classList.add('cs-box');
   let sel = startId;
-  box.append(mk('div', '🎮 Select character', 'slot'));
-  const grid = mk('div', '', 'row');
-  grid.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%;padding:4px';
-  const cards = CHARACTERS.map(c => {
-    const b = mk('button', '', 'opt');
-    b.style.cssText = 'min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px';
-    b.append(charThumb(c, 48), mk('div', c.name));
-    b.onclick = () => { sel = c.id; cards.forEach((x, i) => x.classList.toggle('on', CHARACTERS[i].id === sel)); };
-    return b;
+  // উপরের বার: শিরোনাম, Confirm, Back
+  const top = mk('div', '', 'cs-top');
+  top.append(mk('div', 'CHARACTER MENU', 'cs-title'));
+  const right = mk('div', '', 'cs-right');
+  const ok = mk('button', 'Confirm', 'cs-confirm'); ok.onclick = () => onConfirm(sel);
+  const bk = mk('button', '◀ BACK', 'cs-back'); bk.onclick = () => (onBack ? onBack() : renderProfile());
+  right.append(ok, bk); top.append(right);
+  box.append(top);
+
+  const cards = [];
+  const loadImg = (img, c, wrap) => {
+    const exts = ['jpg', 'png', 'jpeg']; let ei = 0;
+    const next = () => { if (ei < exts.length) img.src = 'thumbs/' + c.id + '.' + exts[ei++]; else { img.remove(); wrap.textContent = c.icon; } };
+    img.onerror = next; next();
+  };
+  for (const [label, g] of [['MALE CHARACTERS', 'boy'], ['FEMALE CHARACTERS', 'girl']]) {
+    box.append(mk('div', label, 'cs-sec'));
+    const grid = mk('div', '', 'cs-grid');
+    CHARACTERS.filter(c => c.gender === g).forEach(c => {
+      const card = mk('div', '', 'cs-card');
+      const pic = mk('div', '', 'cs-pic');
+      const img = document.createElement('img'); img.alt = c.name; img.className = 'cs-img';
+      pic.append(img); loadImg(img, c, pic);
+      const name = mk('div', MENU_NAMES[c.id] || c.name, 'cs-name');
+      const tag = mk('div', '', 'cs-tag');
+      card.append(pic, name, tag);
+      card.onclick = () => { sel = c.id; refresh(); };   // ট্যাপ করলে সিলেক্ট; Confirm চাপলে লবিতে কনফার্ম
+      cards.push({ card, c, tag });
+      grid.append(card);
+    });
+    box.append(grid);
+  }
+  const refresh = () => cards.forEach(x => {
+    x.card.classList.toggle('on', x.c.id === sel);
+    x.tag.textContent = x.c.id === sel ? 'SELECTED' : 'SELECT';
   });
-  cards.forEach((b, i) => b.classList.toggle('on', CHARACTERS[i].id === sel));
-  grid.append(...cards);
-  const ok = mk('button', '✔ Confirm'); ok.style.cssText = 'background:#2ecc71;color:#fff;font-weight:700';
-  ok.onclick = () => onConfirm(sel);
-  const bk = mk('button', '◀ Back'); bk.style.cssText = 'background:#555;color:#fff';
-  bk.onclick = () => (onBack ? onBack() : renderProfile());
-  box.append(grid, ok, bk);
+  refresh();
 }
 
 let ppDraft = null;
 function renderProfile() {
   ensureProfile();
   const p = curP(); if (!p) return;
+  document.getElementById('pcard').classList.remove('cs-box');
   if (!ppDraft || ppDraft.id !== p.id) ppDraft = { id: p.id, gender: p.gender, name: p.name, career: p.career || '', address: p.address || '', bio: p.about || '' };
   const d = ppDraft;
-  const box = document.getElementById('pcard'); box.innerHTML = '';
+  const box = document.getElementById('pcard'); box.innerHTML = ''; box.classList.remove('cmenu');
   const pc = CHARACTERS.find(c => c.id === d.gender) || CHARACTERS[0];
   const xp = p.xp || 0, lvl = p.level || (Math.floor(xp / 100) + 1);
 
@@ -2578,7 +2704,7 @@ let cash = 300, bank = 0, inv = { med: 1, arm: 1, water: 0 }, stam = 500, paused
 const parkedCars = [], panelEl = document.getElementById('panel');
 function toast(t) { const e = document.getElementById('toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => e.style.display = 'none', 1600); }
 let panelFn = null;
-let shopScale = 1.1;
+let shopScale = 0.9;
 function renderPanel() {
   if (!panelFn) return;
   const dd = panelFn(); if (!dd) return;
@@ -2597,7 +2723,7 @@ function renderPanel() {
     });
   }
 }
-function openPanel(fn, corner) { if (panelEl.style.display !== 'flex') navPush(); panelEl.classList.toggle('corner', !!corner); panelFn = fn; paused = true; fireHeld = false; atkHeld = false; jx = 0; jy = 0; panelEl.style.display = 'flex'; renderPanel(); }
+function openPanel(fn, corner) { if (panelEl.style.display !== 'flex') navPush(); panelEl.classList.toggle('corner', !!corner); panelFn = fn; paused = !corner; fireHeld = false; atkHeld = false; jx = 0; jy = 0; panelEl.style.display = 'flex'; renderPanel(); }
 function closePanelRaw() { panelFn = null; paused = false; panelEl.style.display = 'none'; panelEl.classList.remove('corner'); }
 function closePanel() { if (panelEl.style.display === 'flex') navPop(); closePanelRaw(); }
 let navDepth = 0, navIgnore = 0;
@@ -2609,7 +2735,6 @@ addEventListener('popstate', () => {
   if (navDepth > 0) navDepth--;
   if (panelEl.style.display === 'flex') { closePanelRaw(); return; }
   if (started) { returnToLobbyRaw(); return; }
-  if (document.getElementById('settings').style.display === 'flex') { showScr('lobby'); renderLobby(); return; }
   if (document.getElementById('start').style.display === 'flex') { showScr('lobby'); renderLobby(); }
 });
 const shopOpen = fn => openPanel(fn, true);
@@ -2628,7 +2753,7 @@ function openCharSelect() {
 // লবি থেকে সেটিংস (ভবিষ্যতে এখানে নতুন অপশন যোগ হবে)
 function openSettings() {
   navPush();
-  const box = document.getElementById('pcard'); box.innerHTML = '';
+  const box = document.getElementById('pcard'); box.innerHTML = ''; box.classList.remove('cs-box'); box.classList.remove('cmenu');
   box.append(mk('div', '⚙ Settings', 'slot'));
   const back = mk('button', '◀ Back to lobby'); back.style.cssText = 'background:#555;color:#fff';
   back.onclick = () => { navPop(); showScr('lobby'); renderLobby(); };
@@ -2673,7 +2798,7 @@ bindTap(document.getElementById('wsel'), () => openPanel(() => ({ title: '🎒 B
   { t: '💣 Grenade ' + wst.grenade.n + ' · Mine ' + wst.mine.n + ' · Bomb ' + wst.bomb.n },
   { t: '💥 Kills: ' + kills }] })));
 bindTap(document.getElementById('pausebtn'), () => openPanel(() => ({ title: '⚙ Settings', rows: [
-  { t: 'Resume game', b: '▶ Resume', f: closePanel }, { t: 'Return to lobby', b: '🏠 Lobby', f: () => returnToLobby() }, { t: 'Move buttons', b: 'Customize', f: () => { closePanel(); toggleEdit(); } },
+  { t: 'Resume game', b: '▶ Resume', f: closePanel }, { t: 'Return to lobby', b: '🏠 Lobby', f: () => returnToLobby() }, { t: 'Health bar', b: hudPref('hp') ? 'Hide' : 'Show', f: () => setHud('hp', !hudPref('hp')) }, { t: 'Water bar', b: hudPref('ep') ? 'Hide' : 'Show', f: () => setHud('ep', !hudPref('ep')) }, { t: 'Move buttons', b: 'Customize', f: () => { closePanel(); toggleEdit(); } },
   { t: '🏦 Bank (cash 💵' + cash + ' · Bank 💵' + bank + ')', b: 'Open', f: () => openPanel(bankPanel) }] })));
 bindTap(document.getElementById('aim'), () => { if (drv) return; aimOn = !aimOn; document.getElementById('aim').classList.toggle('on', aimOn); });
 bindTap(document.getElementById('nade'), () => { if (!pDead && !drv) throwGrenade(); });
@@ -2733,6 +2858,9 @@ function loop(now) {
   const dt = Math.min(el / 1000, 0.05);
 
   if (!paused) animateWorld(now / 1000, dt);
+  // আটকে যাওয়া অবস্থা ঠিক করা: মানচিত্র বা এডিট বার বন্ধ থাকলে ফ্ল্যাগও বন্ধ (নইলে দৌড়/লাফ/বসা কাজ করে না)
+  if (mapOpen && bigWrap.style.display !== 'flex') mapOpen = false;
+  if (editMode && document.getElementById('editbar').style.display !== 'flex') { editMode = false; document.body.classList.remove('editing'); }
   if (started && !mapOpen && !editMode && !paused) { if (drv) driveStep(dt); else update(dt); }
   if (started) extra(dt);
   if (lbOn) updateLobby(dt, now / 1000); else updateDayNight(dt, !paused);
@@ -2756,7 +2884,7 @@ requestAnimationFrame(loop);
 
 async function startGame(p) {
   exitLobby();
-  activeProfile = p;
+  activeProfile = p; applyHud();
   document.querySelectorAll('#start button').forEach(b => b.disabled = true);
   document.getElementById('msg').textContent = 'Loading...';
   if (!ac) initAudio();
@@ -2782,6 +2910,7 @@ async function startGame(p) {
   document.getElementById('bars').style.display = 'block';
   document.getElementById('pname').textContent = '👤 ' + p.name;
   document.querySelectorAll('.act').forEach(b => b.style.display = 'block');
+  document.getElementById('nade').style.display = 'none';   // বোমা এখন ফায়ার বাটন দিয়েই ছোড়া হয়
 }
 
 addEventListener('resize', () => {
@@ -2801,13 +2930,22 @@ function lbEnsurePivot() {
   lbRing = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.65, 48), new THREE.MeshBasicMaterial({ color: 0x4fc3ff, transparent: true, opacity: 0.9, side: THREE.DoubleSide }));
   lbRing.rotation.x = -Math.PI / 2; lbRing.position.y = 0.02; lbPivot.add(lbRing);
 }
+let lbBuiltGender = null;
+function lbGroundFix(group) {
+  // পায়ের হাড় দিয়ে মাটি মাপা: অ্যানিমেশনের সাথে পা সবসময় মাটিতে থাকবে
+  group.updateMatrixWorld(true);
+  let minY = Infinity;
+  group.traverse(o => { if (o.isBone && /foot|toe/i.test(o.name)) { const v = new THREE.Vector3(); o.getWorldPosition(v); if (v.y < minY) minY = v.y; } });
+  if (isFinite(minY)) group.position.y -= minY;
+}
 async function enterLobby(p) {
   lbEnsurePivot();
   if (!lbOn) {
     lbOn = true;
     lbSavedBg = scene.background; lbSavedFog = scene.fog; lbSavedFov = camera.fov;
     if (!lbBgTex) { lbBgTex = new THREE.TextureLoader().load('branding/lobby.jpg'); lbBgTex.colorSpace = THREE.SRGBColorSpace; }
-    scene.background = lbBgTex; scene.fog = null;
+    scene.background = null; scene.fog = null;
+    document.body.style.background = "#05080f url('branding/lobby.jpg') center/cover no-repeat";
     camera.fov = 45; camera.updateProjectionMatrix();
     lbHidden = [];
     for (const o of scene.children) if (o.visible && !o.isLight) { o.visible = false; lbHidden.push(o); }
@@ -2815,16 +2953,17 @@ async function enterLobby(p) {
     lbYaw = p.lobbyYaw || 0;
   }
   const seq = ++lbBuildSeq;
+  if (lbChar && lbBuiltGender === p.gender) return;          // একই চরিত্র আগে থেকেই দেখানো আছে
+  if (lbChar) { lbPivot.remove(lbChar.group); lbChar = null; }   // পুরনো চরিত্র এখনই সরাও, নতুনটা লোড হওয়া পর্যন্ত
   let c;
   try { c = await buildCharacter(p.gender); applyOutfit(c, p); } catch (e) { return; }
   if (seq !== lbBuildSeq || !lbOn) return;
-  if (lbChar) lbPivot.remove(lbChar.group);
-  lbChar = c; lbPivot.add(c.group);
+  lbChar = c; lbBuiltGender = p.gender; lbPivot.add(c.group);
   c.group.position.set(0, 0, 0); c.group.rotation.set(0, 0, 0);
   // স্থির ভঙ্গি: idle অ্যানিমেশনের প্রথম ফ্রেম ধরে রাখা (মাথা নড়বে না)
   if (c.actions && c.actions.idle && c.mixer) {
     c.current = c.actions.idle; c.state = 'idle'; c.key = 'idle';
-    c.actions.idle.reset().play(); c.mixer.update(0); c.actions.idle.paused = true;
+    c.actions.idle.reset().play(); c.mixer.update(0);
   }
   // মাটিতে বসানো + কেন্দ্র মূল বিন্দুতে: পিভটের ঘূর্ণন সাময়িকভাবে শূন্য করে মাপি
   const savedYaw = lbPivot.rotation.y; lbPivot.rotation.y = 0;
@@ -2837,7 +2976,8 @@ async function enterLobby(p) {
 }
 function updateLobby(dt, t) {
   if (lbPivot) lbPivot.rotation.y = lbYaw;
-  if (lbChar && lbChar.mixer && lbChar.actions && lbChar.actions.idle && !lbChar.actions.idle.paused) lbChar.mixer.update(dt);
+  hemi.intensity = 1.3; sun.intensity = 1.8;
+  if (lbChar && lbChar.mixer) { lbChar.mixer.update(dt); lbGroundFix(lbChar.group); }
   const d = lbHeight * 2.1;
   camera.position.set(0, lbHeight * 0.55, d);
   camera.lookAt(0, lbHeight * 0.5, 0);
@@ -2846,6 +2986,7 @@ function exitLobby() {
   if (!lbOn) return;
   lbOn = false; lbBuildSeq++;
   scene.background = lbSavedBg; scene.fog = lbSavedFog;
+  document.body.style.background = '';
   camera.fov = lbSavedFov; camera.updateProjectionMatrix();
   for (const o of lbHidden) o.visible = true; lbHidden = [];
   if (lbChar) { lbPivot.remove(lbChar.group); lbChar = null; }
@@ -2887,7 +3028,7 @@ async function enterGame() {
   const p = curP();
   if (!p) return;
   activeProfile = p;
-  shopScale = p.shopScale || 1.1;
+  shopScale = p.shopScale || 0.9;
   navPush();
   const intro = document.getElementById('intro');
   showScr('intro');
@@ -2899,9 +3040,9 @@ async function enterGame() {
 }
 document.getElementById('lb-go').addEventListener('click', () => { enterGame(); });
 document.getElementById('lb-char').addEventListener('click', openCharSelect);
-document.querySelector('#lobby .lb-tl').addEventListener('click', openProfileScreen);
+document.querySelector('#lobby .p-profile').addEventListener('click', openProfileScreen);
+document.querySelectorAll('#lobby .lb-soon').forEach(b => b.addEventListener('click', () => lbMsg('Coming soon')));
 document.getElementById('lb-settings').addEventListener('click', openSettings);
-document.getElementById('st-back').addEventListener('click', () => { navPop(); showScr('lobby'); renderLobby(); });
 document.getElementById('lb-store').addEventListener('click', () => lbMsg('Store coming soon'));
 
 // ---------- শুরুর ক্রম: লোডিং → ইন্টারফেস → গল্প → চরিত্র ----------
