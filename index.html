@@ -870,7 +870,8 @@ async function buildCharacter(gender) {
   const model = gltf;
   model.rotation.y = MODEL_YAW;
   let box = new THREE.Box3().setFromObject(model);
-  const s = CHAR_HEIGHT / (box.max.y - box.min.y);
+  const rawHeight = box.max.y - box.min.y;   // মডেলটার নিজের (স্কেল করার আগের) আসল উচ্চতা — বসা/শোয়ার গভীরতা ঠিক করতে লাগবে
+  const s = CHAR_HEIGHT / rawHeight;
   model.scale.setScalar(s);
   box = new THREE.Box3().setFromObject(model);
   model.position.y -= box.min.y;
@@ -884,13 +885,24 @@ async function buildCharacter(gender) {
   const normBone = nm => String(nm).replace(/^mixamorig\d*[:_]?/i, '').replace(/[^a-z0-9]/gi, '').toLowerCase();
   const boneMap = new Map();
   model.traverse(o => { if (o.isBone || o.type === 'Bone') boneMap.set(normBone(o.name), o.name); });
+  // এই মডেলের নিজের Hips হাড়ের দাঁড়ানো-অবস্থার Y (বাইন্ড-পোজ) — ক্রাউচ/প্রোন ক্লিপ অন্য একটা মডেলের
+  // হাইট/অনুপাত ধরে বানানো হলেও এই মডেলের নিজস্ব উচ্চতার সাপেক্ষে বসা/শোয়ার গভীরতা বসাতে এটা লাগবে
+  let modelHipsRestY = 0;
+  { const hn = boneMap.get('hips'); if (hn) { const hb = model.getObjectByName(hn); if (hb) modelHipsRestY = hb.position.y; } }
   const KEEP_Y = ['crouchidle', 'crouchwalk', 'prone'];      // এগুলোতে নিতম্বের উচ্চতা রাখতে হবে (নইলে শূন্যে ভাসবে)
   const ONCE = { jump: 0.75, punch: 0.9, kick: 1.1 };        // একবার চলবে, সর্বোচ্চ এত সেকেন্ডে শেষ হবে (ক্লিপ ছোট হলে নিজের স্বাভাবিক সময়ে)
   const dur = {};
   for (const [n, f] of Object.entries(ANIMS)) {
     const a = await loadAsset(f);
     if (!(a && a.animations.length)) continue;
-    const clip = a.animations[0];
+    const clip = a.animations[0].clone();   // ক্যাশ হওয়া ক্লিপটা একাধিক চরিত্র শেয়ার করে, তাই নিজের কপিতে বদলানো হলো (নইলে চরিত্র বদলালে হাড়ের নাম এলোমেলো হয়ে যেত)
+    // ক্রাউচ/প্রোন ক্লিপ যেই মূল (সোর্স) চরিত্র দিয়ে বানানো, তার নিজের উচ্চতা ও দাঁড়ানো Hips-উচ্চতা বের করা —
+    // যাতে এই ক্লিপ অন্য উচ্চতা/অনুপাতের মডেলে লাগালেও বসা/শোয়ার গভীরতাটা মাটির সাপেক্ষে ঠিক থাকে, মাটির নিচে না ঢুকে যায়
+    let srcHipsRestY = null, srcRawHeight = 0;
+    if (KEEP_Y.includes(n)) {
+      try { const bb = new THREE.Box3().setFromObject(a); srcRawHeight = bb.max.y - bb.min.y; } catch (e) {}
+      a.traverse(o => { if (srcHipsRestY === null && (o.isBone || o.type === 'Bone') && normBone(o.name) === 'hips') srcHipsRestY = o.position.y; });
+    }
     // হাড়ের নাম মেলানো: অ্যানিমেশন ফাইলের হাড়ের নাম (mixamorig:, mixamorig1:, বা প্রিফিক্স ছাড়া) মডেলের হাড়ের নামে বদলে নেয়
     // নাম না মিললে ক্লিপ কোনো হাড়েই লাগে না, আর চরিত্র হাত মেলে (T-pose) দাঁড়িয়ে থাকে
     clip.tracks = clip.tracks.map(t => {
@@ -906,7 +918,15 @@ async function buildCharacter(gender) {
       if (!t.name.endsWith('.position')) return true;
       if (KEEP_Y.includes(n) && /Hips\.position$/.test(t.name)) {   // শুধু উচ্চতা (Y) রাখো, সামনে-পিছনে সরা বন্ধ
         const v = t.values, x0 = v[0], z0 = v[2];
-        for (let i = 0; i < v.length; i += 3) { v[i] = x0; v[i + 2] = z0; }
+        const canNorm = srcHipsRestY !== null && srcRawHeight > 0.01 && rawHeight > 0.01;
+        for (let i = 0; i < v.length; i += 3) {
+          v[i] = x0; v[i + 2] = z0;
+          if (canNorm) {
+            // সোর্স চরিত্রের উচ্চতার কত ভগ্নাংশ নিচে নামছে, সেই একই ভগ্নাংশ এই মডেলের নিজের উচ্চতায় বসানো হলো
+            const frac = (v[i + 1] - srcHipsRestY) / srcRawHeight;
+            v[i + 1] = modelHipsRestY + frac * rawHeight;
+          }
+        }
         return true;
       }
       return false;
@@ -2093,7 +2113,7 @@ while (profiles.length < MAX_PROFILES) profiles.push(null);
 function saveProfiles() { try { localStorage.setItem(PKEY, JSON.stringify({ slots: profiles })); } catch (e) {} }
 function saveProgress() {
   if (!activeProfile || !started) return;
-  Object.assign(activeProfile, { cash, inv, kills, deaths, hp, armor, x: player.x, z: player.z, playSec: playBase + (performance.now() - playStart) / 1000 });
+  Object.assign(activeProfile, { cash, bank, inv, kills, deaths, hp, armor, x: player.x, z: player.z, playSec: playBase + (performance.now() - playStart) / 1000 });
   saveProfiles();
 }
 setInterval(saveProgress, 5000);
@@ -2101,6 +2121,23 @@ addEventListener('pagehide', saveProgress);
 document.addEventListener('visibilitychange', () => { if (document.hidden) saveProgress(); });
 function fmtTime(sec) { const m = Math.floor(sec / 60); return m < 60 ? m + ' মি' : Math.floor(m / 60) + ' ঘ ' + (m % 60) + ' মি'; }
 const mk = (tag, txt, cls) => { const e = document.createElement(tag); if (txt) e.textContent = txt; if (cls) e.className = cls; return e; };
+
+// চরিত্রের ছবি (thumbs/<id>.jpg) — ছবি না পেলে ইমোজিতে ফিরে যায়
+function charThumb(c, size) {
+  size = size || 54;
+  const wrap = mk('div');
+  wrap.style.cssText = `width:${size}px;height:${size}px;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#2a2a30;flex:none;font-size:${Math.round(size * 0.55)}px`;
+  const img = document.createElement('img');
+  img.alt = c.name;
+  img.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:top center;display:block';
+  // ছবিটা .jpg, .png, .jpeg — যেকোনো ফরম্যাটে থাকলেই চলবে; একে একে চেষ্টা করে, কোনোটাই না পেলে ইমোজিতে ফিরে যায়
+  const exts = ['jpg', 'png', 'jpeg']; let ei = 0;
+  const tryNext = () => { if (ei < exts.length) img.src = 'thumbs/' + c.id + '.' + exts[ei++]; else { wrap.innerHTML = ''; wrap.textContent = c.icon; } };
+  img.onerror = tryNext;
+  tryNext();
+  wrap.append(img);
+  return wrap;
+}
 
 // ফ্রি-ফায়ার স্টাইল: বড় গ্রিডে সব চরিত্র দেখায়, ট্যাপ করে বাছাই করা যায়, তারপর "কনফার্ম" চাপলেই পাকা হয়
 function renderCharSelect(startId, onConfirm) {
@@ -2111,9 +2148,8 @@ function renderCharSelect(startId, onConfirm) {
   grid.style.cssText = 'max-height:calc(var(--vh)*44);overflow-y:auto;touch-action:pan-y;padding:4px';
   const cards = CHARACTERS.map(c => {
     const b = mk('button', '', 'opt');
-    b.style.cssText = 'min-width:84px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px';
-    b.append(mk('div', c.icon), mk('div', c.name));
-    b.firstChild.style.fontSize = '30px';
+    b.style.cssText = 'min-width:84px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px';
+    b.append(charThumb(c, 60), mk('div', c.name));
     b.onclick = () => { sel = c.id; cards.forEach((x, i) => x.classList.toggle('on', CHARACTERS[i].id === sel)); };
     return b;
   });
@@ -2131,7 +2167,10 @@ function renderProfile() {
     // হোম লবি: প্রোফাইল আগে থেকেই আছে
     box.append(mk('div', '🏠 হোম লবি', 'slot'));
     const card = mk('div', '', 'slot');
-    card.append(mk('div', ((CHARACTERS.find(c => c.id === p.gender) || CHARACTERS[0]).icon) + ' ' + p.name), mk('div', '💥 কিল: ' + (p.kills || 0) + ' · ☠ মৃত্যু: ' + (p.deaths || 0) + ' · ⏱ ' + fmtTime(p.playSec || 0)));
+    const pc = CHARACTERS.find(c => c.id === p.gender) || CHARACTERS[0];
+    const head = mk('div'); head.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px';
+    head.append(charThumb(pc, 44), mk('div', p.name));
+    card.append(head, mk('div', '💥 কিল: ' + (p.kills || 0) + ' · ☠ মৃত্যু: ' + (p.deaths || 0) + ' · ⏱ ' + fmtTime(p.playSec || 0)));
     const go = mk('button', '▶ খেলা শুরু'); go.onclick = () => startGame(p);
     const chg = mk('button', '🔄 চরিত্র বদলান'); chg.style.cssText = 'background:#2980b9;color:#fff';
     chg.onclick = () => renderCharSelect(p.gender, id => { p.gender = id; pgender = id; saveProfiles(); renderProfile(); });
@@ -2158,7 +2197,9 @@ function renderProfile() {
         const np = { id: Date.now(), name: (inp.value || '').trim() || 'খেলোয়াড়', gender: pgender, dress: pdress, created: Date.now(), kills: 0, deaths: 0, playSec: 0, hp: 100, armor: 100 };
         profiles[0] = np; saveProfiles(); startGame(np);
       };
-      box.append(mk('div', chosen.icon + ' ' + chosen.name + ' নির্বাচিত হয়েছে', 'slot'), inp, mk('div', 'পোশাকের রং', 'soon'), dr, back, go);
+      const chead = mk('div', '', 'slot'); chead.style.cssText += 'display:flex;align-items:center;justify-content:center;gap:8px';
+      chead.append(charThumb(chosen, 44), mk('div', chosen.name + ' নির্বাচিত হয়েছে'));
+      box.append(chead, inp, mk('div', 'পোশাকের রং', 'soon'), dr, back, go);
     });
   }
   if (MAX_PROFILES < 2) box.append(mk('div', '➕ আরও প্রোফাইল — শীঘ্রই আসছে', 'slot soon'));
@@ -2289,7 +2330,7 @@ applyLayout();
 let last = performance.now(), fpsFrames = 0, fpsTime = 0;
 
 // ---------- নতুন HUD ফিচার: স্ট্যামিনা, টাকা, দোকান, ব্যাগ, বিরতি, ক্যামেরা, এইম, গাড়ি ----------
-let cash = 300, inv = { med: 1, arm: 1 }, stam = 100, paused = false, aimOn = false, drv = null, snapFlag = false, lastCash = -1, toastT = 0;
+let cash = 300, bank = 0, inv = { med: 1, arm: 1 }, stam = 100, paused = false, aimOn = false, drv = null, snapFlag = false, lastCash = -1, toastT = 0;
 const parkedCars = [], panelEl = document.getElementById('panel');
 function toast(t) { const e = document.getElementById('toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => e.style.display = 'none', 1600); }
 let panelFn = null;
@@ -2308,7 +2349,16 @@ const SHOP = [
   { n: 'স্নাইপার গুলি +৫', p: 120, f: buy(60, 'sniper', 'res', 5) }, { n: 'গ্রেনেড +১', p: 120, f: buy(9, 'grenade', 'n', 1) },
   { n: 'মাইন +১', p: 150, f: buy(9, 'mine', 'n', 1) }, { n: 'বোমা +১', p: 250, f: buy(9, 'bomb', 'n', 1) }
 ];
-bindTap(document.getElementById('shop'), () => openPanel(() => ({ title: '🛒 দোকান · 💵 ' + cash, rows: SHOP.map(it => ({ t: it.n + ' — 💵' + it.p, b: 'কিনুন', f: () => { if (cash < it.p) { toast('টাকা কম'); return; } cash -= it.p; it.f(); } })) })));
+// ব্যাংক: হাতের নগদ টাকা জমা/তোলা — শপ ও পজ মেনু দুই জায়গা থেকেই খোলা যায়
+function bankPanel() {
+  return { title: '🏦 ব্যাংক', rows: [
+    { t: '👛 হাতে নগদ: 💵 ' + cash },
+    { t: '🏦 ব্যাংকে জমা: 💵 ' + bank },
+    { t: 'হাতের সব টাকা ব্যাংকে জমা দিন', b: '⬇ জমা করুন', f: () => { if (cash <= 0) { toast('হাতে টাকা নেই'); return; } bank += cash; cash = 0; toast('জমা হয়েছে'); } },
+    { t: 'ব্যাংক থেকে সব টাকা তুলে নিন', b: '⬆ তুলুন', f: () => { if (bank <= 0) { toast('ব্যাংকে টাকা নেই'); return; } cash += bank; bank = 0; toast('তোলা হয়েছে'); } }
+  ] };
+}
+bindTap(document.getElementById('shop'), () => openPanel(() => ({ title: '🛒 দোকান · 💵 ' + cash, rows: [...SHOP.map(it => ({ t: it.n + ' — 💵' + it.p, b: 'কিনুন', f: () => { if (cash < it.p) { toast('টাকা কম'); return; } cash -= it.p; it.f(); } })), { t: '🏦 ব্যাংকে টাকা জমা/তোলা (ব্যাংকে: 💵' + bank + ')', b: 'খুলুন', f: () => openPanel(bankPanel) }] })));
 bindTap(document.getElementById('wsel'), () => openPanel(() => ({ title: '🎒 ব্যাগ · 💵 ' + cash, rows: [
   { t: '🩹 মেডকিট × ' + inv.med, b: 'ব্যবহার', f: () => { if (inv.med > 0 && hp < 100) { inv.med--; hp = Math.min(100, hp + 50); } else toast('এখন দরকার নেই'); } },
   { t: '🛡 আর্মার কিট × ' + inv.arm, b: 'পরুন', f: () => { if (inv.arm > 0 && armor < 100) { inv.arm--; armor = Math.min(100, armor + 50); } else toast('এখন দরকার নেই'); } },
@@ -2316,7 +2366,8 @@ bindTap(document.getElementById('wsel'), () => openPanel(() => ({ title: '🎒 �
   { t: '💣 গ্রেনেড ' + wst.grenade.n + ' · মাইন ' + wst.mine.n + ' · বোমা ' + wst.bomb.n },
   { t: '💥 কিল: ' + kills }] })));
 bindTap(document.getElementById('pausebtn'), () => openPanel(() => ({ title: '⏸ বিরতি', rows: [
-  { t: 'খেলা চালিয়ে যান', b: '▶ চালু', f: closePanel }, { t: 'বাটনের জায়গা বদলান', b: 'সাজান', f: () => { closePanel(); toggleEdit(); } }] })));
+  { t: 'খেলা চালিয়ে যান', b: '▶ চালু', f: closePanel }, { t: 'বাটনের জায়গা বদলান', b: 'সাজান', f: () => { closePanel(); toggleEdit(); } },
+  { t: '🏦 ব্যাংক (হাতে 💵' + cash + ' · ব্যাংকে 💵' + bank + ')', b: 'খুলুন', f: () => openPanel(bankPanel) }] })));
 bindTap(document.getElementById('aim'), () => { if (drv) return; aimOn = !aimOn; document.getElementById('aim').classList.toggle('on', aimOn); });
 bindTap(document.getElementById('nade'), () => { if (!pDead && !drv) throwGrenade(); });
 bindTap(document.getElementById('reload'), () => { if (!pDead && !drv) startReload(); });
@@ -2408,7 +2459,7 @@ async function startGame(p) {
   scene.add(char.group);
   if (typeof p.x === 'number') { player.x = p.x; player.z = p.z; if (blocked(player.x, player.z)) player.x = Math.round(player.x / SPACING) * SPACING; }
   kills = p.kills || 0; deaths = p.deaths || 0; hp = p.hp > 0 ? p.hp : 100; armor = p.armor == null ? 100 : p.armor;
-  cash = p.cash == null ? 300 : p.cash; if (p.inv) inv = p.inv;
+  cash = p.cash == null ? 300 : p.cash; bank = p.bank == null ? 0 : p.bank; if (p.inv) inv = p.inv;
   if (p.layout && p.layout.v === 2) { layout = Object.assign({ op: 1, v: 2 }, p.layout); applyLayout(); }
   camYaw = 0; player.yaw = 0;
   started = true; playBase = p.playSec || 0; playStart = performance.now();
