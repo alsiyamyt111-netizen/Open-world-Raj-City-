@@ -2462,9 +2462,11 @@ function renderCharSelect(startId, onConfirm, onBack) {
   box.append(top);
 
   const cards = [];
+  // ক্যারেক্টার মেনুতে পুরো ছবি: আগে fullbody/ ফোল্ডার, না থাকলে thumbs/ (প্রোফাইল অবতার যেমন আছে তেমন থাকবে)
   const loadImg = (img, c, wrap) => {
-    const exts = ['jpg', 'png', 'jpeg']; let ei = 0;
-    const next = () => { if (ei < exts.length) img.src = 'thumbs/' + c.id + '.' + exts[ei++]; else { img.remove(); wrap.textContent = c.icon; } };
+    const srcs = ['fullbody/', 'thumbs/'].flatMap(dir => ['jpg', 'png', 'jpeg'].map(e => dir + c.id + '.' + e));
+    let ei = 0;
+    const next = () => { if (ei < srcs.length) img.src = srcs[ei++]; else { img.remove(); wrap.textContent = c.icon; } };
     img.onerror = next; next();
   };
   for (const [label, g] of [['MALE CHARACTERS', 'boy'], ['FEMALE CHARACTERS', 'girl']]) {
