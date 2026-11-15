@@ -2615,8 +2615,17 @@ const OPAQ = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'medbtn', 
 let layout = { op: 1, v: 2 }, editMode = false, selId = null, dragP = null, dragOff = [0, 0];
 try { const j = localStorage.getItem('wt_layout'); if (j) { const o = JSON.parse(j); if (o.v === 2) layout = Object.assign({ op: 1, v: 2 }, o); } } catch (e) {}
 CUST.forEach(id => { document.getElementById(id).dataset.cust = id; });
+// বাটন/মিনি ম্যাপ স্ক্রিনের বাইরে যেতে পারবে না (আকার অনুযায়ী সীমা)
+function clampL(id) {
+  const el = document.getElementById(id), L = layout[id]; if (!L || !el) return;
+  const sc = L.s || 1, hw = el.offsetWidth * sc / 2, hh = el.offsetHeight * sc / 2;
+  const mx = Math.min(0.5, hw / innerWidth), my = Math.min(0.5, hh / innerHeight);
+  L.x = Math.max(mx, Math.min(1 - mx, L.x));
+  L.y = Math.max(my, Math.min(1 - my, L.y));
+}
 function placeEl(id) {
   const el = document.getElementById(id), L = layout[id]; if (!L) return;
+  clampL(id);
   el.style.left = (L.x * innerWidth) + 'px'; el.style.top = (L.y * innerHeight) + 'px';
   el.style.right = 'auto'; el.style.bottom = 'auto';
   el.style.transform = `translate(-50%,-50%) scale(${L.s || 1})`;
@@ -2682,8 +2691,8 @@ addEventListener('pointermove', e => {
   if (!editMode || e.pointerId !== dragP || !selId) return;
   e.stopPropagation();
   const L = layout[selId];
-  L.x = Math.max(0.03, Math.min(0.97, (e.clientX - dragOff[0]) / innerWidth));
-  L.y = Math.max(0.03, Math.min(0.97, (e.clientY - dragOff[1]) / innerHeight));
+  L.x = (e.clientX - dragOff[0]) / innerWidth;
+  L.y = (e.clientY - dragOff[1]) / innerHeight;
   placeEl(selId);
 }, true);
 for (const ev of ['pointerup', 'pointercancel']) addEventListener(ev, e => {
@@ -2896,6 +2905,7 @@ async function startGame(p) {
   catch (e) { document.getElementById('msg').textContent = 'Error occurred, please try again'; document.querySelectorAll('#start button').forEach(b => b.disabled = false); return; }
   scene.add(char.group);
   if (typeof p.x === 'number') { player.x = p.x; player.z = p.z; if (blocked(player.x, player.z)) player.x = Math.round(player.x / SPACING) * SPACING; }
+  if (blocked(player.x, player.z, 0)) { player.x = 0; player.z = 20; }   // বাধার ভেতরে আটকে থাকলে মুক্ত জায়গায় সরানো
   kills = p.kills || 0; deaths = p.deaths || 0; hp = p.hp > 0 ? p.hp : HP_MAX; armor = p.armor == null ? 100 : p.armor;
   cash = p.cash == null ? 300 : p.cash; bank = p.bank == null ? 0 : p.bank; if (p.inv) inv = p.inv;
   if (p.layout && p.layout.v === 2) { layout = Object.assign({ op: 1, v: 2 }, p.layout); applyLayout(); }
@@ -2937,7 +2947,9 @@ function lbGroundFix(group) {
   // পায়ের হাড় দিয়ে মাটি মাপা: অ্যানিমেশনের সাথে পা সবসময় মাটিতে থাকবে
   group.updateMatrixWorld(true);
   let minY = Infinity;
-  group.traverse(o => { if (o.isBone && /foot|toe/i.test(o.name)) { const v = new THREE.Vector3(); o.getWorldPosition(v); if (v.y < minY) minY = v.y; } });
+  const pick = o => { const v = new THREE.Vector3(); o.getWorldPosition(v); if (v.y < minY) minY = v.y; };
+  group.traverse(o => { if (o.isBone && /foot|toe/i.test(o.name)) pick(o); });
+  if (!isFinite(minY)) group.traverse(o => { if (o.isBone) pick(o); });
   if (isFinite(minY)) group.position.y -= minY;
 }
 async function enterLobby(p) {
