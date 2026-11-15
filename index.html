@@ -2421,8 +2421,17 @@ function applyOutfit(c, p) {
     let n = 0;
     for (const [m, on] of mats) { const nm = (m.name || '') + ' ' + on; if (m.color && cloth.test(nm) && !skin.test(nm)) { m.color.lerp(dress, 0.55); n++; } }
     if (!n && mats.length <= 2) for (const [m] of mats) if (m.color) m.color.lerp(dress, 0.2);   // Robot মডেল: পুরোটায় হালকা রং; মানুষের মডেলে (বেশি অংশ) ত্বকে রং লাগে না
+    // রাত/ছায়াতেও শরীর যেন কালো না দেখায়: নিজের টেক্সচারের রঙেই হালকা আলো দেয় (আলো কমলেও ন্যূনতম উজ্জ্বলতা থাকে)
+    for (const [m] of mats) {
+      if (!m.color || m.emissive === undefined) continue;
+      m.emissive.copy(m.color); m.emissiveIntensity = 0.45;
+      if (m.map) m.emissiveMap = m.map;
+      m.needsUpdate = true;
+    }
   } else {
-    c.group.children[0].material.color.set(dress);
+    const m0 = c.group.children[0].material;
+    m0.color.set(dress);
+    if (m0.emissive) { m0.emissive.copy(m0.color); m0.emissiveIntensity = 0.45; m0.needsUpdate = true; }
   }
 }
 
@@ -2953,23 +2962,38 @@ addEventListener('resize', () => {
 
 
 // ---------- লবিতে 3D চরিত্র প্রিভিউ (মাটিতে দাঁড়ানো, স্থির, ড্র্যাগ করে ৩৬০° ঘোরানো) ----------
-let lbChar = null, lbOn = false, lbHidden = [], lbPivot = null, lbRing = null, lbBgTex = null, lbBuildSeq = 0;
+let lbFill = null, lbChar = null, lbOn = false, lbHidden = [], lbPivot = null, lbRing = null, lbBgTex = null, lbBuildSeq = 0;
 let lbSavedBg = null, lbSavedFog = null, lbSavedFov = 60, lbYaw = 0, lbHeight = 1.8, lbDrag = null;
 function lbEnsurePivot() {
   if (lbPivot) return;
   lbPivot = new THREE.Group(); scene.add(lbPivot);
   lbRing = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.65, 48), new THREE.MeshBasicMaterial({ color: 0x4fc3ff, transparent: true, opacity: 0.9, side: THREE.DoubleSide }));
   lbRing.rotation.x = -Math.PI / 2; lbRing.position.y = 0.02; lbPivot.add(lbRing);
+  // পায়ের নিচে নরম ছায়া: এতে চরিত্র শূন্যে ভাসা নয়, মাটিতে দাঁড়ানো দেখায়
+  const sc = document.createElement('canvas'); sc.width = sc.height = 128;
+  const sx = sc.getContext('2d'), gr = sx.createRadialGradient(64, 64, 4, 64, 64, 64);
+  gr.addColorStop(0, 'rgba(0,0,0,0.75)'); gr.addColorStop(0.5, 'rgba(0,0,0,0.4)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  sx.fillStyle = gr; sx.fillRect(0, 0, 128, 128);
+  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.5), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(sc), transparent: true, depthWrite: false }));
+  shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.01; lbPivot.add(shadow);
+  // লবিতে ক্যামেরার দিক থেকে সামনের আলো (ঘুরলেও সামনের দিক কখনো অন্ধকার হবে না); লবির বাইরে বন্ধ থাকে
+  lbFill = new THREE.DirectionalLight(0xffffff, 0); lbFill.position.set(1.5, 4, 6); scene.add(lbFill);
 }
 let lbBuiltGender = null;
 function lbGroundFix(group) {
-  // পায়ের হাড় দিয়ে মাটি মাপা: অ্যানিমেশনের সাথে পা সবসময় মাটিতে থাকবে
+  // পায়ের হাড় দিয়ে মাটি মাপা: অ্যানিমেশনের সাথে জুতার তলা সবসময় মাটিতে থাকবে
   group.updateMatrixWorld(true);
   let minY = Infinity;
   const pick = o => { const v = new THREE.Vector3(); o.getWorldPosition(v); if (v.y < minY) minY = v.y; };
   group.traverse(o => { if (o.isBone && /foot|toe/i.test(o.name)) pick(o); });
   if (!isFinite(minY)) group.traverse(o => { if (o.isBone) pick(o); });
-  if (isFinite(minY)) group.position.y -= minY;
+  if (!isFinite(minY)) return;
+  // হাড় আর জুতার তলার মধ্যের ফারাক একবারই মেপে রাখি (আসল মেশের সবচেয়ে নিচের বিন্দু থেকে)
+  if (group.userData.soleOff === undefined) {
+    const mb = new THREE.Box3().setFromObject(group, true);
+    group.userData.soleOff = isFinite(mb.min.y) ? Math.max(0, Math.min(0.2, minY - mb.min.y)) : 0;
+  }
+  group.position.y -= (minY - group.userData.soleOff);
 }
 async function enterLobby(p) {
   lbEnsurePivot();
@@ -3009,11 +3033,11 @@ async function enterLobby(p) {
 }
 function updateLobby(dt, t) {
   if (lbPivot) lbPivot.rotation.y = lbYaw;
-  hemi.intensity = 1.3; sun.intensity = 1.8;
+  hemi.intensity = 1.5; sun.intensity = 1.8; if (lbFill) lbFill.intensity = 1.4;
   if (lbChar && lbChar.mixer) { lbChar.mixer.update(dt); lbGroundFix(lbChar.group); }
   const d = lbHeight * 2.1;
-  camera.position.set(0, lbHeight * 0.55, d);
-  camera.lookAt(0, lbHeight * 0.5, 0);
+  camera.position.set(0, lbHeight * 0.75, d);
+  camera.lookAt(0, lbHeight * 0.45, 0);
 }
 function exitLobby() {
   if (!lbOn) return;
@@ -3024,6 +3048,7 @@ function exitLobby() {
   for (const o of lbHidden) o.visible = true; lbHidden = [];
   if (lbChar) { lbPivot.remove(lbChar.group); lbChar = null; }
   if (lbPivot) lbPivot.visible = false;
+  if (lbFill) lbFill.intensity = 0;
 }
 const lbDragEl = document.getElementById('lb-drag');
 lbDragEl.addEventListener('pointerdown', e => { lbDrag = { id: e.pointerId, x: e.clientX }; lbDragEl.setPointerCapture(e.pointerId); });
