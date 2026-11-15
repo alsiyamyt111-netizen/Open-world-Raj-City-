@@ -144,7 +144,7 @@ body.playing .ib{display:flex!important}
 .ld-flag { display: inline-block; width: 20px; height: 13px; background: radial-gradient(circle, #e0001b 0 40%, transparent 41%), #006a4e; border-radius: 2px; }
 
 /* ---- হোম লবি ---- */
-#lobby { background: #05080f url('branding/lobby.jpg') center/cover no-repeat; justify-content: space-between; padding: 0; overflow: hidden; font-family: 'Trebuchet MS', sans-serif; }
+#lobby { background: transparent; justify-content: space-between; padding: 0; overflow: hidden; font-family: 'Trebuchet MS', sans-serif; }
 #lobby .lb-panel { background: rgba(10,10,14,.82); border: 2px solid rgba(255,255,255,.85); border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,.5); }
 #lobby .lb-head { background: #000; font-style: italic; font-weight: 700; font-size: 13px; letter-spacing: .5px; padding: 4px 10px; color: #fff; text-transform: uppercase; }
 #lobby .lb-tl { position: absolute; left: 12px; top: 12px; width: min(300px, 46vw); }
@@ -169,6 +169,16 @@ body.playing .ib{display:flex!important}
 #lobby .lb-start { background: linear-gradient(#e6c24a, #a9801c); color: #1b1408; border: 2px solid #fff; border-radius: 6px; padding: 16px; font-size: 20px; font-weight: 900; font-style: italic; letter-spacing: 1px; cursor: pointer; font-family: inherit; box-shadow: 0 0 14px rgba(255,210,80,.55); }
 #lobby .lb-start:active { transform: scale(.98); }
 #lobby .lb-msg { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); color: #fff; background: rgba(0,0,0,.7); padding: 6px 14px; border-radius: 8px; font-size: 13px; display: none; }
+
+/* ---- কোণার দোকান ও বিরতি মেনু ---- */
+#panel.corner { background: transparent; pointer-events: none; align-items: flex-start; justify-content: flex-start; padding: 170px 0 0 8px; box-sizing: border-box; }
+#panel.corner .pbox { pointer-events: auto; width: calc(230px * var(--ps, 1)); max-height: 55vh; font-size: calc(12px * var(--ps, 1)); padding: 8px 10px; background: rgba(20,20,26,.94); border: 1px solid #888; }
+#panel.corner .pbox h3 { font-size: calc(13px * var(--ps, 1)); margin: 0 0 6px; }
+#panel.corner .pbox button { font-size: calc(11px * var(--ps, 1)); padding: 4px 8px; }
+#panel.corner .pclose { display: none; }
+.pctl { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 6px; }
+.pctl button { padding: 4px 8px; font-size: 12px; background: #fff; color: #222; }
+.pctl .pback { background: #e67e22; color: #fff; }
 </style>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
@@ -2278,13 +2288,13 @@ function renderProfile() {
   const p = profiles[0];
   if (p) {
     // হোম লবি: প্রোফাইল আগে থেকেই আছে
-    box.append(mk('div', '🏠 হোম লবি', 'slot'));
+    box.append(mk('div', '👤 প্রোফাইল ও চরিত্র', 'slot'));
     const card = mk('div', '', 'slot');
     const pc = CHARACTERS.find(c => c.id === p.gender) || CHARACTERS[0];
     const head = mk('div'); head.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px';
     head.append(charThumb(pc, 44), mk('div', p.name));
     card.append(head, mk('div', '💥 কিল: ' + (p.kills || 0) + ' · ☠ মৃত্যু: ' + (p.deaths || 0) + ' · ⏱ ' + fmtTime(p.playSec || 0)));
-    const go = mk('button', '▶ খেলা শুরু'); go.onclick = () => startGame(p);
+    const go = mk('button', '◀ লবিতে ফিরুন'); go.onclick = () => { showScr('lobby'); renderLobby(); };
     const chg = mk('button', '🔄 চরিত্র বদলান'); chg.style.cssText = 'background:#2980b9;color:#fff';
     chg.onclick = () => renderCharSelect(p.gender, id => { p.gender = id; pgender = id; saveProfiles(); renderProfile(); });
     const del = mk('button', '🗑 প্রোফাইল মুছুন'); del.style.background = '#c0392b';
@@ -2292,7 +2302,9 @@ function renderProfile() {
       if (!delArm) { delArm = true; del.textContent = 'আবার চাপুন — সব অগ্রগতি মুছে যাবে'; return; }
       profiles[0] = null; saveProfiles(); renderProfile();
     };
-    box.append(card, go, chg, del);
+    const nin = mk('input'); nin.value = p.name; nin.maxLength = 16; nin.placeholder = 'আপনার নাম';
+    const nsv = mk('button', '✏ নাম সেভ'); nsv.onclick = () => { p.name = (nin.value || '').trim() || p.name; nin.value = p.name; saveProfiles(); nsv.textContent = '✔ সেভ হয়েছে'; setTimeout(() => nsv.textContent = '✏ নাম সেভ', 1200); };
+    box.append(card, nin, nsv, go, chg, del);
   } else {
     // নতুন খেলোয়াড়: আগে চরিত্র বাছাই + কনফার্ম, তারপর নাম/পোশাক দিয়ে প্রোফাইল তৈরি
     renderCharSelect(pgender, id => {
@@ -2308,7 +2320,7 @@ function renderProfile() {
       const go = mk('button', '✔ প্রোফাইল তৈরি করে শুরু');
       go.onclick = () => {
         const np = { id: Date.now(), name: (inp.value || '').trim() || 'খেলোয়াড়', gender: pgender, dress: pdress, created: Date.now(), kills: 0, deaths: 0, playSec: 0, hp: 100, armor: 100 };
-        profiles[0] = np; saveProfiles(); startGame(np);
+        profiles[0] = np; saveProfiles(); showScr('lobby'); renderLobby();
       };
       const chead = mk('div', '', 'slot'); chead.style.cssText += 'display:flex;align-items:center;justify-content:center;gap:8px';
       chead.append(charThumb(chosen, 44), mk('div', chosen.name + ' নির্বাচিত হয়েছে'));
@@ -2447,14 +2459,40 @@ let cash = 300, bank = 0, inv = { med: 1, arm: 1 }, stam = 100, paused = false, 
 const parkedCars = [], panelEl = document.getElementById('panel');
 function toast(t) { const e = document.getElementById('toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => e.style.display = 'none', 1600); }
 let panelFn = null;
+let shopScale = 0.85;
 function renderPanel() {
-  const d = panelFn(); if (!d) return;
-  panelEl.innerHTML = '<div class="pbox"><h3>' + d.title + '</h3>' + d.rows.map((r, i) => '<div class="prow"><span>' + r.t + '</span>' + (r.b ? '<button data-r="' + i + '">' + r.b + '</button>' : '') + '</div>').join('') + '<button class="pclose">✕ বন্ধ</button></div>';
-  panelEl.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { d.rows[b.dataset.r].f(); renderPanel(); });
+  if (!panelFn) return;
+  const dd = panelFn(); if (!dd) return;
+  const corner = panelEl.classList.contains('corner');
+  const ctl = corner ? '<div class="pctl"><button class="pback">◀ ফিরুন</button><span><button class="psz" data-d="-1">A−</button> <button class="psz" data-d="1">A+</button></span></div>' : '';
+  panelEl.style.setProperty('--ps', shopScale);
+  panelEl.innerHTML = '<div class="pbox">' + ctl + '<h3>' + dd.title + '</h3>' + dd.rows.map((r, i) => '<div class="prow"><span>' + r.t + '</span>' + (r.b ? '<button data-r="' + i + '">' + r.b + '</button>' : '') + '</div>').join('') + '<button class="pclose">✕ বন্ধ</button></div>';
+  panelEl.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { dd.rows[b.dataset.r].f(); renderPanel(); });
   panelEl.querySelector('.pclose').onclick = closePanel;
+  if (corner) {
+    panelEl.querySelector('.pback').onclick = closePanel;
+    panelEl.querySelectorAll('.psz').forEach(b => b.onclick = () => {
+      shopScale = Math.max(0.6, Math.min(1.6, +(shopScale + (+b.dataset.d) * 0.15).toFixed(2)));
+      if (activeProfile) { activeProfile.shopScale = shopScale; saveProfiles(); }
+      renderPanel();
+    });
+  }
 }
-function openPanel(fn) { panelFn = fn; paused = true; fireHeld = false; atkHeld = false; jx = 0; jy = 0; panelEl.style.display = 'flex'; renderPanel(); }
-function closePanel() { panelFn = null; paused = false; panelEl.style.display = 'none'; }
+function openPanel(fn, corner) { panelEl.classList.toggle('corner', !!corner); panelFn = fn; paused = true; fireHeld = false; atkHeld = false; jx = 0; jy = 0; panelEl.style.display = 'flex'; renderPanel(); }
+function closePanel() { panelFn = null; paused = false; panelEl.style.display = 'none'; panelEl.classList.remove('corner'); }
+const shopOpen = fn => openPanel(fn, true);
+// মম্যাচ থেকে লবিতে ফেরা: প্রোফাইল সেভ, গেম বন্ধ, HUD লুকানো, লবি দেখানো
+function returnToLobby() {
+  if (!started) return;
+  saveProgress();
+  closePanel(); closeMap();
+  started = false; drv = null; aimOn = false;
+  if (char) { scene.remove(char.group); char = null; }
+  document.body.classList.remove('playing');
+  ['hud', 'mini', 'joy', 'run', 'bars', 'eye', 'veh', 'crosshair'].forEach(i => { const e = document.getElementById(i); if (e) e.style.display = 'none'; });
+  document.querySelectorAll('.act').forEach(b => b.style.display = 'none');
+  showScr('lobby'); renderLobby();
+}
 const buy = (cap, key, k, n) => () => { const q = wst[key]; if (k in q) q[k] = Math.min(cap, q[k] + n); lastHud = ''; };
 const SHOP = [
   { n: '🩹 মেডকিট (+৫০ হেলথ)', p: 150, f: () => inv.med++ }, { n: '🛡 আর্মার কিট (+৫০)', p: 200, f: () => inv.arm++ },
@@ -2471,15 +2509,15 @@ function bankPanel() {
     { t: 'ব্যাংক থেকে সব টাকা তুলে নিন', b: '⬆ তুলুন', f: () => { if (bank <= 0) { toast('ব্যাংকে টাকা নেই'); return; } cash += bank; bank = 0; toast('তোলা হয়েছে'); } }
   ] };
 }
-bindTap(document.getElementById('shop'), () => openPanel(() => ({ title: '🛒 দোকান · 💵 ' + cash, rows: [...SHOP.map(it => ({ t: it.n + ' — 💵' + it.p, b: 'কিনুন', f: () => { if (cash < it.p) { toast('টাকা কম'); return; } cash -= it.p; it.f(); } })), { t: '🏦 ব্যাংকে টাকা জমা/তোলা (ব্যাংকে: 💵' + bank + ')', b: 'খুলুন', f: () => openPanel(bankPanel) }] })));
+bindTap(document.getElementById('shop'), () => shopOpen(() => ({ title: '🛒 দোকান · 💵 ' + cash, rows: [...SHOP.map(it => ({ t: it.n + ' — 💵' + it.p, b: 'কিনুন', f: () => { if (cash < it.p) { toast('টাকা কম'); return; } cash -= it.p; it.f(); } })), { t: '🏦 ব্যাংকে টাকা জমা/তোলা (ব্যাংকে: 💵' + bank + ')', b: 'খুলুন', f: () => openPanel(bankPanel, true) }] })));
 bindTap(document.getElementById('wsel'), () => openPanel(() => ({ title: '🎒 ব্যাগ · 💵 ' + cash, rows: [
   { t: '🩹 মেডকিট × ' + inv.med, b: 'ব্যবহার', f: () => { if (inv.med > 0 && hp < 100) { inv.med--; hp = Math.min(100, hp + 50); } else toast('এখন দরকার নেই'); } },
   { t: '🛡 আর্মার কিট × ' + inv.arm, b: 'পরুন', f: () => { if (inv.arm > 0 && armor < 100) { inv.arm--; armor = Math.min(100, armor + 50); } else toast('এখন দরকার নেই'); } },
   { t: '🔫 রাইফেল ' + cntOf(WEAPONS[0]) + ' · পিস্তল ' + cntOf(WEAPONS[1]) + ' · স্নাইপার ' + cntOf(WEAPONS[2]) },
   { t: '💣 গ্রেনেড ' + wst.grenade.n + ' · মাইন ' + wst.mine.n + ' · বোমা ' + wst.bomb.n },
   { t: '💥 কিল: ' + kills }] })));
-bindTap(document.getElementById('pausebtn'), () => openPanel(() => ({ title: '⏸ বিরতি', rows: [
-  { t: 'খেলা চালিয়ে যান', b: '▶ চালু', f: closePanel }, { t: 'বাটনের জায়গা বদলান', b: 'সাজান', f: () => { closePanel(); toggleEdit(); } },
+bindTap(document.getElementById('pausebtn'), () => openPanel(() => ({ title: '⚙ সেটিংস', rows: [
+  { t: 'খেলা চালিয়ে যান', b: '▶ চালু', f: closePanel }, { t: 'মূল লবিতে ফিরে যান', b: '🏠 লবি', f: () => returnToLobby() }, { t: 'বাটনের জায়গা বদলান', b: 'সাজান', f: () => { closePanel(); toggleEdit(); } },
   { t: '🏦 ব্যাংক (হাতে 💵' + cash + ' · ব্যাংকে 💵' + bank + ')', b: 'খুলুন', f: () => openPanel(bankPanel) }] })));
 bindTap(document.getElementById('aim'), () => { if (drv) return; aimOn = !aimOn; document.getElementById('aim').classList.toggle('on', aimOn); });
 bindTap(document.getElementById('nade'), () => { if (!pDead && !drv) throwGrenade(); });
@@ -2541,7 +2579,7 @@ function loop(now) {
   if (!paused) animateWorld(now / 1000, dt);
   if (started && !mapOpen && !editMode && !paused) { if (drv) driveStep(dt); else update(dt); }
   if (started) extra(dt);
-  updateDayNight(dt, !paused);
+  if (lbOn) updateLobby(dt, now / 1000); else updateDayNight(dt, !paused);
   renderer.render(scene, camera);
   if (snapFlag) shot();
   renderEye();
@@ -2561,6 +2599,7 @@ camera.lookAt(player.x, 1.6, player.z);
 requestAnimationFrame(loop);
 
 async function startGame(p) {
+  exitLobby();
   activeProfile = p;
   document.querySelectorAll('#start button').forEach(b => b.disabled = true);
   document.getElementById('msg').textContent = 'লোড হচ্ছে...';
@@ -2596,10 +2635,53 @@ addEventListener('resize', () => {
 });
 
 
+
+// ---------- লবিতে 3D চরিত্র প্রিভিউ ----------
+let lbChar = null, lbOn = false, lbHidden = [], lbRing = null, lbBgTex = null, lbBuildSeq = 0;
+let lbSavedBg = null, lbSavedFog = null, lbSavedFov = 60;
+async function enterLobby(p) {
+  if (!lbOn) {
+    lbOn = true;
+    lbSavedBg = scene.background; lbSavedFog = scene.fog; lbSavedFov = camera.fov;
+    if (!lbBgTex) { lbBgTex = new THREE.TextureLoader().load('branding/lobby.jpg'); lbBgTex.colorSpace = THREE.SRGBColorSpace; }
+    scene.background = lbBgTex; scene.fog = null;
+    camera.fov = 50; camera.updateProjectionMatrix();
+    lbHidden = [];
+    for (const o of scene.children) if (o.visible && !o.isLight) { o.visible = false; lbHidden.push(o); }
+    if (!lbRing) {
+      lbRing = new THREE.Mesh(new THREE.RingGeometry(0.7, 0.85, 48), new THREE.MeshBasicMaterial({ color: 0x4fc3ff, transparent: true, opacity: 0.9, side: THREE.DoubleSide }));
+      lbRing.rotation.x = -Math.PI / 2; lbRing.position.y = 0.03; scene.add(lbRing);
+    }
+    lbRing.visible = true;
+  }
+  const seq = ++lbBuildSeq;
+  let c;
+  try { c = await buildCharacter(p.gender); applyOutfit(c, p); } catch (e) { return; }
+  if (seq !== lbBuildSeq || !lbOn) return;
+  if (lbChar) scene.remove(lbChar.group);
+  lbChar = c; c.group.position.set(0, 0, 0); c.group.rotation.set(0, 0, 0); scene.add(c.group);
+  if (c.actions && c.actions.idle && c.mixer) { c.current = c.actions.idle; c.actions.idle.reset().play(); c.state = 'idle'; c.key = 'idle'; }
+}
+function updateLobby(dt, t) {
+  if (lbChar && lbChar.mixer) lbChar.mixer.update(dt);
+  const a = t * 0.25;
+  camera.position.set(Math.sin(a) * 5, 1.6, Math.cos(a) * 5);
+  camera.lookAt(0, 1.0, 0);
+}
+function exitLobby() {
+  if (!lbOn) return;
+  lbOn = false; lbBuildSeq++;
+  scene.background = lbSavedBg; scene.fog = lbSavedFog;
+  camera.fov = lbSavedFov; camera.updateProjectionMatrix();
+  for (const o of lbHidden) o.visible = true; lbHidden = [];
+  if (lbChar) { scene.remove(lbChar.group); lbChar = null; }
+  if (lbRing) lbRing.visible = false;
+}
+
 // ---------- হোম লবি ----------
 function lbMsg(t) { const m = document.getElementById('lb-msg'); m.textContent = t; m.style.display = 'block'; clearTimeout(lbMsg.t); lbMsg.t = setTimeout(() => m.style.display = 'none', 1600); }
 function renderLobby() {
-  const p = activeProfile || profiles[0];
+  const p = profiles[0];
   if (!p) return;
   activeProfile = p;
   const xp = p.xp || 0, lvl = p.level || (Math.floor(xp / 100) + 1);
@@ -2607,8 +2689,27 @@ function renderLobby() {
   document.getElementById('lb-lvl').textContent = 'Level ' + lvl;
   document.getElementById('lb-xp').style.width = (xp % 100) + '%';
   document.getElementById('lb-cash').textContent = '$' + (p.cash == null ? 300 : p.cash).toLocaleString('en-US');
+  enterLobby(p);
 }
-document.getElementById('lb-go').addEventListener('click', () => { if (activeProfile) startGame(activeProfile); });
+function ensureProfile() {
+  if (profiles[0]) return;
+  profiles[0] = { id: Date.now(), name: 'খেলোয়াড়', gender: pgender, dress: pdress, created: Date.now(), kills: 0, deaths: 0, playSec: 0, hp: 100, armor: 100 };
+  saveProfiles();
+}
+async function enterGame() {
+  const p = profiles[0];
+  if (!p) return;
+  activeProfile = p;
+  shopScale = p.shopScale || 0.85;
+  const intro = document.getElementById('intro');
+  showScr('intro');
+  intro.classList.remove('go');
+  requestAnimationFrame(() => requestAnimationFrame(() => intro.classList.add('go')));
+  await Promise.all([startGame(p), pause(3500)]);
+  if (!started) { showScr('lobby'); renderLobby(); lbMsg('লোড হয়নি, আবার চেষ্টা করুন'); return; }
+  intro.style.display = 'none';
+}
+document.getElementById('lb-go').addEventListener('click', () => { enterGame(); });
 document.getElementById('lb-char').addEventListener('click', () => { showScr('start'); renderProfile(); });
 document.getElementById('lb-settings').addEventListener('click', () => lbMsg('সেটিংস শীঘ্রই আসছে'));
 document.getElementById('lb-store').addEventListener('click', () => lbMsg('স্টোর শীঘ্রই আসছে'));
@@ -2634,7 +2735,7 @@ function finishLine() {
   gid('storybtn').textContent = storyIdx >= STORY.length ? 'চরিত্র বাছাই' : 'পরবর্তী';
 }
 function nextLine() {
-  if (storyIdx >= STORY.length) { if (profiles[0]) { showScr('lobby'); renderLobby(); } else { showScr('start'); renderProfile(); } return; }
+  if (storyIdx >= STORY.length) { ensureProfile(); showScr('lobby'); renderLobby(); return; }
   storyFull = STORY[storyIdx++];
   const el = gid('storytxt');
   el.textContent = '';
