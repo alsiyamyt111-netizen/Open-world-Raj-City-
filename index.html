@@ -421,7 +421,7 @@ body.playing #enterb.show{display:flex!important}
   <div class="ld-made">Made in Bangladesh <span class="ld-flag"></span></div>
 </div>
 <script>(function(){var f=document.getElementById('barfill'),t=document.getElementById('pct'),p=0;window.__bootT=setInterval(function(){p=Math.min(30,p+1.2);window.__bootP=p;f.style.width=p+'%';t.textContent=Math.floor(p)+'%';},120);})();</script>
-<div id="intro" class="scr" style="background:#05080f url('branding/splash.jpg') center/cover no-repeat;">
+<div id="intro" class="scr" style="background:#05080f url('branding/splash2.jpg') center/cover no-repeat;">
   <div class="ibar"><i id="ibarfill"></i></div>
   <div id="intro-sub" style="position:absolute;left:0;right:0;bottom:12%;text-align:center;color:#fff;font-size:18px;font-weight:700;letter-spacing:1px;text-shadow:0 2px 6px #000,0 0 2px #000">Loading...</div>
 </div>
@@ -3396,8 +3396,24 @@ function renderProfile() {
   const av = mk('div', '', 'pp-av');
   av.append(charThumb(pc, 110));
   const chg = mk('button', 'Change Avatar', 'pp-wide');
-  chg.onclick = () => renderCharSelect(d.gender, id => { d.gender = id; p.gender = id; saveProfiles(); renderProfile(); });
-  left.append(av, chg);
+  // প্রোফাইলের "Change Avatar" এখানেই থাকবে — আলাদা ক্যারেক্টার মেনুতে (renderCharSelect) যাবে না,
+  // ক্যারেক্টার সিলেক্ট করার জন্য সেই আলাদা মেনু (lb-char → openCharSelect) আগের মতোই থেকে যাচ্ছে
+  const pick = mk('div'); pick.style.cssText = 'display:none;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:8px;max-height:150px;overflow-y:auto;width:100%';
+  const avCards = CHARACTERS.map(c => {
+    const b = mk('button', '', 'opt'); b.style.cssText = 'padding:3px;min-width:0';
+    b.append(charThumb(c, 40));
+    b.onclick = () => {
+      d.gender = c.id;
+      av.innerHTML = ''; av.append(charThumb(c, 110));
+      avCards.forEach(x => x.classList.remove('on')); b.classList.add('on');
+      pick.style.display = 'none';
+    };
+    if (c.id === d.gender) b.classList.add('on');
+    return b;
+  });
+  pick.append(...avCards);
+  chg.onclick = () => { pick.style.display = pick.style.display === 'none' ? 'flex' : 'none'; };
+  left.append(av, chg, pick);
 
   // right: fields
   const right = mk('div', '', 'pp-right');
