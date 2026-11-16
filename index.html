@@ -6,6 +6,7 @@
 <title>Greatest Bangla Rich City Open World</title>
 <link rel="icon" href="branding/icon.jpg">
 <link rel="apple-touch-icon" href="branding/icon.jpg">
+<link rel="preload" as="image" href="branding/splash.jpg">
 <style>
   :root { --vw: 1vw; --vh: 1vh; }
   html, body { margin: 0; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; touch-action: none; user-select: none; }
@@ -164,6 +165,9 @@ body.driving #run,body.driving #crouch,body.driving #prone,body.driving #jump,bo
 .ld-flag { display: inline-block; width: 20px; height: 13px; background: radial-gradient(circle, #e0001b 0 40%, transparent 41%), #006a4e; border-radius: 2px; }
 
 /* ---- হোম লবি ---- */
+#loading { display: flex; }
+#intro .ibar { position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%); width: min(70vw, 360px); height: 8px; background: #0a1424; border: 1px solid #3a7bd5; border-radius: 8px; overflow: hidden; box-shadow: 0 0 10px rgba(60,150,255,.45); }
+#intro .ibar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #1f5fd0, #3fa9ff 60%, #9fe6ff); }
 #lobby { background: transparent; justify-content: space-between; padding: 0; overflow: hidden; font-family: 'Trebuchet MS', sans-serif; }
 #lobby .lb-panel { background: rgba(10,10,14,.82); border: 2px solid rgba(255,255,255,.85); border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,.5); }
 #lobby .lb-head { background: #000; font-style: italic; font-weight: 700; font-size: 13px; letter-spacing: .5px; padding: 4px 10px; color: #fff; text-transform: uppercase; }
@@ -388,8 +392,9 @@ body.driving #run,body.driving #crouch,body.driving #prone,body.driving #jump,bo
   <div class="ld-soon">More Updates Coming Soon...</div>
   <div class="ld-made">Made in Bangladesh <span class="ld-flag"></span></div>
 </div>
+<script>(function(){var f=document.getElementById('barfill'),t=document.getElementById('pct'),p=0;window.__bootT=setInterval(function(){p=Math.min(30,p+1.2);window.__bootP=p;f.style.width=p+'%';t.textContent=Math.floor(p)+'%';},120);})();</script>
 <div id="intro" class="scr" style="background:#05080f url('branding/splash.jpg') center/cover no-repeat;">
-  <div class="ttl">Entering the city...</div>
+  <div class="ibar"><i id="ibarfill"></i></div>
   <div id="intro-sub" style="position:absolute;left:0;right:0;bottom:12%;text-align:center;color:#fff;font-size:18px;font-weight:700;letter-spacing:1px;text-shadow:0 2px 6px #000,0 0 2px #000">Loading...</div>
 </div>
 <div id="story" class="scr" style="background:#06090f;flex-direction:column;justify-content:flex-end;align-items:center;padding:24px;box-sizing:border-box;gap:18px;">
@@ -3758,17 +3763,23 @@ async function enterGame() {
   activeProfile = p;
   shopScale = Math.min(1, p.shopScale || 0.8);
   navPush();
-  const intro = document.getElementById('intro'), sub = document.getElementById('intro-sub');
+  const intro = document.getElementById('intro'), sub = document.getElementById('intro-sub'), fill = document.getElementById('ibarfill');
   showScr('intro');
-  sub.textContent = 'Loading...';
-  intro.classList.remove('go');
-  requestAnimationFrame(() => requestAnimationFrame(() => intro.classList.add('go')));
-  const t0 = performance.now();
-  await startGame(p);
-  sub.textContent = 'Waiting for other players...';
-  const left = 3500 - (performance.now() - t0);
-  if (left > 0) await pause(left);
+  let dots = 0, base = 'Connecting to server';
+  const setSub = t => { base = t; dots = 0; sub.textContent = base; };
+  const dt = setInterval(() => { dots = (dots + 1) % 4; sub.textContent = base + '.'.repeat(dots); }, 380);
+  setSub('Connecting to server');
+  fill.style.transition = 'none'; fill.style.width = '0%'; void fill.offsetWidth;
+  fill.style.transition = 'width 4.2s linear'; fill.style.width = '94%';
+  const run = startGame(p);
+  await pause(1500);
+  await run;
+  setSub('Waiting for another player');
+  await pause(2400);
+  clearInterval(dt);
   if (!started) { showScr('lobby'); renderLobby(); lbMsg('Failed to load, please try again'); return; }
+  fill.style.transition = 'width .25s'; fill.style.width = '100%';
+  await pause(260);
   intro.style.display = 'none';
 }
 document.getElementById('lb-go').addEventListener('click', () => { enterGame(); });
@@ -3821,7 +3832,7 @@ async function introSeq() {
   const TIPS = ['Stay alert when driving on city roads.', 'Slow down to avoid police attention.', 'Deposit cash in the bank before spending it.', 'A red dot on the mini map means an enemy is nearby.'];
   gid('tip').textContent = TIPS[Math.floor(Math.random() * TIPS.length)];
 
-  let p = 0;
+  clearInterval(window.__bootT); let p = window.__bootP || 0;
   const pre = Promise.all([preloadAll(), loadImgs()]); let preFin = false; pre.then(() => { preFin = true; });
   await new Promise(res => {
     const t = setInterval(() => {
@@ -3832,10 +3843,7 @@ async function introSeq() {
       if (p >= 100) { clearInterval(t); res(); }
     }, 80);
   });
-  await pause(400);
-  showScr('intro');
-  requestAnimationFrame(() => requestAnimationFrame(() => gid('intro').classList.add('go')));
-  await pause(3200);
+  await pause(300);
   if (curP()) { showScr('lobby'); renderLobby(); return; }   // ফিরে আসা Player: গল্প বাদ
   showScr('story');
   nextLine();
