@@ -235,13 +235,13 @@ body.playing #enterb.show{display:flex!important}
 .pctl .pback { background: #e67e22; color: #fff; }
 #panel.corner .prow { flex-direction: column; align-items: stretch; gap: 4px; border: 1px solid #555; border-radius: 8px; padding: 6px; border-bottom: 1px solid #555; }
 #panel.corner .prow button { width: 100%; }
-/* ম্যাচের Resume প্যানেল: আগের Settings প্যানেলের ৩/৫ মাপ, Backpack-এর পাশে */
+/* ম্যাচের Resume প্যানেল: Backpack-এর পাশে, মাঝারি ও সহজে ট্যাপ করা যায় */
 #panel.resume { background: transparent; pointer-events: none; align-items: flex-start; justify-content: flex-start; padding: 66px 0 0 68px; box-sizing: border-box; }
-#panel.resume .pbox { pointer-events: auto; box-sizing: border-box; width: min(252px, calc(var(--vw)*62)); max-height: calc(var(--vh)*70); padding: 7px 8px; border-width: 1px; border-radius: 9px; font-size: 7.8px; }
-#panel.resume .pbox h3 { font-size: 9.6px; margin: 0 0 5px; }
-#panel.resume .plist { display: block; overflow-y: auto; min-height: 0; }
-#panel.resume .prow { gap: 5px; padding: 3.6px 0; font-size: 7.8px; }
-#panel.resume .pbox button { padding: 3.6px 7.2px; border-radius: 5px; font-size: 7.8px; }
+#panel.resume .pbox { pointer-events: auto; box-sizing: border-box; width: min(340px, calc(var(--vw)*78)); max-height: calc(var(--vh)*82); padding: 10px 12px; border-width: 1.5px; border-radius: 11px; font-size: 12px; }
+#panel.resume .pbox h3 { font-size: 14px; margin: 0 0 8px; }
+#panel.resume .plist { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; overflow-y: auto; min-height: 0; }
+#panel.resume .prow { flex-direction: column; align-items: stretch; justify-content: center; gap: 6px; min-height: 58px; padding: 7px; border: 1px solid #444; border-radius: 8px; font-size: 11px; }
+#panel.resume .pbox button { min-height: 36px; padding: 7px 9px; border-radius: 7px; font-size: 12px; }
 #panel.resume .pclose { display: none; }
 #bars .bar { width: 110px !important; height: 9px !important; }
 #bars .brow b svg { width: 14px; height: 14px; }
@@ -4010,7 +4010,12 @@ function newGameReset() {
   saveProfiles(); renderLobby();
 }
 bindTap(document.getElementById('pausebtn'), () => openPanel(() => ({ title: 'Resume', rows: [
-  { t: 'Save current game', b: '💾 Save', f: () => { saveProgress(); toast('💾 Game saved'); closePanel(); } }
+  { t: 'Back to Game', b: '▶ Back', f: () => closePanel() },
+  { t: 'Back to Lobby', b: '🏠 Lobby', f: () => returnToLobby() },
+  { t: 'Health bar', b: 'Show / Hide', f: () => { const r = document.querySelectorAll('#bars .brow')[0]; if (r) r.style.display = r.style.display === 'none' ? 'flex' : 'none'; } },
+  { t: 'Water bar', b: 'Show / Hide', f: () => { const r = document.querySelectorAll('#bars .brow')[2]; if (r) r.style.display = r.style.display === 'none' ? 'flex' : 'none'; } },
+  { t: 'Mobile Banking', b: '🏦 Open', f: () => openPanel(bankPanel, false, true) },
+  { t: 'Save Current Game', b: '💾 Save', f: () => { saveProgress(); toast('💾 Game saved'); closePanel(); } }
 ] }), false, true));
 bindTap(document.getElementById('aim'), () => { if (drv) return; aimOn = !aimOn; document.getElementById('aim').classList.toggle('on', aimOn); });
 bindTap(document.getElementById('nade'), () => { if (!pDead && !drv) throwGrenade(); });
