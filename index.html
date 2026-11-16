@@ -1742,7 +1742,11 @@ const ANIMS = {
   idle: 'Idle', walk: 'Walk', run: 'Run',
   jump: 'Jump', walljump: 'WallJump',
   crouchidle: 'crouchidle', crouchwalk: 'crouch', prone: 'prone',
-  punch: 'punch', kick: 'kick', fire: 'firing', fightidle: 'fightidel'
+  punch: 'punch', kick: 'kick', fire: 'firing', fightidle: 'fightidel',
+  // বসা / ঘুমানো (models/ ফোল্ডারে এই নামের .fbx ফাইল)
+  standtosit: 'standtosit', sittostand: 'sittostand', lyingdown: 'lyingdown', sleepingidle: 'sleepingidle',
+// গাড়িতে ওঠা / নামা (models/entercar.fbx, models/exitcar.fbx)
+entercar: 'entercar', exitcar: 'exitcar'
 };
 // NPC-দের অ্যানিমেশন (মার খাওয়া, মরা, ওঠা) — পরিস্থিতি অনুযায়ী নিজে চলে
 const NPC_ANIMS = { hit: 'Hitreaction', death: 'death', getup: 'Getup' };
@@ -1780,8 +1784,8 @@ async function buildCharacter(gender) {
   // হাইট/অনুপাত ধরে বানানো হলেও এই মডেলের নিজস্ব উচ্চতার সাপেক্ষে বসা/শোয়ার গভীরতা বসাতে এটা লাগবে
   let modelHipsRestY = 0;
   { const hn = boneMap.get('hips'); if (hn) { const hb = model.getObjectByName(hn); if (hb) modelHipsRestY = hb.position.y; } }
-  const KEEP_Y = ['crouchidle', 'crouchwalk', 'prone'];      // এগুলোতে নিতম্বের উচ্চতা রাখতে হবে (নইলে শূন্যে ভাসবে)
-  const ONCE = { jump: 0.75, walljump: 0.9, punch: 0.9, kick: 1.1 };        // একবার চলবে, সর্বোচ্চ এত সেকেন্ডে শেষ হবে (ক্লিপ ছোট হলে নিজের স্বাভাবিক সময়ে)
+  const KEEP_Y = ['crouchidle', 'crouchwalk', 'prone', 'standtosit', 'sittostand', 'lyingdown', 'sleepingidle', 'entercar', 'exitcar'];      // এগুলোতে নিতম্বের উচ্চতা রাখতে হবে (নইলে শূন্যে ভাসবে)
+  const ONCE = { jump: 0.75, walljump: 0.9, punch: 0.9, kick: 1.1, entercar: 2.2, exitcar: 2.2 };   // entercar/exitcar: বেশি লম্বা হলে ২.২ সেকেন্ডে দ্রুত চলবে        // একবার চলবে, সর্বোচ্চ এত সেকেন্ডে শেষ হবে (ক্লিপ ছোট হলে নিজের স্বাভাবিক সময়ে)
   const dur = {};
   for (const [n, f] of Object.entries(ANIMS)) {
     const a = await loadAsset(f);
@@ -1824,6 +1828,7 @@ async function buildCharacter(gender) {
     });
     const act = mixer.clipAction(clip, model);
     if (ONCE[n]) { const d = Math.min(clip.duration, ONCE[n]); act.setLoop(THREE.LoopOnce, 1); act.clampWhenFinished = true; speed[n] = clip.duration / d; dur[n] = d; }
+    else if (['standtosit', 'sittostand', 'lyingdown'].includes(n)) { act.setLoop(THREE.LoopOnce, 1); act.clampWhenFinished = true; dur[n] = clip.duration; }   // একবার চলে শেষ পোজে থেমে থাকে
     actions[n] = act;
   }
   if (actions.walk) speed.walk = 0.75; if (actions.run) speed.run = 1.0;
@@ -2007,7 +2012,54 @@ function nearVault() {
   }
   return best;
 }
+// ===== বসা / ঘুমানো সিস্টেম =====
+function nearSeat() {
+  if (!inside || !char || !char.mixer || jumping || rest) return null;
+  const R = inside.room, A = char.actions;
+  let best = null, bd = 1e9;
+  const test = (list, kind, rad) => { for (const sp of list) { const d = Math.hypot(R.ox + sp.x - player.x, R.oz + sp.z - player.z); if (d < rad && d < bd) { bd = d; best = { kind, s: sp, R }; } } };
+  if (A.standtosit && A.sittostand) test(R.seats, 'sit', 1.25);
+  if (A.lyingdown && A.sleepingidle) test(R.beds, 'sleep', 1.9);
+  return best;
+}
+function startRest(h) {
+  const R = h.R, sp = h.s, sit = h.kind === 'sit', nm = sit ? 'standtosit' : 'lyingdown';
+  const cd = char.dur[nm] || 2, k = cd / Math.min(cd, sit ? REST_TUNE.sitCap : REST_TUNE.sleepCap);
+  rest = { kind: h.kind, R, s: sp, phase: 'in', t: 0, anim: nm, rev: false, sp: k, dur: cd / k, fx: player.x, fz: player.z, fyaw: player.yaw, tx: R.ox + sp.x, tz: R.oz + sp.z, lift: 0, ox: 0, oz: 0, rested: false };
+  stance = 'stand'; setRun(false); aimOn = false; document.getElementById('aim').classList.remove('on');
+  atk = null; gunT = 0; combatT = 0; spd = 0;
+  if (!sit) toast('😴 Sleeping — move the joystick to wake up');
+}
+function restStep(dt, wake) {
+  const r = rest, ease = k => k * k * (3 - 2 * k), sit = r.kind === 'sit';
+  r.t += dt;
+  if (r.phase === 'in') {
+    const q = ease(Math.min(1, r.t / Math.min(r.dur, 0.9)));
+    player.x = r.fx + (r.tx - r.fx) * q; player.z = r.fz + (r.tz - r.fz) * q;
+    player.yaw = r.fyaw + wrap(r.s.ry - r.fyaw) * q; r.lift = r.s.lift * q;
+    if (r.t >= r.dur) { r.phase = 'hold'; r.t = 0; r.sp = 1; if (!sit) r.anim = 'sleepingidle'; }
+  } else if (r.phase === 'hold') {
+    player.x = r.tx; player.z = r.tz; player.yaw = r.s.ry; r.lift = r.s.lift;
+    if (!sit) {
+      hp = Math.min(HP_MAX, hp + 14 * dt); armor = Math.min(100, armor + 20 * dt); hurtT = 99;
+      if (!r.rested && hp >= HP_MAX && armor >= 100) { r.rested = true; toast('😴 Rested — health restored'); }
+    }
+    if (wake && r.t > 0.5) {
+      const nm = sit ? 'sittostand' : 'lyingdown', cd = char.dur[nm] || 2;
+      r.sp = cd / Math.min(cd, sit ? REST_TUNE.sitCap : REST_TUNE.sleepCap); r.dur = cd / r.sp;
+      r.anim = nm; r.rev = !sit; r.phase = 'out'; r.t = 0;
+      let ex = r.s.exits[0];
+      for (const c of r.s.exits) if (!blocked(r.R.ox + c.x, r.R.oz + c.z, 0)) { ex = c; break; }   // যেদিকে ফাঁকা সেদিক দিয়ে নামবে
+      r.ox = r.R.ox + ex.x; r.oz = r.R.oz + ex.z;
+    }
+  } else {
+    const q = ease(Math.max(0, Math.min(1, (r.t / r.dur - 0.3) / 0.7)));
+    player.x = r.tx + (r.ox - r.tx) * q; player.z = r.tz + (r.oz - r.tz) * q; r.lift = r.s.lift * (1 - q);
+    if (r.t >= r.dur) { rest = null; spd = 0; }
+  }
+}
 function doJump() {
+  if (rest) return;
   if (jumping && vy <= 0 && player.y - supportY(player.x, player.z, player.y) < 0.05) jumping = false;
   if (jumping) return;
   stance = 'stand'; atk = null;
@@ -2019,7 +2071,7 @@ function doJump() {
   jumping = true; vy = vaulting ? 11 : 7;
   if (vaulting && !vaultHint) { vaultHint = true; toast('🧗 Wall Jump! Climbing over the wall'); }
 }
-function toggleStance(st) { stance = stance === st ? 'stand' : st; atk = null; setRun(false); }
+function toggleStance(st) { if (rest) return; stance = stance === st ? 'stand' : st; atk = null; setRun(false); }
 
 let dragId = null, lastX = 0, lastY = 0, camYaw = 0, camPitch = 0;
 const PITCH_MIN = -0.6, PITCH_MAX = 1.45;
@@ -2052,6 +2104,17 @@ addEventListener('pointercancel', endPtr);
 const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
 const player = { x: 0, y: 0, z: 20, yaw: 0 };
 let stance = 'stand', jumping = false, vy = 0, cr = 0, pr = 0;
+// ===== বসা / ঘুমানো: মাপ ঠিক না লাগলে শুধু এই সংখ্যাগুলো বদলান =====
+const REST_TUNE = {
+  chairLift: 0,      // চেয়ারে বসলে শরীর কতটা ওপরে (মিটার) — বসা ভাসলে কমান, ডুবলে বাড়ান
+  sofaLift: 0.09,    // সোফায়
+  bedLift: 0.58,     // শোয়ার সময় বিছানার উচ্চতা
+  sitZ: 0.05,        // বসার সময় সামনে(+)/পিছনে(-) সরানো
+  bedZ: 0.05,        // শোয়ার সময় বিছানার মাথা(-)/পায়ের(+) দিকে সরানো
+  sitCap: 2.0,       // বসা/ওঠার সর্বোচ্চ সময় (সেকেন্ড) — ক্লিপ লম্বা হলে এর মধ্যে চেপে দেয়
+  sleepCap: 3.0      // শোয়া/ওঠার সর্বোচ্চ সময়
+};
+let rest = null, restWake = false, seatHit = null;
 let char = null, started = false;
 let phase = 0, amp = 0, lastStep = 0;
 let spd = 0;
@@ -2106,13 +2169,17 @@ function unstick() {
 }
 function update(dt) {
   if (xfade) return;
-  if (blocked(player.x, player.z, player.y)) unstick();
+  if (!rest && blocked(player.x, player.z, player.y)) unstick();
   const kbX = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
   const kbY = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0);
   let ix = Math.max(-1, Math.min(1, kbX + jx));
   let iy = Math.max(-1, Math.min(1, kbY + jy));
   if (pDead) { ix = 0; iy = 0; }
-  const run = (runTouch || keys.has('ShiftLeft') || keys.has('ShiftRight')) && stance === 'stand' && combatT <= 0 && !pDead;
+  let wake = false;
+  if (rest && (pDead || !inside || !char || !char.mixer)) rest = null;
+  if (rest) { wake = Math.hypot(ix, iy) > 0.45 || restWake; ix = 0; iy = 0; }   // বসা/ঘুমে থাকলে জয়স্টিক নাড়ালে উঠবে
+  restWake = false;
+  const run = (runTouch || keys.has('ShiftLeft') || keys.has('ShiftRight')) && stance === 'stand' && combatT <= 0 && !pDead && !rest;
   if (run && Math.hypot(ix, iy) < 0.1) { ix = 0; iy = 1; }   // Run চালু থাকলে Joystick ছাড়াই সামনে Runায়
   const mag = Math.min(1, Math.hypot(ix, iy));
   const moving = mag > 0.1;
@@ -2153,6 +2220,7 @@ function update(dt) {
     camYaw += wrap(player.yaw - camYaw) * (1 - Math.exp(-dt * 1.5));
   }
 
+  if (rest) { combatT = 0; atk = null; gunT = 0; restStep(dt, wake); }
   updateCombat(dt);
   updateVitals(dt);
   if (combatT > 0) {
@@ -2172,7 +2240,7 @@ function update(dt) {
     pr += ((stance === 'prone' ? 1 : 0) - pr) * (1 - Math.exp(-dt * 10));
     char.group.rotation.order = 'YXZ';
     if (char.mixer) {            // Mixamo: Animationই শোয়া/বসা দেখায়, তাই কাত/চ্যাপ্টা নয়
-      char.group.position.set(player.x, player.y, player.z);
+      char.group.position.set(player.x, player.y + (rest ? rest.lift : 0), player.z);
       char.group.rotation.set(0, player.yaw, 0);
     } else {
       char.group.position.set(player.x - Math.sin(player.yaw) * 0.9 * pr, player.y + pr * 0.2, player.z - Math.cos(player.yaw) * 0.9 * pr);
@@ -2186,7 +2254,8 @@ function update(dt) {
       // Mixamo অ্যানিমেশন বাছাই (অগ্রাধিকার ওপর থেকে নিচে)
       const A = char.actions;
       let state;
-      if (jumping && vaulting && A.walljump) state = 'walljump';
+      if (rest) state = rest.anim;
+      else if (jumping && vaulting && A.walljump) state = 'walljump';
       else if (jumping && A.jump) state = 'jump';
       else if (stance === 'prone' && A.prone) state = 'prone';
       else if (stance === 'crouch' && (A.crouchidle || A.crouchwalk)) state = (moving && A.crouchwalk) || !A.crouchidle ? 'crouchwalk' : 'crouchidle';
@@ -2195,12 +2264,13 @@ function update(dt) {
       else if (moving) state = run ? 'run' : 'walk';
       else state = A.idle ? 'idle' : 'walk';
       if (!A[state]) state = A.idle ? 'idle' : Object.keys(A)[0];
-      const key = (state === 'punch' || state === 'kick') ? atk : state;   // নতুন Punch = নতুন করে Start
+      const key = rest ? state + (rest.rev ? '_r' : '') : (state === 'punch' || state === 'kick') ? atk : state;   // নতুন Punch = নতুন করে Start
       if (key !== char.key) {
         const next = A[state];
         if (char.current && char.current !== next) char.current.fadeOut(0.15);
         next.reset().fadeIn(0.15).play();
-        next.timeScale = char.speed[state] || 1;
+        next.timeScale = rest ? rest.sp * (rest.rev ? -1 : 1) : (char.speed[state] || 1);
+        if (rest && rest.rev) next.time = next.getClip().duration;   // ঘুম থেকে ওঠা = শোয়ার ক্লিপ উল্টো চালানো
         char.current = next; char.state = state; char.key = key;
       }
       if (state === 'prone') A.prone.timeScale = moving ? 1 : 0;   // দাঁড়িয়ে থাকলে শোয়া ভঙ্গিতে স্থির
@@ -3017,12 +3087,14 @@ function placeMine() {
 function startCombat() { combatT = 4; if (runTouch) setRun(false); }
 let atkLast = '';
 function doPunch() {
+  if (rest) return;
   if (atkCD > 0 && atkLast === 'punch') return;   // একই বাটন বারবার চাপলে সামান্য বিরতি; অন্য বাটন চাপলে সাথে সাথে বদলে যাবে
   stance = 'stand'; startCombat(); gunT = 0; jabSide ^= 1;
   const d = char && char.mixer ? (char.dur.punch || 0.5) : 0.32;
   atk = { type: 'punch', side: jabSide, t: 0, dur: d, hit: false }; atkCD = d * 0.7; atkLast = 'punch';
 }
 function doKick() {
+  if (rest) return;
   if (atkCD > 0 && atkLast === 'kick') return;
   stance = 'stand'; startCombat(); gunT = 0;
   const d = char && char.mixer ? (char.dur.kick || 0.7) : 0.5;
@@ -3078,6 +3150,7 @@ function hurtNPC(n, dmg, dx, dz, kb) {
   if (n.hp <= 0) { n.dead = true; n.deadT = 0; n.hostT = 0; kills++; cash += 100; }
 }
 function shoot() {
+  if (rest) return;
   const w = WEAPONS[wIdx], s = wst[w.id];
   if (!s || !w.mag) return;
   if (s.mag <= 0) { startReload(); fireHeld = false; return; }
@@ -4017,37 +4090,61 @@ function charAnimTo(st) {
   if (char.current && char.current !== nx) char.current.fadeOut(0.15);
   nx.reset().fadeIn(0.15).play(); nx.timeScale = char.speed[st] || 1; char.current = nx; char.state = st; char.key = st;
 }
+// গাড়িতে ওঠা/নামার অ্যানিমেশন টিউনিং — ভঙ্গি ঠিক না লাগলে শুধু এই সংখ্যাগুলো বদলান
+const CAR_TUNE = { yawIn: 0, yawOut: 0, seatLift: 0, slideFrom: 0.35, slideTo: 0.85 };
 function stepEnter(dt) {
-  const e = ent, c = e.c, y = c.g.rotation.y; e.t += dt; const t = e.t, sg = e.sgn;
-  const outP = carToWorld(c, sg * (e.door.hw + 0.9), 0.2), seatP = carToWorld(c, -0.4, 0.15);
-  const faceIn = Math.atan2(-sg * Math.cos(y), sg * Math.sin(y)), faceOut = faceIn + Math.PI;
-  let p, yaw, a, done = false;
-  if (e.mode === 'in') {
-    if (t < 0.55) { const k = eio(t / 0.55); p = [e.from[0] + (outP[0] - e.from[0]) * k, e.from[1] + (outP[1] - e.from[1]) * k]; }
-    else { const k = eio(cl01((t - 0.55) / 0.5)); p = [outP[0] + (seatP[0] - outP[0]) * k, outP[1] + (seatP[1] - outP[1]) * k]; }
-    yaw = faceIn; a = t < 1.05 ? cl01((t - 0.25) / 0.4) : 1 - cl01((t - 1.05) / 0.35);
-    if (t >= 1.05) char.group.visible = false;
-    done = t >= 1.4;
-  } else {
-    const k = eio(cl01((t - 0.3) / 0.55)); p = [seatP[0] + (outP[0] - seatP[0]) * k, seatP[1] + (outP[1] - seatP[1]) * k];
-    yaw = faceOut; a = t < 0.85 ? cl01(t / 0.4) : 1 - cl01((t - 0.85) / 0.35);
-    done = t >= 1.2;
-  }
-  e.door.pivot.rotation.y = -sg * 1.15 * eio(a);
-  player.x = p[0]; player.z = p[1]; player.y = 0; player.yaw = yaw;
-  if (char.mixer) { const moving = e.mode === 'in' ? t < 1.05 : (t > 0.3 && t < 0.85); charAnimTo(moving ? 'walk' : 'idle'); char.mixer.update(dt); char.group.position.set(p[0], 0, p[1]); char.group.rotation.set(0, yaw, 0); }
-  else { char.group.position.set(p[0], 0, p[1]); char.group.rotation.set(0, yaw, 0); }
-  if (!done) return;
-  c.g.remove(e.door.pivot); ent = null;
-  if (e.mode === 'in') {
-    drv = { c, sp: 0, gear: 'D', brk: false, beepT: 0, lights: c.lights !== undefined ? c.lights : nightK > 0.5 };
-    char.group.visible = false; document.getElementById('veh').classList.add('on');
-    dashShow(); applyCarLights();
-    toast('🚗 ' + (c.name || 'Car') + ' · WASD drive · Space brake · E exit');
-  } else {
-    player.yaw = y; camYaw = y; char.key = null; char.group.visible = true;
-    document.getElementById('veh').classList.remove('on');
-  }
+const e = ent, c = e.c, y = c.g.rotation.y; e.t += dt; const t = e.t, sg = e.sgn;
+const outP = carToWorld(c, sg * (e.door.hw + 0.9), 0.2), seatP = carToWorld(c, -0.4, 0.15);
+const faceIn = Math.atan2(-sg * Math.cos(y), sg * Math.sin(y)) + CAR_TUNE.yawIn, faceOut = faceIn + Math.PI + CAR_TUNE.yawOut - CAR_TUNE.yawIn;
+const A = char.actions || {}, useAnim = !!(char.mixer && (e.mode === 'in' ? A.entercar : A.exitcar));
+let p, yaw, a, done = false, st = 'idle', lift = 0;
+if (useAnim) {
+// ---- Mixamo অ্যানিমেশন সহ ----
+const D = e.mode === 'in' ? (char.dur.entercar || 2) : (char.dur.exitcar || 2), T1 = 0.55;
+if (e.mode === 'in') {
+if (t < T1) { const k = eio(t / T1); p = [e.from[0] + (outP[0] - e.from[0]) * k, e.from[1] + (outP[1] - e.from[1]) * k]; st = 'walk'; a = cl01((t - 0.2) / 0.35); }
+else {
+const u = cl01((t - T1) / D), k = eio(cl01((u - CAR_TUNE.slideFrom) / (CAR_TUNE.slideTo - CAR_TUNE.slideFrom)));
+p = [outP[0] + (seatP[0] - outP[0]) * k, outP[1] + (seatP[1] - outP[1]) * k]; st = 'entercar';
+a = u < 0.7 ? 1 : 1 - cl01((u - 0.7) / 0.3); done = t >= T1 + D;
+}
+yaw = faceIn;
+} else {
+const u = cl01(t / D), k = eio(cl01((u - 0.1) / 0.6));
+p = [seatP[0] + (outP[0] - seatP[0]) * k, seatP[1] + (outP[1] - seatP[1]) * k]; st = 'exitcar';
+a = u < 0.15 ? cl01(u / 0.15) : (u < 0.8 ? 1 : 1 - cl01((u - 0.8) / 0.2)); yaw = faceOut; done = t >= D + 0.15;
+}
+} else {
+// ---- অ্যানিমেশন ফাইল না থাকলে আগের কোড-ভিত্তিক পদ্ধতি ----
+if (e.mode === 'in') {
+if (t < 0.55) { const k = eio(t / 0.55); p = [e.from[0] + (outP[0] - e.from[0]) * k, e.from[1] + (outP[1] - e.from[1]) * k]; }
+else { const k = eio(cl01((t - 0.55) / 0.5)); p = [outP[0] + (seatP[0] - outP[0]) * k, outP[1] + (seatP[1] - outP[1]) * k]; }
+yaw = faceIn; a = t < 1.05 ? cl01((t - 0.25) / 0.4) : 1 - cl01((t - 1.05) / 0.35);
+if (t >= 1.05) char.group.visible = false;
+done = t >= 1.4;
+st = t < 1.05 ? 'walk' : 'idle';
+} else {
+const k = eio(cl01((t - 0.3) / 0.55)); p = [seatP[0] + (outP[0] - seatP[0]) * k, seatP[1] + (outP[1] - seatP[1]) * k];
+yaw = faceOut; a = t < 0.85 ? cl01(t / 0.4) : 1 - cl01((t - 0.85) / 0.35);
+done = t >= 1.2;
+st = (t > 0.3 && t < 0.85) ? 'walk' : 'idle';
+}
+}
+e.door.pivot.rotation.y = -sg * 1.15 * eio(a);
+player.x = p[0]; player.z = p[1]; player.y = 0; player.yaw = yaw;
+if (char.mixer) { charAnimTo(st); char.mixer.update(dt); char.group.position.set(p[0], (useAnim && st !== 'walk' ? CAR_TUNE.seatLift : 0), p[1]); char.group.rotation.set(0, yaw, 0); }
+else { char.group.position.set(p[0], 0, p[1]); char.group.rotation.set(0, yaw, 0); }
+if (!done) return;
+c.g.remove(e.door.pivot); ent = null;
+if (e.mode === 'in') {
+drv = { c, sp: 0, gear: 'D', brk: false, beepT: 0, lights: c.lights !== undefined ? c.lights : nightK > 0.5 };
+char.group.visible = false; document.getElementById('veh').classList.add('on');
+dashShow(); applyCarLights();
+toast('🚗 ' + (c.name || 'Car') + ' · WASD drive · Space brake · E exit');
+} else {
+player.yaw = y; camYaw = y; char.key = null; char.group.visible = true;
+document.getElementById('veh').classList.remove('on');
+}
 }
 function toggleVeh() {
   if (pDead || ent) return;
@@ -4159,7 +4256,7 @@ function getRoom(type) {
   if (ROOMS[type]) return ROOMS[type];
   const [HW, HD, WH, fk, wc] = RMS[type], OX = 3000, OZ = RIDX[type] * 40;
   const g = new THREE.Group(); g.userData.indoor = true; g.visible = false;
-  const R = { ox: OX, oz: OZ, hw: HW, hd: HD, wh: WH, group: g, cols: [], plan: [], counter: null, bed: null, type }, mats = {};
+  const R = { ox: OX, oz: OZ, hw: HW, hd: HD, wh: WH, group: g, cols: [], plan: [], counter: null, bed: null, seats: [], beds: [], type }, mats = {};
   const mt = (c, o) => { const k = c + (o ? JSON.stringify(o) : ''); return mats[k] || (mats[k] = new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.7 }, o))); };
   const glowM = (c, k) => mt(c, { emissive: c, emissiveIntensity: k === undefined ? 1 : k });
   const glass = new THREE.MeshStandardMaterial({ color: 0x9fd3ec, transparent: true, opacity: 0.3, roughness: 0.1 });
@@ -4193,15 +4290,21 @@ function getRoom(type) {
   const win = (x, z, ry, w) => { const P = new THREE.Group(); P.position.set(x, 1.7, z); P.rotation.y = ry; L.add(P); const q = kit(P); q.b(w + 0.12, 1.12, 0.05, 0, 0, 0, '#f5f5f5'); q.b(w, 1.0, 0.06, 0, 0, 0.01, glowM('#9ec9ee', 0.6)); q.b(0.04, 1.0, 0.07, 0, 0, 0.02, '#f5f5f5'); q.b(w, 0.04, 0.07, 0, 0, 0.02, '#f5f5f5'); };
   const banner = (x, y, z, w, ry) => { const m = new THREE.Mesh(UB, signMat); m.scale.set(w, w * 0.25, 0.05); m.position.set(x, y, z); m.rotation.y = ry || 0; L.add(m); };
   // ---- আসবাব ও জিনিসপত্র ----
+  // বসার জায়গা / বিছানার জায়গা নথিভুক্ত করা (ঘরের লোকাল কোঅর্ডিনেট)
+  const mkSeat = (x, z, ry, lx, lz, lift, ex) => {
+    const c = Math.cos(ry), sn = Math.sin(ry), W = (a, b) => ({ x: x + a * c + b * sn, z: z - a * sn + b * c });
+    const p = W(lx, lz);
+    return { x: p.x, z: p.z, ry, lift, exits: (ex || [[lx, lz + 0.9], [lx - 0.85, lz + 0.5], [lx + 0.85, lz + 0.5], [lx, lz - 0.9]]).map(e => W(e[0], e[1])) };
+  };
   const rug = (x, z, w, d, c) => { k.b(w, 0.02, d, x, 0.012, z, c); k.b(w - 0.3, 0.025, d - 0.3, x, 0.014, z, shade(c, 1.35)); };
-  const chair = (x, z, ry, col) => F(x, z, ry, 0.5, 0.5, q => { q.b(0.46, 0.06, 0.46, 0, 0.46, 0, col); q.b(0.46, 0.45, 0.05, 0, 0.72, -0.2, col); for (const a of [-1, 1]) for (const b of [-1, 1]) q.b(0.04, 0.44, 0.04, a * 0.19, 0.22, b * 0.19, '#3a2a1c'); });
+  const chair = (x, z, ry, col) => { R.seats.push(mkSeat(x, z, ry, 0, REST_TUNE.sitZ, REST_TUNE.chairLift)); return F(x, z, ry, 0.5, 0.5, q => { q.b(0.46, 0.06, 0.46, 0, 0.46, 0, col); q.b(0.46, 0.45, 0.05, 0, 0.72, -0.2, col); for (const a of [-1, 1]) for (const b of [-1, 1]) q.b(0.04, 0.44, 0.04, a * 0.19, 0.22, b * 0.19, '#3a2a1c'); }); };
   const rtable = (x, z, c) => F(x, z, 0, 1.3, 1.3, q => { q.c(0.62, 0.05, 0, 0.76, 0, c); q.c(0.07, 0.72, 0, 0.38, 0, '#444'); q.c(0.3, 0.04, 0, 0.02, 0, '#444'); });
-  const sofa = (x, z, ry, col) => F(x, z, ry, 2.3, 1.0, q => {
+  const sofa = (x, z, ry, col) => { for (const sx of [-0.72, 0, 0.72]) R.seats.push(mkSeat(x, z, ry, sx, REST_TUNE.sitZ, REST_TUNE.sofaLift)); return F(x, z, ry, 2.3, 1.0, q => {
     const lt = shade(col, 1.18); q.b(2.2, 0.3, 0.9, 0, 0.28, 0, col); q.b(2.2, 0.55, 0.2, 0, 0.72, -0.38, col);
     for (const sx of [-0.72, 0, 0.72]) { q.b(0.7, 0.17, 0.72, sx, 0.5, 0.05, lt); q.b(0.66, 0.38, 0.14, sx, 0.78, -0.24, lt); }
     for (const sx of [-1.06, 1.06]) q.b(0.2, 0.5, 0.9, sx, 0.5, 0, shade(col, 0.9));
     for (const sx of [-1, 1]) for (const sz of [-0.38, 0.38]) q.c(0.035, 0.12, sx, 0.06, sz, '#222');
-  });
+  }); };
   const plant = (x, z, sc) => F(x, z, 0, 0.5 * sc, 0.5 * sc, q => { q.c(0.2 * sc, 0.36 * sc, 0, 0.18 * sc, 0, '#b5651d'); q.c(0.18 * sc, 0.03, 0, 0.37 * sc, 0, '#3a2a1a'); for (let i = 0; i < 6; i++) q.s(0.2 * sc, 0.3 * sc, 0.2 * sc, Math.cos(i * 1.05) * 0.14 * sc, (0.6 + (i % 3) * 0.16) * sc, Math.sin(i * 1.05) * 0.14 * sc, i % 2 ? '#2f8f46' : '#3fae5a'); });
   const fridge = (x, z, ry) => F(x, z, ry, 0.75, 0.75, q => { q.b(0.7, 1.9, 0.7, 0, 0.95, 0, '#e6e8ea', { metalness: 0.3, roughness: 0.4 }); q.b(0.7, 0.02, 0.02, 0, 1.38, 0.36, '#777'); q.b(0.03, 0.4, 0.04, 0.27, 1.65, 0.37, '#999'); q.b(0.03, 0.7, 0.04, 0.27, 0.85, 0.37, '#999'); });
   const kitchen = (x, z, ry, len) => F(x, z, ry, len, 0.62, q => {
@@ -4209,10 +4312,10 @@ function getRoom(type) {
     q.b(len + 0.02, 0.05, 0.64, 0, 0.88, 0, '#3d3d42', { roughness: 0.3 }); q.b(0.6, 0.02, 0.4, -len / 4, 0.91, 0, '#9aa0a6', { metalness: 0.8 }); q.c(0.02, 0.25, -len / 4, 1.03, -0.2, '#bbb', { metalness: 0.9 });
     for (const a of [0.15, 0.45]) for (const b of [-0.12, 0.12]) q.c(0.09, 0.012, len / 4 + a - 0.3, 0.915, b, '#111'); q.b(len, 0.6, 0.35, 0, 1.9, -0.13, '#e4ddcc');
   });
-  const bed = (x, z, ry, col) => F(x, z, ry, 1.9, 2.2, q => {
+  const bed = (x, z, ry, col) => { R.beds.push(mkSeat(x, z, ry, 0, REST_TUNE.bedZ, REST_TUNE.bedLift, [[1.3, 0.2], [-1.3, 0.2], [0, 1.7], [1.3, -0.8], [-1.3, -0.8]])); return F(x, z, ry, 1.9, 2.2, q => {
     q.b(1.9, 0.28, 2.2, 0, 0.24, 0, '#5a4030'); q.b(1.8, 0.22, 2.1, 0, 0.46, 0.02, '#f3f0ea'); q.b(1.84, 0.1, 1.3, 0, 0.58, 0.45, col); q.b(1.84, 0.14, 0.18, 0, 0.6, -0.2, shade(col, 1.25)); q.b(1.9, 0.95, 0.1, 0, 0.7, -1.1, '#5a4030');
     for (const sx of [-0.45, 0.45]) q.s(0.34, 0.1, 0.22, sx, 0.62, -0.82, '#fff');
-  });
+  }); };
   const nstand = (x, z) => F(x, z, 0, 0.45, 0.4, q => { q.b(0.45, 0.5, 0.4, 0, 0.25, 0, '#6b4a2f'); q.b(0.4, 0.02, 0.02, 0, 0.3, 0.21, '#222'); q.c(0.06, 0.03, 0, 0.52, 0, '#777'); q.c(0.015, 0.25, 0, 0.66, 0, '#777'); q.s(0.15, 0.11, 0.15, 0, 0.88, 0, glowM('#ffe9b0', 0.8)); });
   const tvset = (x, z) => F(x, z, 0, 2.0, 0.5, q => { q.b(2, 0.5, 0.45, 0, 0.3, 0, '#3b2c22'); q.b(0.02, 0.4, 0.02, 0, 0.3, 0.23, '#111'); q.b(0.5, 0.04, 0.2, 0, 0.58, 0, '#222'); q.b(1.5, 0.85, 0.06, 0, 1.05, 0, '#0b0b0d'); q.b(1.42, 0.77, 0.02, 0, 1.05, 0.035, glowM('#1a3a5a', 0.9)); });
   const lampF = (x, z) => F(x, z, 0, 0.3, 0.3, q => { q.c(0.14, 0.03, 0, 0.02, 0, '#333'); q.c(0.02, 1.4, 0, 0.72, 0, '#444'); q.s(0.22, 0.18, 0.22, 0, 1.5, 0, glowM('#ffe9b0', 0.8)); });
@@ -4337,7 +4440,7 @@ function drawMiniIn(c, R) {
 function setAct(k) {
   if (k === actKey) return; actKey = k;
   if (!k) { enterB.classList.remove('show'); return; }
-  const M = k === 'trade' ? { food: ['bag', 'Order'], cloth: ['bag', 'Wear'], car: ['car', 'Cars'], med: ['cross', 'Medic'], bank: ['bag', 'Bank'] }[inside.room.type] : { enter: ['door', 'Enter'], exit: ['door', 'Exit'], bed: ['cross', 'Rest'] }[k];
+  const M = k === 'trade' ? { food: ['bag', 'Order'], cloth: ['bag', 'Wear'], car: ['car', 'Cars'], med: ['cross', 'Medic'], bank: ['bag', 'Bank'] }[inside.room.type] : { enter: ['door', 'Enter'], exit: ['door', 'Exit'], bed: ['cross', 'Rest'], sit: ['crouch', 'Sit'], sleep: ['cross', 'Sleep'], stand: ['jump', 'Stand'], wake: ['jump', 'Wake'] }[k];
   enterB.innerHTML = svgW(ICONS[M[0]]) + '<span>' + M[1] + '</span>'; enterB.classList.add('show');
 }
 function fadeTo(mid) {   // স্ক্রিন কালো → মাঝখানে জায়গা বদল → আবার পরিষ্কার
@@ -4370,17 +4473,21 @@ function doAct() {
   if (actKey === 'enter' && doorHit) goIn(doorHit);
   else if (actKey === 'exit') fadeTo(leaveNow);
   else if (actKey === 'trade') tradeAct(inside.room.type);
+  else if (actKey === 'sit' || actKey === 'sleep') { if (seatHit) startRest(seatHit); }
+  else if (actKey === 'stand' || actKey === 'wake') restWake = true;
   else if (actKey === 'bed') fadeTo(() => { hp = HP_MAX; armor = 100; hurtT = 99; toast('😴 Rested — health restored'); });
 }
 bindTap(enterB, doAct);
 function doorStep(now) {
   if (doorMarkMesh && !inside) doorMarkMesh.position.y = Math.sin(now / 300) * 0.15;
   if (!started || paused || xfade || drv || ent || pDead) { setAct(null); return; }
-  let k = null; doorHit = null;
+  if (rest) { setAct(rest.phase === 'hold' ? (rest.kind === 'sleep' ? 'wake' : 'stand') : null); return; }
+  let k = null; doorHit = null; seatHit = null;
   if (inside) {
     const R = inside.room, lx = player.x - R.ox, lz = player.z - R.oz;
     if (lz > R.hd - 1.1 && Math.abs(lx) < 1.3) k = 'exit';
     else if (R.counter && Math.hypot(lx - R.counter[0], lz - R.counter[1]) < 1.6) k = 'trade';
+    else if ((seatHit = nearSeat())) k = seatHit.kind;   // 'sit' বা 'sleep'
     else if (R.bed && Math.hypot(lx - R.bed[0], lz - R.bed[1]) < 1.8) k = 'bed';
     if (k === 'exit' && now > inLock && spd > 1.2 && Math.cos(player.yaw) > 0.6) { fadeTo(leaveNow); return; }
   } else {
