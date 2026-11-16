@@ -763,7 +763,7 @@ function facadeTex(base) {
 // ---------- ওয়ার্ল্ড ----------
 const boxes = [];
 let inside = null, xfade = false, inOut = null, inHidden = [], inLock = 0, doorMarkMesh = null;
-const doors = [], doorMarks = [];
+const doors = [], doorMarks = [], doorSigns = [];
 const roadCenters = [];
 const blocksList = [], parks = [];
 const mctx = document.getElementById('mini').getContext('2d');
@@ -816,11 +816,13 @@ function addCompound(cx, cz, gs, w, d, shop, hasGarage, enterable) {
   }
   const bfz = -2.5 + d / 2;
   box(-1.2, bfz, 1.2, 12.2, 0, 0.03, '#b9b3a6', false);
-  if (enterable) {   // সামনের দেয়ালে দরজা + ঢোকার চিহ্ন
+  if (enterable) {   // সামনের দেয়ালে দরজা + দোকানের সাইনবোর্ড + ঢোকার চিহ্ন
+    const ty = enterable, dcol = { home: '#6a4226', food: '#d63c2f', cloth: '#8e44ad', car: '#2c3e50', med: '#1e9e5a', bank: '#1b4f8a' }[ty];
     box(-0.75, bfz, 0.75, bfz + 0.05, 0, 2.3, '#2b2b2b', false);
-    box(-0.6, bfz, 0.6, bfz + 0.1, 0, 2.15, shop ? '#2f6f9f' : '#6a4226', false);
+    box(-0.6, bfz, 0.6, bfz + 0.1, 0, 2.15, dcol, false);
     const P = rc(0, bfz + 0.6);
-    doors.push({ x: P[0], z: P[1], ox: S, oz: C, type: shop ? 'shop' : 'home' });
+    if (ty !== 'home') { const q = rc(0, bfz + 0.09); doorSigns.push({ t: ty, p: [q[0], 0.15 + 4.0, q[1]], ry: Math.atan2(S, C) }); }
+    doors.push({ x: P[0], z: P[1], ox: S, oz: C, type: ty, out: rc(0, 17.5) });
     doorMarks.push([P[0], 3.1, P[1]]);
   }
   // ফুলের বাগান
@@ -858,6 +860,12 @@ function finalizeCompounds() {
     const im = new THREE.InstancedMesh(cg, new THREE.MeshBasicMaterial({ color: 0xffd400 }), doorMarks.length), m = new THREE.Matrix4();
     doorMarks.forEach((p, i) => { m.makeTranslation(p[0], p[1], p[2]); im.setMatrixAt(i, m); });
     im.frustumCulled = false; scene.add(im); doorMarkMesh = im;
+  }
+  for (const t in SIGNS) {   // দোকানের নামের সাইনবোর্ড (প্রতি ধরনে একটাই ইনস্ট্যান্সড মেশ)
+    const Ls = doorSigns.filter(s => s.t === t); if (!Ls.length) continue;
+    const im = new THREE.InstancedMesh(new THREE.PlaneGeometry(3.4, 0.85), new THREE.MeshBasicMaterial({ map: signTex(t) }), Ls.length), m = new THREE.Matrix4(), q = new THREE.Quaternion();
+    Ls.forEach((s, i) => { q.setFromAxisAngle(UPV, s.ry); m.compose(new THREE.Vector3(s.p[0], s.p[1], s.p[2]), q, new THREE.Vector3(1, 1, 1)); im.setMatrixAt(i, m); });
+    im.frustumCulled = false; scene.add(im);
   }
 }
 
@@ -1105,6 +1113,7 @@ function buildWorld() {
   });
   buildHighway(); buildPort(); buildVegetation();
   for (const CY of CITIES) {
+  let ci = 0; const nb = Math.round(CY.nx * CY.nz * 2 / 3), SPC = { [Math.floor(nb * 0.2)]: 'cloth', [Math.floor(nb * 0.4)]: 'car', [Math.floor(nb * 0.6)]: 'med', [Math.floor(nb * 0.8)]: 'bank' };
   for (let kx = CY.kx0; kx < CY.kx0 + CY.nx; kx++) {
     for (let kz = CY.kz0; kz < CY.kz0 + CY.nz; kz++) {
       const cx = CY.ox + kx * SPACING + 20, cz = CY.oz + kz * SPACING + 20;
@@ -1133,8 +1142,9 @@ function buildWorld() {
       mesh.position.set(bx, h / 2, bz);
       mesh.castShadow = true; mesh.receiveShadow = true;
       scene.add(mesh);
-      const shop = Math.random() < 0.6;
-      boxes.push({ minX: bx - ww / 2, maxX: bx + ww / 2, minZ: bz - dd / 2, maxZ: bz + dd / 2, h, name: shop ? 'Shop' : h > 22 ? 'Office Tower' : 'Home' });
+      const ty = SPC[ci] || (ci % 5 === 1 || ci % 5 === 3 ? 'food' : h <= 22 ? 'home' : null); ci++;
+      const shop = !!ty && ty !== 'home';
+      boxes.push({ minX: bx - ww / 2, maxX: bx + ww / 2, minZ: bz - dd / 2, maxZ: bz + dd / 2, h, name: { food: 'Food Mart', cloth: 'Fashion Mall', car: 'Auto Showroom', med: 'Pharmacy', bank: 'Bank' }[ty] || (h > 22 ? 'Office Tower' : 'Home') });
 
       // দোকানের ছাউনি (বিল্ডিংয়ের সামনের দিকে)
       if (shop) {
@@ -1147,7 +1157,7 @@ function buildWorld() {
         aw.castShadow = true;
         scene.add(aw);
       }
-      addCompound(cx, cz, gs, w, d, shop, Math.random() < 0.55, shop || h <= 22);
+      addCompound(cx, cz, gs, w, d, shop, Math.random() < 0.55, ty);
 
       addTree(cx - 14, cz - 14, 0.7);
     }
@@ -3879,51 +3889,201 @@ function extra(dt) {
 // ================= GTA-স্টাইল ভেতরে ঢোকা: দরজায় গেলে ফেড → আলাদা ছোট ঘর; বেরোলে দরজার সামনে ফেরা =================
 const fadeEl = document.getElementById('fade'), enterB = document.getElementById('enterb'), ROOMS = {};
 let actKey = null, doorHit = null;
+const SIGNS = { food: ['🍔 FOOD MART', '#d63c2f'], cloth: ['👗 FASHION MALL', '#8e44ad'], car: ['🚗 AUTO SHOWROOM', '#1f2d3d'], med: ['✚ PHARMACY', '#1e9e5a'], bank: ['🏦 BANK', '#1b4f8a'] };
+function signTex(t) {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 128; const x = c.getContext('2d');
+  x.fillStyle = SIGNS[t][1]; x.fillRect(0, 0, 512, 128); x.strokeStyle = '#fff'; x.lineWidth = 6; x.strokeRect(6, 6, 500, 116);
+  x.fillStyle = '#fff'; x.font = 'bold 54px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(SIGNS[t][0], 256, 68);
+  const T = new THREE.CanvasTexture(c); T.colorSpace = THREE.SRGBColorSpace; return T;
+}
+function buyCar(tpl, price) {
+  if (cash < price) { toast('Not enough money'); return; }
+  cash -= price; const g = tpl.g.clone(), body = g.children[0];
+  body.material = body.material.clone(); body.material.color.set(['#c0392b', '#2e86de', '#f1c40f', '#ecf0f1', '#2c3e50'][Math.floor(Math.random() * 5)]);
+  const d = inOut.d; g.position.set(d.out[0], 0, d.out[1]); g.rotation.y = Math.atan2(d.ox, d.oz) + Math.PI / 2; g.visible = false; scene.add(g);
+  parkedCars.push({ g, headM: g.children[4], tailM: g.children[5], name: tpl.name, lights: false }); inHidden.push(g);
+  toast('🚗 ' + tpl.name + ' delivered outside the door');
+}
+function tradeAct(t) {
+  if (t === 'bank') return shopOpen(bankPanel);
+  const buy = s => ({ t: s.n + ' — 💵' + s.p, b: 'Buy', f: () => { if (cash < s.p) { toast('Not enough money'); return; } cash -= s.p; s.f(); toast('Bought'); } });
+  shopOpen(() => {
+    if (t === 'food') return { title: '🍔 Food Mart · 💵 ' + cash, rows: [SHOP[1], SHOP[2]].map(buy) };
+    if (t === 'med') return { title: '✚ Pharmacy · 💵 ' + cash, rows: [SHOP[0], SHOP[3]].map(buy) };
+    if (t === 'cloth') return { title: '👗 Fashion Mall · 💵 ' + cash, rows: [['Blue', '#3498db'], ['Red', '#e74c3c'], ['Green', '#2ecc71'], ['Black', '#222222'], ['Yellow', '#f1c40f']].map(o => ({ t: '👕 ' + o[0] + ' outfit — 💵100', b: 'Buy', f: () => { if (cash < 100) { toast('Not enough money'); return; } cash -= 100; if (activeProfile) { activeProfile.dress = o[1]; saveProfiles(); } toast('Outfit changed'); } })) };
+    const tp = [], nm = []; for (const c of cars.concat(parkedCars)) if (!nm.includes(c.name)) { nm.push(c.name); tp.push(c); }
+    return { title: '🚗 Auto Showroom · 💵 ' + cash, rows: tp.slice(0, 5).map((c, i) => ({ t: '🚗 ' + c.name + ' — 💵' + (1200 + i * 600), b: 'Buy', f: () => buyCar(c, 1200 + i * 600) })) };
+  });
+}
+const RMS = { home: [4.5, 3.5, 3, 'wood', '#e6dccb'], food: [5, 4, 3.2, 'tile', '#f4ecd6'], cloth: [7, 5, 3.4, 'tile', '#f1eaf0'], car: [7, 5, 4, 'dark', '#dfe3e8'], med: [5, 4, 3.2, 'tile2', '#eef5f3'], bank: [6, 4.5, 3.6, 'marble', '#e9e1d0'] };
+const RIDX = { home: 0, food: 1, cloth: 2, car: 3, med: 4, bank: 5 };
+const UB = new THREE.BoxGeometry(1, 1, 1), UC = new THREE.CylinderGeometry(1, 1, 1, 16), US = new THREE.SphereGeometry(1, 14, 10);
+const cvs = (w, h, f) => { const c = document.createElement('canvas'); c.width = w; c.height = h; f(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t; };
+const shade = (c, f) => '#' + new THREE.Color(c).multiplyScalar(f).getHexString();
+function floorMat(kind, hw, hd) {   // মেঝের টেক্সচার: কাঠ / টাইল / মার্বেল / গাঢ় চকচকে
+  const T = cvs(256, 256, (x, w, h) => {
+    if (kind === 'wood') { for (let i = 0; i < 8; i++) { x.fillStyle = 'hsl(28,' + (35 + Math.random() * 10) + '%,' + (38 + Math.random() * 10) + '%)'; x.fillRect(0, i * 32, w, 32); x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(0, i * 32, w, 2); x.fillRect((i * 97) % w, i * 32, 2, 32); } }
+    else if (kind === 'dark') { x.fillStyle = '#2b2e34'; x.fillRect(0, 0, w, h); x.fillStyle = 'rgba(255,255,255,.07)'; x.fillRect(0, 0, w, 3); x.fillRect(0, 0, 3, h); }
+    else if (kind === 'marble') { x.fillStyle = '#ece6d8'; x.fillRect(0, 0, w, h); x.strokeStyle = 'rgba(120,110,100,.35)'; for (let i = 0; i < 9; i++) { x.beginPath(); x.moveTo(Math.random() * w, 0); x.bezierCurveTo(Math.random() * w, 80, Math.random() * w, 160, Math.random() * w, h); x.stroke(); } x.fillStyle = '#c9bfa9'; x.fillRect(0, 0, w, 2); x.fillRect(0, 0, 2, h); x.fillRect(w / 2, 0, 2, h); x.fillRect(0, h / 2, w, 2); }
+    else { const a = kind === 'tile2' ? '#f2f6f4' : '#eae6dc', b = kind === 'tile2' ? '#cfe3dc' : '#c3cdb8'; for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { x.fillStyle = (i + j) % 2 ? b : a; x.fillRect(i * 64, j * 64, 64, 64); } }
+  });
+  T.repeat.set(hw * 2 / 2.4, hd * 2 / 2.4);
+  return new THREE.MeshStandardMaterial({ map: T, roughness: kind === 'dark' || kind === 'marble' ? 0.25 : 0.7, metalness: kind === 'dark' ? 0.3 : 0 });
+}
 function getRoom(type) {
   if (ROOMS[type]) return ROOMS[type];
-  const shop = type === 'shop', OX = 3000, OZ = shop ? 140 : 0, HW = 4.5, HD = 3.5, WH = 3;
+  const [HW, HD, WH, fk, wc] = RMS[type], OX = 3000, OZ = RIDX[type] * 40;
   const g = new THREE.Group(); g.userData.indoor = true; g.visible = false;
-  const R = { ox: OX, oz: OZ, hw: HW, hd: HD, wh: WH, group: g, cols: [], plan: [], counter: null, bed: null }, mats = {};
-  const mt = c => mats[c] || (mats[c] = new THREE.MeshStandardMaterial({ color: c, roughness: 0.85 }));
-  const glow = (c, k) => new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: k, roughness: 0.6 });
-  const B = (w, h, d, x, y, z, c, solid, m) => {
-    const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m || mt(c)); o.position.set(OX + x, y, OZ + z); g.add(o);
-    if (solid) { R.cols.push({ minX: OX + x - w / 2, maxX: OX + x + w / 2, minZ: OZ + z - d / 2, maxZ: OZ + z + d / 2 }); R.plan.push([x - w / 2, z - d / 2, w, d]); }
-    return o;
+  const R = { ox: OX, oz: OZ, hw: HW, hd: HD, wh: WH, group: g, cols: [], plan: [], counter: null, bed: null, type }, mats = {};
+  const mt = (c, o) => { const k = c + (o ? JSON.stringify(o) : ''); return mats[k] || (mats[k] = new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.7 }, o))); };
+  const glowM = (c, k) => mt(c, { emissive: c, emissiveIntensity: k === undefined ? 1 : k });
+  const glass = new THREE.MeshStandardMaterial({ color: 0x9fd3ec, transparent: true, opacity: 0.3, roughness: 0.1 });
+  const M = (c, o) => typeof c === 'string' ? mt(c, o) : c;
+  const kit = P => ({
+    b: (w, h, d, x, y, z, c, o) => { const m = new THREE.Mesh(UB, M(c, o)); m.scale.set(w, h, d); m.position.set(x, y, z); P.add(m); return m; },
+    c: (r, h, x, y, z, c, o) => { const m = new THREE.Mesh(UC, M(c, o)); m.scale.set(r, h, r); m.position.set(x, y, z); P.add(m); return m; },
+    s: (rx, ry, rz, x, y, z, c, o) => { const m = new THREE.Mesh(US, M(c, o)); m.scale.set(rx, ry, rz); m.position.set(x, y, z); P.add(m); return m; }
+  });
+  const L = new THREE.Group(); L.position.set(OX, 0, OZ); g.add(L); const k = kit(L);
+  const solid = (x, z, w, d) => { R.cols.push({ minX: OX + x - w / 2, maxX: OX + x + w / 2, minZ: OZ + z - d / 2, maxZ: OZ + z + d / 2 }); R.plan.push([x - w / 2, z - d / 2, w, d]); };
+  const F = (x, z, ry, cw, cd, fn) => {   // আসবাবের গ্রুপ: (x,z) এ ry কোণে; cw×cd সংঘর্ষ-বাক্স (ঘুরলে নিজে অদলবদল)
+    const P = new THREE.Group(); P.position.set(x, 0, z); P.rotation.y = ry; L.add(P);
+    if (cw) { const sw = Math.abs(Math.sin(ry)) > 0.7; solid(x, z, sw ? cd : cw, sw ? cw : cd); }
+    fn(kit(P)); return P;
   };
-  const wc = shop ? '#f0ebdf' : '#e6dccb';
-  B(2 * HW, 0.1, 2 * HD, 0, -0.05, 0, shop ? '#cfcbc3' : '#a9825a');
-  B(2 * HW + 0.4, WH, 0.2, 0, WH / 2, -HD - 0.1, wc); B(2 * HW + 0.4, WH, 0.2, 0, WH / 2, HD + 0.1, wc);
-  B(0.2, WH, 2 * HD, -HW - 0.1, WH / 2, 0, wc); B(0.2, WH, 2 * HD, HW + 0.1, WH / 2, 0, wc);
-  B(2 * HW + 0.4, 0.1, 2 * HD + 0.4, 0, WH + 0.05, 0, '#e9e4da', false, new THREE.MeshBasicMaterial({ color: 0xe9e4da }));
-  B(1.4, 2.35, 0.06, 0, 1.175, HD - 0.04, '#2b2b2b'); B(1.2, 2.2, 0.08, 0, 1.1, HD - 0.1, shop ? '#2f6f9f' : '#6a4226');
-  B(0.9, 0.2, 0.04, 0, 2.55, HD - 0.06, '#2ecc71', false, new THREE.MeshBasicMaterial({ color: 0x2ecc71 }));
-  B(1.4, 0.03, 0.9, 0, 0.02, HD - 0.8, '#2ecc71', false, new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, opacity: 0.55 }));
-  B(1.6, 0.05, 0.6, 0, WH - 0.05, 0, '#fff', false, new THREE.MeshBasicMaterial({ color: 0xffffff }));
-  for (const wx of shop ? [-3.2, 3.2] : [-1.6, 1.6]) B(1.4, 1.0, 0.05, wx, 1.7, -HD + 0.03, '#9ec9ee', false, glow(0x9ec9ee, 0.5));
-  const cols = ['#e74c3c', '#f1c40f', '#3498db', '#2ecc71', '#e67e22', '#9b59b6', '#ecf0f1'], rnd = a => a[Math.floor(Math.random() * a.length)];
-  if (!shop) {
-    R.bed = [2.3, -1.0];
-    B(2.0, 0.1, 0.5, -2.4, 0.35, -3.2, '#4a3b30'); B(2.0, 0.6, 0.5, -2.4, 0.3, -3.2, '#4a3b30');
-    B(1.5, 0.85, 0.08, -2.4, 1.1, -3.4, '#111', false, glow(0x1a2a3a, 0.8));
-    B(2.2, 0.6, 0.9, -2.4, 0.3, -1.2, '#4b6a88'); B(2.2, 0.5, 0.2, -2.4, 0.8, -0.75, '#3e5a75', false);
-    B(1.8, 0.6, 2.6, 3.2, 0.3, -2.2, '#7a5a3a'); B(1.7, 0.2, 2.0, 3.2, 0.65, -1.9, '#d65d5d', false); B(1.2, 0.15, 0.5, 3.2, 0.7, -3.2, '#fff', false);
-    B(0.7, 0.9, 2.4, 4.0, 0.45, 1.2, '#c9c2b5'); B(0.7, 2.0, 0.7, 4.0, 1.0, 2.8, '#eaeaea');
-    B(1.2, 0.8, 1.2, 0.8, 0.4, -0.4, '#8a6a48'); B(3.0, 0.03, 2.0, -2.0, 0.02, -1.6, '#8c3b3b', false);
-    B(0.5, 0.6, 0.5, -4.0, 0.3, 2.9, '#6b4a2f'); B(0.7, 0.9, 0.7, -4.0, 0.95, 2.9, '#3f8f4a', false);
-  } else {
-    R.counter = [1.9, 0.4];
-    B(0.8, 1.1, 3.0, 3.0, 0.55, 0.4, '#6b4a2f'); B(0.4, 0.3, 0.4, 3.0, 1.25, 0.9, '#222', false);
-    const kp = new THREE.Group(); kp.position.set(OX + 3.95, 0, OZ + 0.4); g.add(kp);
-    for (const [w, h, d, y, c] of [[0.4, 0.8, 0.3, 0.4, '#3b3b58'], [0.5, 0.7, 0.34, 1.15, '#c0392b']]) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mt(c)); m.position.y = y; kp.add(m); }
-    const hd = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), mt('#e0a97a')); hd.position.y = 1.7; kp.add(hd);
-    B(0.8, 2.0, 2.2, -4.0, 1.0, 1.6, '#9fd3ec', true, glow(0x9fd3ec, 0.35));
-    for (const sx of [-2.8, 0, 2.8]) {
-      B(2.4, 1.9, 0.5, sx, 0.95, -3.2, '#8d7b68');
-      for (let r = 0; r < 4; r++) for (let i = 0; i < 6; i++) B(0.3, 0.28, 0.3, sx - 1.0 + i * 0.4, 0.25 + r * 0.45, -2.9, '#fff', false, mt(rnd(cols)));
+  const signMat = new THREE.MeshBasicMaterial({ map: signTex(type === 'home' ? 'food' : type) });
+  // ---- ঘরের খোল: মেঝে, দেয়াল, স্কার্টিং, ছাদ, বাতি ----
+  const fl = new THREE.Mesh(UB, floorMat(fk, HW, HD)); fl.scale.set(2 * HW, 0.1, 2 * HD); fl.position.y = -0.05; L.add(fl);
+  const wm = mt(wc), bb = mt('#ffffff', { roughness: 0.5 });
+  k.b(2 * HW + 0.4, WH, 0.2, 0, WH / 2, -HD - 0.1, wm); k.b(2 * HW + 0.4, WH, 0.2, 0, WH / 2, HD + 0.1, wm);
+  k.b(0.2, WH, 2 * HD, -HW - 0.1, WH / 2, 0, wm); k.b(0.2, WH, 2 * HD, HW + 0.1, WH / 2, 0, wm);
+  k.b(2 * HW, 0.12, 0.04, 0, 0.06, -HD + 0.02, bb); k.b(2 * HW, 0.12, 0.04, 0, 0.06, HD - 0.02, bb); k.b(0.04, 0.12, 2 * HD, -HW + 0.02, 0.06, 0, bb); k.b(0.04, 0.12, 2 * HD, HW - 0.02, 0.06, 0, bb);
+  k.b(2 * HW + 0.4, 0.1, 2 * HD + 0.4, 0, WH + 0.05, 0, new THREE.MeshBasicMaterial({ color: 0xe9e4da }));
+  const lm = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  for (let i = -1; i <= 1; i += 2) for (let j = -1; j <= 1; j += 2) k.b(1.3, 0.04, 0.45, i * HW * 0.5, WH - 0.03, j * HD * 0.45, lm);
+  const dc = { home: '#6a4226', food: '#d63c2f', cloth: '#8e44ad', car: '#2c3e50', med: '#1e9e5a', bank: '#1b4f8a' }[type];
+  k.b(1.4, 2.35, 0.06, 0, 1.175, HD - 0.04, '#2b2b2b'); k.b(1.2, 2.2, 0.08, 0, 1.1, HD - 0.1, dc); k.s(0.04, 0.04, 0.04, 0.45, 1.05, HD - 0.16, '#d9c07a', { metalness: 0.8 });
+  k.b(0.9, 0.2, 0.04, 0, 2.55, HD - 0.06, new THREE.MeshBasicMaterial({ color: 0x2ecc71 }));
+  k.b(1.4, 0.03, 0.9, 0, 0.02, HD - 0.8, new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, opacity: 0.5 }));
+  const win = (x, z, ry, w) => { const P = new THREE.Group(); P.position.set(x, 1.7, z); P.rotation.y = ry; L.add(P); const q = kit(P); q.b(w + 0.12, 1.12, 0.05, 0, 0, 0, '#f5f5f5'); q.b(w, 1.0, 0.06, 0, 0, 0.01, glowM('#9ec9ee', 0.6)); q.b(0.04, 1.0, 0.07, 0, 0, 0.02, '#f5f5f5'); q.b(w, 0.04, 0.07, 0, 0, 0.02, '#f5f5f5'); };
+  const banner = (x, y, z, w, ry) => { const m = new THREE.Mesh(UB, signMat); m.scale.set(w, w * 0.25, 0.05); m.position.set(x, y, z); m.rotation.y = ry || 0; L.add(m); };
+  // ---- আসবাব ও জিনিসপত্র ----
+  const rug = (x, z, w, d, c) => { k.b(w, 0.02, d, x, 0.012, z, c); k.b(w - 0.3, 0.025, d - 0.3, x, 0.014, z, shade(c, 1.35)); };
+  const chair = (x, z, ry, col) => F(x, z, ry, 0.5, 0.5, q => { q.b(0.46, 0.06, 0.46, 0, 0.46, 0, col); q.b(0.46, 0.45, 0.05, 0, 0.72, -0.2, col); for (const a of [-1, 1]) for (const b of [-1, 1]) q.b(0.04, 0.44, 0.04, a * 0.19, 0.22, b * 0.19, '#3a2a1c'); });
+  const rtable = (x, z, c) => F(x, z, 0, 1.3, 1.3, q => { q.c(0.62, 0.05, 0, 0.76, 0, c); q.c(0.07, 0.72, 0, 0.38, 0, '#444'); q.c(0.3, 0.04, 0, 0.02, 0, '#444'); });
+  const sofa = (x, z, ry, col) => F(x, z, ry, 2.3, 1.0, q => {
+    const lt = shade(col, 1.18); q.b(2.2, 0.3, 0.9, 0, 0.28, 0, col); q.b(2.2, 0.55, 0.2, 0, 0.72, -0.38, col);
+    for (const sx of [-0.72, 0, 0.72]) { q.b(0.7, 0.17, 0.72, sx, 0.5, 0.05, lt); q.b(0.66, 0.38, 0.14, sx, 0.78, -0.24, lt); }
+    for (const sx of [-1.06, 1.06]) q.b(0.2, 0.5, 0.9, sx, 0.5, 0, shade(col, 0.9));
+    for (const sx of [-1, 1]) for (const sz of [-0.38, 0.38]) q.c(0.035, 0.12, sx, 0.06, sz, '#222');
+  });
+  const plant = (x, z, sc) => F(x, z, 0, 0.5 * sc, 0.5 * sc, q => { q.c(0.2 * sc, 0.36 * sc, 0, 0.18 * sc, 0, '#b5651d'); q.c(0.18 * sc, 0.03, 0, 0.37 * sc, 0, '#3a2a1a'); for (let i = 0; i < 6; i++) q.s(0.2 * sc, 0.3 * sc, 0.2 * sc, Math.cos(i * 1.05) * 0.14 * sc, (0.6 + (i % 3) * 0.16) * sc, Math.sin(i * 1.05) * 0.14 * sc, i % 2 ? '#2f8f46' : '#3fae5a'); });
+  const fridge = (x, z, ry) => F(x, z, ry, 0.75, 0.75, q => { q.b(0.7, 1.9, 0.7, 0, 0.95, 0, '#e6e8ea', { metalness: 0.3, roughness: 0.4 }); q.b(0.7, 0.02, 0.02, 0, 1.38, 0.36, '#777'); q.b(0.03, 0.4, 0.04, 0.27, 1.65, 0.37, '#999'); q.b(0.03, 0.7, 0.04, 0.27, 0.85, 0.37, '#999'); });
+  const kitchen = (x, z, ry, len) => F(x, z, ry, len, 0.62, q => {
+    q.b(len, 0.85, 0.6, 0, 0.43, 0, '#f1ece0'); for (let i = -Math.floor(len / 0.9 / 2); i <= Math.floor(len / 0.9 / 2); i++) { q.b(0.02, 0.7, 0.02, i * 0.9 + 0.45, 0.43, 0.31, '#8a8478'); q.b(0.04, 0.12, 0.02, i * 0.9 + 0.4, 0.6, 0.32, '#aaa'); }
+    q.b(len + 0.02, 0.05, 0.64, 0, 0.88, 0, '#3d3d42', { roughness: 0.3 }); q.b(0.6, 0.02, 0.4, -len / 4, 0.91, 0, '#9aa0a6', { metalness: 0.8 }); q.c(0.02, 0.25, -len / 4, 1.03, -0.2, '#bbb', { metalness: 0.9 });
+    for (const a of [0.15, 0.45]) for (const b of [-0.12, 0.12]) q.c(0.09, 0.012, len / 4 + a - 0.3, 0.915, b, '#111'); q.b(len, 0.6, 0.35, 0, 1.9, -0.13, '#e4ddcc');
+  });
+  const bed = (x, z, ry, col) => F(x, z, ry, 1.9, 2.2, q => {
+    q.b(1.9, 0.28, 2.2, 0, 0.24, 0, '#5a4030'); q.b(1.8, 0.22, 2.1, 0, 0.46, 0.02, '#f3f0ea'); q.b(1.84, 0.1, 1.3, 0, 0.58, 0.45, col); q.b(1.84, 0.14, 0.18, 0, 0.6, -0.2, shade(col, 1.25)); q.b(1.9, 0.95, 0.1, 0, 0.7, -1.1, '#5a4030');
+    for (const sx of [-0.45, 0.45]) q.s(0.34, 0.1, 0.22, sx, 0.62, -0.82, '#fff');
+  });
+  const nstand = (x, z) => F(x, z, 0, 0.45, 0.4, q => { q.b(0.45, 0.5, 0.4, 0, 0.25, 0, '#6b4a2f'); q.b(0.4, 0.02, 0.02, 0, 0.3, 0.21, '#222'); q.c(0.06, 0.03, 0, 0.52, 0, '#777'); q.c(0.015, 0.25, 0, 0.66, 0, '#777'); q.s(0.15, 0.11, 0.15, 0, 0.88, 0, glowM('#ffe9b0', 0.8)); });
+  const tvset = (x, z) => F(x, z, 0, 2.0, 0.5, q => { q.b(2, 0.5, 0.45, 0, 0.3, 0, '#3b2c22'); q.b(0.02, 0.4, 0.02, 0, 0.3, 0.23, '#111'); q.b(0.5, 0.04, 0.2, 0, 0.58, 0, '#222'); q.b(1.5, 0.85, 0.06, 0, 1.05, 0, '#0b0b0d'); q.b(1.42, 0.77, 0.02, 0, 1.05, 0.035, glowM('#1a3a5a', 0.9)); });
+  const lampF = (x, z) => F(x, z, 0, 0.3, 0.3, q => { q.c(0.14, 0.03, 0, 0.02, 0, '#333'); q.c(0.02, 1.4, 0, 0.72, 0, '#444'); q.s(0.22, 0.18, 0.22, 0, 1.5, 0, glowM('#ffe9b0', 0.8)); });
+  const person = (x, z, ry, shirt, pants, hair) => F(x, z, ry, 0, 0, q => { for (const sx of [-0.1, 0.1]) { q.b(0.14, 0.8, 0.16, sx, 0.4, 0, pants); q.b(0.1, 0.55, 0.12, sx * 2.8, 1.1, 0, shirt); } q.b(0.42, 0.6, 0.24, 0, 1.1, 0, shirt); q.s(0.14, 0.16, 0.14, 0, 1.62, 0, '#e0a97a'); q.s(0.15, 0.1, 0.15, 0, 1.72, -0.01, hair || '#2b1d14'); });
+  const counter = (x, z, ry, w, col) => F(x, z, ry, w, 0.8, q => {
+    q.b(w, 1.0, 0.7, 0, 0.5, 0, col); q.b(w - 0.1, 0.7, 0.02, 0, 0.5, 0.36, shade(col, 0.8)); q.b(w + 0.06, 0.06, 0.78, 0, 1.03, 0, '#e8e4dc', { roughness: 0.3 });
+    q.b(0.4, 0.2, 0.34, w / 2 - 0.5, 1.16, 0, '#222'); q.b(0.32, 0.2, 0.03, w / 2 - 0.5, 1.34, 0.02, glowM('#4aa3ff', 0.8)); q.c(0.08, 0.2, -w / 2 + 0.5, 1.16, 0.1, glass); q.s(0.06, 0.06, 0.06, -w / 2 + 0.9, 1.1, 0.15, '#e74c3c');
+  });
+  const prodCols = ['#e74c3c', '#f1c40f', '#3498db', '#2ecc71', '#e67e22', '#9b59b6', '#ecf0f1', '#1abc9c'], rnd = a => a[Math.floor(Math.random() * a.length)];
+  const shelf = (x, z, ry, w, kind) => F(x, z, ry, w, 0.5, q => {
+    for (const sx of [-1, 1]) q.b(0.04, 1.9, 0.45, sx * w / 2, 0.95, 0, '#8d7b68'); q.b(w, 1.9, 0.03, 0, 0.95, -0.22, '#7a6a58'); q.b(w, 0.05, 0.47, 0, 1.92, 0, '#8d7b68');
+    for (let r = 0; r < 4; r++) {
+      q.b(w, 0.03, 0.45, 0, 0.12 + r * 0.46, 0, '#b99d78');
+      for (let j = 0, n = Math.floor((w - 0.2) / 0.22); j < n; j++) {
+        const px = -w / 2 + 0.2 + j * 0.22, y0 = 0.14 + r * 0.46, c = rnd(prodCols), t = (j + r) % 3;
+        if (kind === 'med') { if (t === 0) { q.c(0.045, 0.14, px, y0 + 0.07, 0.04, '#f4f4f4'); q.c(0.048, 0.03, px, y0 + 0.15, 0.04, c); } else q.b(0.13, 0.17, 0.08, px, y0 + 0.09, 0.05, t === 1 ? '#f4f8f6' : shade(c, 0.9)); }
+        else if (t === 0) q.c(0.07, 0.17, px, y0 + 0.09, 0.04, c, { metalness: 0.4 }); else if (t === 1) { q.c(0.05, 0.3, px, y0 + 0.16, 0.04, c); q.c(0.025, 0.05, px, y0 + 0.33, 0.04, '#eee'); } else q.b(0.18, 0.28, 0.1, px, y0 + 0.15, 0.05, c);
+      }
     }
-    B(3.0, 1.4, 0.7, -0.8, 0.7, -0.2, '#8d7b68');
-    for (let i = 0; i < 12; i++) B(0.3, 0.28, 0.3, -2.0 + i * 0.22, 1.54, -0.2 + (i % 2) * 0.2, '#fff', false, mt(rnd(cols)));
+  });
+  const cooler = (x, z, w) => F(x, z, 0, w, 0.7, q => {
+    q.b(w, 1.9, 0.7, 0, 0.95, 0, '#f5f7f8'); q.b(w - 0.15, 1.6, 0.5, 0, 0.95, -0.02, glowM('#cfeeff', 0.5)); q.b(w - 0.08, 1.7, 0.02, 0, 0.95, 0.36, glass); q.b(w, 0.18, 0.72, 0, 1.95, 0, '#2f9bd8');
+    for (let r = 0; r < 3; r++) { q.b(w - 0.15, 0.02, 0.45, 0, 0.35 + r * 0.5, 0, '#cfd8dc'); for (let j = 0; j < Math.floor(w / 0.17); j++) q.c(0.05, 0.24, -w / 2 + 0.2 + j * 0.17, 0.5 + r * 0.5, 0, rnd(prodCols), { metalness: 0.3 }); }
+  });
+  const produce = (x, z) => F(x, z, 0, 2.2, 0.8, q => { for (let i = 0; i < 3; i++) { q.b(0.7, 0.28, 0.6, -0.75 + i * 0.75, 0.14, 0, '#a67c52'); for (let j = 0; j < 7; j++) q.s(0.09, 0.09, 0.09, -0.95 + i * 0.75 + (j % 4) * 0.13, 0.32 + (j > 3 ? 0.1 : 0), (j > 3 ? 0.1 : -0.08), ['#e74c3c', '#e67e22', '#8bc34a'][i]); } });
+  const rack = (x, z, w) => F(x, z, 0, w, 0.6, q => {
+    for (const sx of [-1, 1]) q.c(0.02, 1.5, sx * w / 2, 0.75, 0, '#ccc'); q.b(w, 0.04, 0.55, 0, 0.02, 0, '#888'); q.c(0.015, w, 0, 1.45, 0, '#ddd').rotation.z = Math.PI / 2;
+    for (let i = 0, n = Math.floor(w / 0.2); i < n; i++) { const px = -w / 2 + 0.2 + i * 0.2, c = rnd(prodCols); q.b(0.3, 0.5, 0.05, px, 1.12, 0, c); for (const sg of [-1, 1]) q.b(0.14, 0.12, 0.05, px + sg * 0.19, 1.32, 0, c).rotation.z = sg * 0.6; q.b(0.1, 0.05, 0.055, px, 1.38, 0, shade(c, 0.7)); }
+  });
+  const mann = (x, z, c, skirt) => F(x, z, 0, 0.5, 0.5, q => { q.c(0.22, 0.03, 0, 0.02, 0, '#333'); q.c(0.02, 0.9, 0, 0.45, 0, '#999'); q.c(0.16, 0.5, 0, 1.15, 0, c); if (skirt) q.c(0.27, 0.5, 0, 0.7, 0, c); else { q.c(0.16, 0.4, 0, 0.7, 0, '#34495e'); } q.s(0.1, 0.12, 0.1, 0, 1.55, 0, '#e9e4dc'); });
+  const foldT = (x, z) => F(x, z, 0, 1.6, 1.0, q => { q.b(1.6, 0.08, 1.0, 0, 0.8, 0, '#8a6a48'); for (const a of [-1, 1]) for (const b of [-1, 1]) q.b(0.06, 0.78, 0.06, a * 0.72, 0.39, b * 0.42, '#6b4a2f'); for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) for (let s = 0; s < 3; s++) q.b(0.42, 0.05, 0.34, -0.5 + i * 0.5, 0.87 + s * 0.05, -0.22 + j * 0.44, shade(rnd(prodCols), 1 - s * 0.06)); });
+  const fitting = (x, z, ry) => F(x, z, ry, 1.1, 1.1, q => { q.b(1.1, 2.2, 0.04, 0, 1.1, -0.55, '#c9bfd8'); for (const sx of [-1, 1]) q.b(0.04, 2.2, 1.1, sx * 0.55, 1.1, 0, '#c9bfd8'); q.b(1.0, 2.0, 0.04, 0, 1.05, 0.52, '#7d3c98'); q.b(0.5, 1.2, 0.02, 0, 1.2, -0.52, glowM('#cfe8f5', 0.5)); });
+  const bench = (x, z, ry) => F(x, z, ry, 1.5, 0.45, q => { q.b(1.5, 0.1, 0.45, 0, 0.45, 0, '#6b4a2f'); for (const sx of [-1, 1]) q.b(0.06, 0.45, 0.4, sx * 0.65, 0.22, 0, '#333'); });
+  const carM = (x, z, ry, col) => {
+    k.c(2.35, 0.12, x, 0.06, z, '#bfc5cc', { metalness: 0.5, roughness: 0.3 }); k.c(2.4, 0.06, x, 0.03, z, '#ffd400');
+    return F(x, z, ry, 2.2, 4.5, q => {
+      const P = { metalness: 0.55, roughness: 0.22 };
+      for (const sx of [-0.88, 0.88]) for (const sz of [-1.3, 1.3]) { q.c(0.36, 0.26, sx, 0.36, sz, '#151515').rotation.z = Math.PI / 2; q.c(0.2, 0.28, sx, 0.36, sz, '#cfd4d8', { metalness: 0.9 }).rotation.z = Math.PI / 2; }
+      q.b(1.9, 0.5, 4.2, 0, 0.62, 0, col, P); q.b(1.84, 0.14, 1.2, 0, 0.9, 1.35, col, P); q.b(1.84, 0.16, 0.9, 0, 0.92, -1.6, col, P);
+      q.b(1.55, 0.5, 2.0, 0, 1.15, -0.1, '#223344', { metalness: 0.8, roughness: 0.1 }); q.b(1.5, 0.06, 1.7, 0, 1.42, -0.1, col, P);
+      for (const sx of [-0.6, 0.6]) { q.b(0.4, 0.12, 0.05, sx, 0.75, 2.11, glowM('#fffbe0')); q.b(0.4, 0.1, 0.05, sx, 0.78, -2.11, glowM('#ff2a2a')); }
+      q.b(1.92, 0.18, 0.12, 0, 0.42, 2.1, '#222'); q.b(1.92, 0.18, 0.12, 0, 0.42, -2.1, '#222'); q.b(0.7, 0.1, 0.04, 0, 0.68, 2.11, '#111');
+      for (const sx of [-0.98, 0.98]) q.b(0.08, 0.1, 0.18, sx, 1.08, 0.55, col, P);
+    });
+  };
+  const atm = (x, z, ry) => F(x, z, ry, 0.7, 0.6, q => { q.b(0.7, 1.7, 0.5, 0, 0.85, 0, '#2f3a46'); q.b(0.4, 0.3, 0.02, 0, 1.35, 0.26, glowM('#4aa3ff', 0.9)); q.b(0.3, 0.12, 0.14, 0, 1.05, 0.3, '#aaa'); q.b(0.2, 0.03, 0.02, 0, 0.8, 0.26, '#111'); q.b(0.7, 0.18, 0.5, 0, 1.8, 0, '#1b4f8a'); });
+  const stan = (x, z) => F(x, z, 0, 0, 0, q => { q.c(0.12, 0.02, 0, 0.01, 0, '#b8932f', { metalness: 0.9 }); q.c(0.025, 0.9, 0, 0.45, 0, '#b8932f', { metalness: 0.9 }); q.s(0.05, 0.05, 0.05, 0, 0.92, 0, '#b8932f'); });
+  const examBed = (x, z, ry) => F(x, z, ry, 0.9, 2.0, q => { for (const a of [-1, 1]) for (const b of [-1, 1]) q.c(0.03, 0.5, a * 0.38, 0.25, b * 0.9, '#aaa'); q.b(0.8, 0.1, 1.9, 0, 0.55, 0, '#d6dde0'); q.b(0.75, 0.1, 1.8, 0, 0.65, 0, '#7fc7a6'); q.s(0.25, 0.07, 0.17, 0, 0.74, -0.7, '#fff'); });
+  const cross = (x, y, z, ry) => { const P = new THREE.Group(); P.position.set(x, y, z); P.rotation.y = ry; L.add(P); const q = kit(P); q.b(0.9, 0.9, 0.03, 0, 0, 0, '#fff'); q.b(0.18, 0.62, 0.04, 0, 0, 0.01, glowM('#1ec45a', 0.8)); q.b(0.62, 0.18, 0.04, 0, 0, 0.01, glowM('#1ec45a', 0.8)); };
+  const clockW = (x, y, z) => { k.c(0.3, 0.05, x, y, z, '#fff').rotation.x = Math.PI / 2; k.b(0.02, 0.2, 0.02, x, y + 0.08, z + 0.04, '#222'); k.b(0.15, 0.02, 0.02, x + 0.06, y, z + 0.04, '#222'); };
+  const picture = (x, y, z, w, h, c) => { k.b(w + 0.1, h + 0.1, 0.04, x, y, z, '#4a3524'); k.b(w, h, 0.05, x, y, z, glowM(c, 0.25)); };
+  // ---- ধরন অনুযায়ী সাজানো ----
+  if (type === 'home') {
+    R.bed = [2.3, -0.9];
+    rug(-2.4, -1.8, 3.4, 2.4, '#8c3b3b'); tvset(-2.4, -3.2); F(-2.4, -2.0, 0, 1.0, 0.6, q => { q.b(1, 0.05, 0.6, 0, 0.42, 0, '#8a6a48'); q.b(0.9, 0.03, 0.5, 0, 0.18, 0, '#6b4a2f'); for (const a of [-1, 1]) for (const b of [-1, 1]) q.b(0.05, 0.4, 0.05, a * 0.45, 0.2, b * 0.25, '#5a3c26'); });
+    sofa(-2.4, -0.7, Math.PI, '#4b6a88'); lampF(-4.0, -3.1);
+    bed(3.2, -2.2, 0, '#d65d5d'); nstand(1.85, -3.15); F(4.15, 0.3, 0, 0.6, 1.4, q => { q.b(0.6, 2.1, 1.4, 0, 1.05, 0, '#7a5a3a'); q.b(0.02, 1.9, 0.02, 0, 1.05, -0.7 + 0.7, '#3a2a1c').position.set(-0.3, 1.05, 0); q.b(0.04, 0.2, 0.04, -0.32, 1.05, -0.1, '#c9b27c'); q.b(0.04, 0.2, 0.04, -0.32, 1.05, 0.1, '#c9b27c'); });
+    rtable(1.3, 1.4, '#8a6a48'); chair(1.3, 0.55, 0, '#a47b52'); chair(1.3, 2.25, Math.PI, '#a47b52'); chair(0.4, 1.4, Math.PI / 2, '#a47b52'); chair(2.2, 1.4, -Math.PI / 2, '#a47b52');
+    kitchen(-4.2, 1.7, Math.PI / 2, 2.6); fridge(-4.15, -0.5, Math.PI / 2); plant(4.0, 2.7, 1.2);
+    win(0.3, -HD + 0.03, 0, 1.2); picture(-0.9, 2.0, -HD + 0.04, 0.6, 0.45, '#d9a441'); picture(4.38, 1.8, 1.6, 0.04, 0.5, '#4aa3a0');
+  } else if (type === 'food') {
+    R.counter = [2.2, 0.8]; banner(-1.3, 2.7, -HD + 0.05, 3.6);
+    for (const cx of [-3.4, -1.3, 0.8]) cooler(cx, -3.6, 1.9);
+    shelf(-4.6, -1.2, Math.PI / 2, 2.2, 'food'); shelf(-4.6, 1.3, Math.PI / 2, 2.2, 'food'); shelf(-1.4, 0.6, 0, 2.4, 'food');
+    produce(2.4, -2.8); counter(3.6, 0.8, -Math.PI / 2, 3.0, '#d63c2f'); person(4.35, 0.8, -Math.PI / 2, '#f5f5f5', '#3b3b58');
+    k.b(0.05, 0.9, 2.4, HW - 0.05, 2.1, 0.8, '#1c2a22'); for (let i = 0; i < 5; i++) k.b(0.01, 0.04, 1.8 - (i % 2) * 0.5, HW - 0.09, 2.35 - i * 0.17, 0.8, '#f5f0d0');
+    rtable(-2.8, 2.4, '#d63c2f'); chair(-2.8, 1.6, 0, '#444'); chair(-3.6, 2.4, Math.PI / 2, '#444'); plant(-4.2, 3.2, 1); win(3.2, -HD + 0.03, 0, 1.2);
+  } else if (type === 'cloth') {
+    R.counter = [3.8, 1.5]; banner(0, 3.0, -HD + 0.05, 5);
+    rack(-4.6, -4.2, 2.2); rack(-2.0, -4.2, 2.2); rack(0.6, -4.2, 2.2);
+    F(4.4, -3.6, 0, 3, 1.6, q => q.b(3, 0.2, 1.6, 0, 0.1, 0, '#d9d2c6')); mann(3.5, -3.6, '#c0392b', true); mann(4.4, -3.6, '#2e86de', false); mann(5.3, -3.6, '#8e44ad', true);
+    for (const z of [-3.0, -1.8, -0.6]) fitting(-6.35, z, Math.PI / 2);
+    foldT(-2.0, -1.2); foldT(0.8, -1.2); rack(-2.5, 1.4, 2.0); rack(0.5, 1.4, 2.0);
+    counter(5.0, 1.5, -Math.PI / 2, 2.4, '#8e44ad'); person(5.75, 1.5, -Math.PI / 2, '#e91e8c', '#222'); bench(-4.5, 3.2, 0); plant(6.2, 3.8, 1.2);
+    for (let i = 0; i < 4; i++) picture(-5.5 + i * 2.8 + 0.5, 2.2, -HD + 0.04, 0.9, 0.6, rnd(prodCols));
+  } else if (type === 'car') {
+    R.counter = [-4.0, 2.6]; k.b(13.6, 3.0, 0.05, 0, 2.0, -HD + 0.03, '#1f2d3d'); banner(0, 2.6, -HD + 0.07, 6.5);
+    carM(-4.6, -1.4, 0.5, '#c0392b'); carM(0, -1.4, -0.4, '#ecf0f1'); carM(4.6, -1.4, 0.35, '#2e86de');
+    counter(-5.2, 2.6, Math.PI / 2, 2.6, '#2c3e50'); person(-5.95, 2.6, Math.PI / 2, '#1f2d3d', '#222'); sofa(4.8, 3.4, Math.PI, '#34495e'); F(3.2, 3.4, 0, 0.8, 0.8, q => { q.c(0.35, 0.04, 0, 0.45, 0, '#222'); q.c(0.04, 0.4, 0, 0.22, 0, '#555'); });
+    plant(6.3, 4.3, 1.3); plant(-6.3, -4.3, 1.3); clockW(2.2, 2.6, -HD + 0.04);
+  } else if (type === 'med') {
+    R.counter = [2.2, 0.8]; cross(1.9, 2.4, -HD + 0.04, 0); banner(-1.8, 2.75, -HD + 0.05, 3.2);
+    shelf(-3.2, -3.6, 0, 2.2, 'med'); shelf(-0.8, -3.6, 0, 2.2, 'med');
+    counter(3.6, 0.8, -Math.PI / 2, 3.0, '#ffffff'); person(4.35, 0.8, -Math.PI / 2, '#f5f5f5', '#4a6572');
+    for (const z of [-1.0, 0.2, 1.4]) chair(-4.3, z, Math.PI / 2, '#2f9bd8'); examBed(-3.3, 2.7, Math.PI / 2);
+    F(-1.9, 2.7, 0, 0.3, 0.3, q => { q.c(0.15, 0.02, 0, 0.01, 0, '#aaa'); q.c(0.015, 1.8, 0, 0.9, 0, '#ccc'); q.b(0.13, 0.22, 0.05, 0, 1.7, 0, '#e8f4ff', { transparent: true, opacity: 0.8 }); });
+    plant(4.2, 3.2, 1); cross(HW - 0.05, 1.9, -1.8, -Math.PI / 2); clockW(-4.9, 2.0, -1.0);
+  } else {
+    R.counter = [-1.0, -1.1]; banner(-1.0, 3.0, -HD + 0.05, 4.5);
+    F(-1, -2.2, 0, 7, 0.8, q => { q.b(7, 1.1, 0.7, 0, 0.55, 0, '#4a3a2a'); q.b(7.05, 0.06, 0.8, 0, 1.13, 0, '#d9d2c3', { roughness: 0.2 }); q.b(7, 0.9, 0.03, 0, 1.65, 0.1, glass); for (let i = -2; i <= 2; i++) q.b(0.05, 0.9, 0.05, i * 1.5 + 0.75, 1.65, 0.1, '#b8932f', { metalness: 0.8 }); });
+    for (const tx of [-3.2, 0.5]) { person(tx, -3.0, 0, '#1b4f8a', '#222'); k.b(0.5, 0.35, 0.05, tx + 0.8, 1.45, -2.6, '#222'); k.b(0.44, 0.27, 0.02, tx + 0.8, 1.45, -2.57, glowM('#4aa3ff', 0.7)); }
+    k.b(2.4, 2.4, 0.2, 4.2, 1.2, -HD + 0.1, '#5c636a'); k.c(0.9, 0.25, 4.2, 1.2, -HD + 0.3, '#8a929a', { metalness: 0.9, roughness: 0.3 }).rotation.x = Math.PI / 2; k.c(0.25, 0.06, 4.2, 1.2, -HD + 0.45, '#d9c07a', { metalness: 0.9 }).rotation.x = Math.PI / 2;
+    for (const a of [0, 1, 2]) k.b(0.05, 0.9, 0.04, 4.2, 1.2, -HD + 0.5, '#d9c07a', { metalness: 0.9 }).rotation.z = a * 1.047;
+    atm(5.6, -1.2, -Math.PI / 2); atm(5.6, 0.2, -Math.PI / 2); atm(5.6, 1.6, -Math.PI / 2);
+    for (const [sx, sz] of [[-3, 0.6], [1, 0.6], [-3, 1.8], [1, 1.8]]) stan(sx, sz); k.b(4, 0.03, 0.03, -1, 0.88, 0.6, '#8e1b1b'); k.b(4, 0.03, 0.03, -1, 0.88, 1.8, '#8e1b1b');
+    sofa(-5.2, 2.3, Math.PI / 2, '#2c3e50'); plant(5.3, 3.5, 1.3); plant(-5.4, -3.9, 1.3); clockW(-1.0, 2.5, HD - 0.06);
   }
   g.traverse(o => { o.castShadow = false; o.receiveShadow = false; });
   scene.add(g); return (ROOMS[type] = R);
@@ -3952,7 +4112,7 @@ function drawMiniIn(c, R) {
 function setAct(k) {
   if (k === actKey) return; actKey = k;
   if (!k) { enterB.classList.remove('show'); return; }
-  const M = { enter: ['door', 'Enter'], exit: ['door', 'Exit'], shop: ['bag', 'Shop'], bed: ['cross', 'Rest'] }[k];
+  const M = k === 'trade' ? { food: ['bag', 'Order'], cloth: ['bag', 'Wear'], car: ['car', 'Cars'], med: ['cross', 'Medic'], bank: ['bag', 'Bank'] }[inside.room.type] : { enter: ['door', 'Enter'], exit: ['door', 'Exit'], bed: ['cross', 'Rest'] }[k];
   enterB.innerHTML = svgW(ICONS[M[0]]) + '<span>' + M[1] + '</span>'; enterB.classList.add('show');
 }
 function fadeTo(mid) {   // স্ক্রিন কালো → মাঝখানে জায়গা বদল → আবার পরিষ্কার
@@ -3967,9 +4127,9 @@ function goIn(d) {
     const R = getRoom(d.type);
     inHidden = []; for (const o of scene.children) if (!o.isLight && o !== char.group && !o.userData.indoor && o.visible) { o.visible = false; inHidden.push(o); }
     R.group.visible = true; inside = { room: R };
-    player.x = R.ox; player.z = R.oz + 1.3; player.y = 0; player.yaw = Math.PI; camYaw = Math.PI; spd = 0; jumping = false; vy = 0;
+    player.x = R.ox; player.z = R.oz + R.hd - 2.2; player.y = 0; player.yaw = Math.PI; camYaw = Math.PI; spd = 0; jumping = false; vy = 0;
     camera.position.set(player.x, 1.8, player.z + 2.5);
-    toast(d.type === 'shop' ? '🏪 Shop' : '🏠 Home');
+    toast({ home: '🏠 Home', food: '🍔 Food Mart', cloth: '👗 Fashion Mall', car: '🚗 Auto Showroom', med: '✚ Pharmacy', bank: '🏦 Bank' }[d.type]);
   });
 }
 function leaveNow() {
@@ -3984,7 +4144,7 @@ function doAct() {
   if (xfade || !actKey) return;
   if (actKey === 'enter' && doorHit) goIn(doorHit);
   else if (actKey === 'exit') fadeTo(leaveNow);
-  else if (actKey === 'shop') document.getElementById('shop').dispatchEvent(new MouseEvent('click'));
+  else if (actKey === 'trade') tradeAct(inside.room.type);
   else if (actKey === 'bed') fadeTo(() => { hp = HP_MAX; armor = 100; hurtT = 99; toast('😴 Rested — health restored'); });
 }
 bindTap(enterB, doAct);
@@ -3994,8 +4154,8 @@ function doorStep(now) {
   let k = null; doorHit = null;
   if (inside) {
     const R = inside.room, lx = player.x - R.ox, lz = player.z - R.oz;
-    if (lz > 2.4 && Math.abs(lx) < 1.3) k = 'exit';
-    else if (R.counter && Math.hypot(lx - R.counter[0], lz - R.counter[1]) < 1.6) k = 'shop';
+    if (lz > R.hd - 1.1 && Math.abs(lx) < 1.3) k = 'exit';
+    else if (R.counter && Math.hypot(lx - R.counter[0], lz - R.counter[1]) < 1.6) k = 'trade';
     else if (R.bed && Math.hypot(lx - R.bed[0], lz - R.bed[1]) < 1.8) k = 'bed';
     if (k === 'exit' && now > inLock && spd > 1.2 && Math.cos(player.yaw) > 0.6) { fadeTo(leaveNow); return; }
   } else {
