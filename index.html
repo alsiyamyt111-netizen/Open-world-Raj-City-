@@ -173,6 +173,9 @@ body.driving #run,body.driving #crouch,body.driving #prone,body.driving #jump,bo
 #crouch{left:calc(var(--vw)*50 - 160px + 128px);bottom:12px;right:auto;top:auto;width:58px;height:58px;font-size:12px}
 #prone{left:calc(var(--vw)*50 - 160px + 192px);bottom:12px;right:auto;top:auto;width:58px;height:58px;font-size:12px}
 #cam{left:calc(var(--vw)*50 - 160px + 256px);bottom:12px;right:auto;top:auto;width:58px;height:58px;font-size:12px}
+#enterb{left:calc(var(--vw)*50 - 160px);bottom:76px;right:auto;top:auto;width:62px;height:62px;font-size:12px;display:none!important;background:rgba(46,204,113,.92);border-color:#fff}
+body.playing #enterb.show{display:flex!important}
+#fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:9998;transition:opacity .3s}
 
 /* ---- নতুন Loadিং স্ক্রীন ---- */
 #loading { background: #05080f url('branding/splash.jpg') center/cover no-repeat; justify-content: flex-end; padding: 0 0 4vh; }
@@ -479,6 +482,8 @@ body.driving #run,body.driving #crouch,body.driving #prone,body.driving #jump,bo
 <button id="crouch" class="act ib" data-i="crouch" data-l="Crouch"></button>
 <button id="prone" class="act ib" data-i="prone" data-l="Prone"></button>
 <button id="cam" class="act ib" data-i="cam" data-l="Camera"></button>
+<button id="enterb" class="act ib" data-i="door" data-l="Enter"></button>
+<div id="fade"></div>
 <div id="wheel"></div>
 <div id="eye"></div>
 <div id="cardash"><div id="cdbar"></div>
@@ -757,6 +762,8 @@ function facadeTex(base) {
 
 // ---------- ওয়ার্ল্ড ----------
 const boxes = [];
+let inside = null, xfade = false, inOut = null, inHidden = [], inLock = 0, doorMarkMesh = null;
+const doors = [], doorMarks = [];
 const roadCenters = [];
 const blocksList = [], parks = [];
 const mctx = document.getElementById('mini').getContext('2d');
@@ -772,7 +779,7 @@ const compBoxes = [], compCaps = [], compPlants = [], compounds = [];
 const wallCols = ['#c97b5a', '#d8cbb0', '#b8bdc4', '#e4d5a8', '#a86f4a', '#e9e2d0'];
 const flowerCols = ['#ff4d6d', '#ffd23f', '#ffffff', '#c77dff', '#ff9f1c', '#ff6fb5'];
 const leafCols = ['#2f8f3f', '#3fa34d', '#57b84f', '#4c9a3a'];
-function addCompound(cx, cz, gs, w, d, shop, hasGarage) {
+function addCompound(cx, cz, gs, w, d, shop, hasGarage, enterable) {
   const C = [1, 0, -1, 0][gs], S = [0, 1, 0, -1][gs], Y0 = 0.15;
   const rc = (lx, lz) => [cx + lx * C + lz * S, cz - lx * S + lz * C];
   const rect = (lx0, lz0, lx1, lz1) => {
@@ -809,6 +816,13 @@ function addCompound(cx, cz, gs, w, d, shop, hasGarage) {
   }
   const bfz = -2.5 + d / 2;
   box(-1.2, bfz, 1.2, 12.2, 0, 0.03, '#b9b3a6', false);
+  if (enterable) {   // সামনের দেয়ালে দরজা + ঢোকার চিহ্ন
+    box(-0.75, bfz, 0.75, bfz + 0.05, 0, 2.3, '#2b2b2b', false);
+    box(-0.6, bfz, 0.6, bfz + 0.1, 0, 2.15, shop ? '#2f6f9f' : '#6a4226', false);
+    const P = rc(0, bfz + 0.6);
+    doors.push({ x: P[0], z: P[1], ox: S, oz: C, type: shop ? 'shop' : 'home' });
+    doorMarks.push([P[0], 3.1, P[1]]);
+  }
   // ফুলের বাগান
   const beds = [[3.0, 8.8, 11.4, 11.2], [10.2, -10.5, 11.8, 8.5], [-11.8, -10.5, -10.2, hasGarage ? 4.0 : 8.5]];
   if (!hasGarage) beds.push([-11.4, 8.8, -3.0, 11.2]);
@@ -839,6 +853,12 @@ function finalizeCompounds() {
   mkI(new THREE.SphereGeometry(1, 8, 6), new THREE.MeshStandardMaterial({ roughness: 0.6 }), compCaps, false);
   const pm = new THREE.MeshStandardMaterial({ roughness: 0.7 }); windify(pm, 0.04);
   mkI(new THREE.SphereGeometry(1, 7, 5), pm, compPlants, false);
+  if (doorMarks.length) {   // দরজার ওপরে সোনালি তীর (সবগুলো একসাথে ওঠানামা করে)
+    const cg = new THREE.ConeGeometry(0.28, 0.6, 4); cg.rotateX(Math.PI);
+    const im = new THREE.InstancedMesh(cg, new THREE.MeshBasicMaterial({ color: 0xffd400 }), doorMarks.length), m = new THREE.Matrix4();
+    doorMarks.forEach((p, i) => { m.makeTranslation(p[0], p[1], p[2]); im.setMatrixAt(i, m); });
+    im.frustumCulled = false; scene.add(im); doorMarkMesh = im;
+  }
 }
 
 
@@ -1127,7 +1147,7 @@ function buildWorld() {
         aw.castShadow = true;
         scene.add(aw);
       }
-      addCompound(cx, cz, gs, w, d, shop, Math.random() < 0.55);
+      addCompound(cx, cz, gs, w, d, shop, Math.random() < 0.55, shop || h <= 22);
 
       addTree(cx - 14, cz - 14, 0.7);
     }
@@ -1912,6 +1932,7 @@ function bxCells() {
 }
 const bxAt = (x, z) => bxCells().get(gKey(Math.floor(x / GCS), Math.floor(z / GCS)));
 function blocked(x, z, y = -9) {
+  if (inside) return inBlocked(x, z);
   if (terrainAt(x, z) < -0.7) return true;
   const list = bxAt(x, z); if (!list) return false;
   for (const b of list) {
@@ -1923,6 +1944,7 @@ function blocked(x, z, y = -9) {
   return false;
 }
 function supportY(x, z, y) {
+  if (inside) return 0;
   let g = groundY(x, z);
   const list = bxAt(x, z); if (!list) return g;
   for (const b of list) {
@@ -1938,6 +1960,7 @@ function unstick() {
   }
 }
 function update(dt) {
+  if (xfade) return;
   if (blocked(player.x, player.z, player.y)) unstick();
   const kbX = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
   const kbY = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0);
@@ -1965,8 +1988,7 @@ function update(dt) {
     const nz = player.z + dz * speed * dt;
     if (!blocked(nx, player.z, player.y)) player.x = nx;
     if (!blocked(player.x, nz, player.y)) player.z = nz;
-    player.x = Math.max(MX0 + 5, Math.min(MX1 - 5, player.x));
-    player.z = Math.max(MZ0 + 5, Math.min(MZ1 - 5, player.z));
+    if (!inside) { player.x = Math.max(MX0 + 5, Math.min(MX1 - 5, player.x)); player.z = Math.max(MZ0 + 5, Math.min(MZ1 - 5, player.z)); }
 
     phase += dt * (run ? 12 : 7) * mag;
   }
@@ -2084,7 +2106,7 @@ function update(dt) {
   if (moving && !jumping && stepIdx !== lastStep) { lastStep = stepIdx; playStep(run); }
 
   // ক্যামেরা: yaw = ৩৬০° ঘোরা, pitch = আকাশ/নিচ দেখা (সোয়াইপ)
-  const D = camDist, H = camFront ? 1.7 : Math.max(1.3, Math.min(2.2, 0.9 + D * 0.22)), cp = Math.cos(camPitch), sp = Math.sin(camPitch), eyeOff = cr * 0.55 + pr * 1.1, fr = camFront ? 1 : -1;
+  const D = inside ? Math.min(camDist, 3.2) : camDist, H = camFront ? 1.7 : Math.max(1.3, Math.min(2.2, 0.9 + D * 0.22)), cp = Math.cos(camPitch), sp = Math.sin(camPitch), eyeOff = cr * 0.55 + pr * 1.1, fr = camFront ? 1 : -1;
   const down = Math.max(0, -sp);
   const want = new THREE.Vector3(
     player.x + fr * Math.sin(camYaw) * D * cp,
@@ -2092,6 +2114,12 @@ function update(dt) {
     player.z + fr * Math.cos(camYaw) * D * cp
   );
   camera.position.lerp(want, 1 - Math.exp(-dt * (dragId !== null ? 30 : 6)));
+  if (inside) {   // ঘরের ভেতরে ক্যামেরা দেয়ালের বাইরে যেতে পারে না
+    const R = inside.room, p = camera.position;
+    p.x = Math.max(R.ox - R.hw + 0.35, Math.min(R.ox + R.hw - 0.35, p.x));
+    p.z = Math.max(R.oz - R.hd + 0.35, Math.min(R.oz + R.hd - 0.35, p.z));
+    p.y = Math.max(0.5, Math.min(R.wh - 0.3, p.y));
+  }
   camera.fov += ((moving && run ? 66 : 60) - camera.fov) * (1 - Math.exp(-dt * 2.5));
   camera.updateProjectionMatrix();
   const K = D * Math.max(0, Math.min(1, 1 + camPitch / 0.3));
@@ -2222,6 +2250,7 @@ function drawMini() {
   const c = mctx, S = 0.5, R = 60;
   c.save(); c.clearRect(0, 0, 120, 120);
   c.beginPath(); c.arc(R, R, R, 0, Math.PI * 2); c.clip();
+  if (inside) { drawMiniIn(c, R); c.restore(); return; }
   const T = (x, z) => [R - (x - player.x) * S, R - (z - player.z) * S];
   drawLayer(c, T, false, 120); drawRoute(c, T, 3);
   if (marker) {
@@ -2348,6 +2377,7 @@ function drawBig() {
 }
 function openMap() {
   if (!started || mapOpen) return;
+  if (inside) { toast('No map indoors'); return; }
   navPush();
   mapOpen = true; bmFollow = true;
   bmW = innerWidth; bmH = innerHeight; bmDpr = Math.min(devicePixelRatio || 1, 2); bm.width = Math.round(bmW * bmDpr); bm.height = Math.round(bmH * bmDpr);
@@ -2742,6 +2772,7 @@ const ICONS = {
   heart: '<path d="M24 41S6 30 6 18a9 9 0 0 1 18-3 9 9 0 0 1 18 3c0 12-18 23-18 23z" fill="#ff3b3b"/>',
   shield: '<path d="M24 5l16 6v12c0 10-7 17-16 20C15 40 8 33 8 23V11z" fill="#3aa0ff"/>',
   bolt: '<path d="M27 3L10 27h11l-3 18 20-26H27z" fill="#3de03d"/>',
+  door: '<path d="M12 6h20v36H12z" ' + STK + '/><circle cx="26" cy="25" r="2.5" fill="currentColor"/><path d="M36 15l8 9-8 9" ' + STK + '/>',
   bullet: '<g transform="rotate(-45 24 24)"><rect x="16" y="18" width="16" height="28" rx="2" fill="#e8a317"/><path d="M16 18Q24 -2 32 18z" fill="#f4f4f4"/></g>'
 };
 document.querySelectorAll('[data-i]').forEach(el => { el.innerHTML = svgW(ICONS[el.dataset.i]) + (el.dataset.l ? '<span>' + el.dataset.l + '</span>' : ''); });
@@ -3146,6 +3177,7 @@ function hurtPlayer(dmg) {
   if (hp <= 0) { hp = 0; pDead = true; deadT = 0; deaths++; document.getElementById('dead').style.display = 'flex'; setRun(false); saveProgress(); }
 }
 function respawnPlayer() {
+  if (inside) leaveNow();
   pDead = false; hp = HP_MAX; armor = 100; restock(); player.x = 0; player.z = 20; player.y = 0; stance = 'stand'; jumping = false;
   document.getElementById('dead').style.display = 'none'; saveProgress();
 }
@@ -3246,7 +3278,7 @@ while (profiles.length < MAX_PROFILES) profiles.push(null);
 function saveProfiles() { try { localStorage.setItem(PKEY, JSON.stringify({ slots: profiles })); } catch (e) {} }
 function saveProgress() {
   if (!activeProfile || !started) return;
-  Object.assign(activeProfile, { cash, bank, inv, kills, deaths, hp, armor, x: player.x, z: player.z, playSec: playBase + (performance.now() - playStart) / 1000 });
+  Object.assign(activeProfile, { cash, bank, inv, kills, deaths, hp, armor, x: inside ? inOut.x : player.x, z: inside ? inOut.z : player.z, playSec: playBase + (performance.now() - playStart) / 1000 });
   saveProfiles();
 }
 setInterval(saveProgress, 5000);
@@ -3615,6 +3647,7 @@ function openProfileScreen() { navPush(); ppDraft = null; showScr('start'); rend
 // মম্যাচ থেকে লবিতে ফেরা: প্রোফাইল সেভ, গেম বন্ধ, HUD লুকানো, লবি দেখানো
 function returnToLobbyRaw() {
   if (!started) return;
+  if (inside) leaveNow();
   saveProgress();
   closePanelRaw(); closeMap();
   if (drv) { drv.c.g.visible = true; }
@@ -3843,6 +3876,138 @@ function extra(dt) {
   if (!drv && !ent) { let nd = 1e9; for (const c of cars) nd = Math.min(nd, (c.g.position.x - player.x) ** 2 + (c.g.position.z - player.z) ** 2); for (const c of parkedCars) nd = Math.min(nd, (c.g.position.x - player.x) ** 2 + (c.g.position.z - player.z) ** 2); $id('veh').classList.toggle('hint', nd < 81); }
 }
 
+// ================= GTA-স্টাইল ভেতরে ঢোকা: দরজায় গেলে ফেড → আলাদা ছোট ঘর; বেরোলে দরজার সামনে ফেরা =================
+const fadeEl = document.getElementById('fade'), enterB = document.getElementById('enterb'), ROOMS = {};
+let actKey = null, doorHit = null;
+function getRoom(type) {
+  if (ROOMS[type]) return ROOMS[type];
+  const shop = type === 'shop', OX = 3000, OZ = shop ? 140 : 0, HW = 4.5, HD = 3.5, WH = 3;
+  const g = new THREE.Group(); g.userData.indoor = true; g.visible = false;
+  const R = { ox: OX, oz: OZ, hw: HW, hd: HD, wh: WH, group: g, cols: [], plan: [], counter: null, bed: null }, mats = {};
+  const mt = c => mats[c] || (mats[c] = new THREE.MeshStandardMaterial({ color: c, roughness: 0.85 }));
+  const glow = (c, k) => new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: k, roughness: 0.6 });
+  const B = (w, h, d, x, y, z, c, solid, m) => {
+    const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m || mt(c)); o.position.set(OX + x, y, OZ + z); g.add(o);
+    if (solid) { R.cols.push({ minX: OX + x - w / 2, maxX: OX + x + w / 2, minZ: OZ + z - d / 2, maxZ: OZ + z + d / 2 }); R.plan.push([x - w / 2, z - d / 2, w, d]); }
+    return o;
+  };
+  const wc = shop ? '#f0ebdf' : '#e6dccb';
+  B(2 * HW, 0.1, 2 * HD, 0, -0.05, 0, shop ? '#cfcbc3' : '#a9825a');
+  B(2 * HW + 0.4, WH, 0.2, 0, WH / 2, -HD - 0.1, wc); B(2 * HW + 0.4, WH, 0.2, 0, WH / 2, HD + 0.1, wc);
+  B(0.2, WH, 2 * HD, -HW - 0.1, WH / 2, 0, wc); B(0.2, WH, 2 * HD, HW + 0.1, WH / 2, 0, wc);
+  B(2 * HW + 0.4, 0.1, 2 * HD + 0.4, 0, WH + 0.05, 0, '#e9e4da', false, new THREE.MeshBasicMaterial({ color: 0xe9e4da }));
+  B(1.4, 2.35, 0.06, 0, 1.175, HD - 0.04, '#2b2b2b'); B(1.2, 2.2, 0.08, 0, 1.1, HD - 0.1, shop ? '#2f6f9f' : '#6a4226');
+  B(0.9, 0.2, 0.04, 0, 2.55, HD - 0.06, '#2ecc71', false, new THREE.MeshBasicMaterial({ color: 0x2ecc71 }));
+  B(1.4, 0.03, 0.9, 0, 0.02, HD - 0.8, '#2ecc71', false, new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, opacity: 0.55 }));
+  B(1.6, 0.05, 0.6, 0, WH - 0.05, 0, '#fff', false, new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  for (const wx of shop ? [-3.2, 3.2] : [-1.6, 1.6]) B(1.4, 1.0, 0.05, wx, 1.7, -HD + 0.03, '#9ec9ee', false, glow(0x9ec9ee, 0.5));
+  const cols = ['#e74c3c', '#f1c40f', '#3498db', '#2ecc71', '#e67e22', '#9b59b6', '#ecf0f1'], rnd = a => a[Math.floor(Math.random() * a.length)];
+  if (!shop) {
+    R.bed = [2.3, -1.0];
+    B(2.0, 0.1, 0.5, -2.4, 0.35, -3.2, '#4a3b30'); B(2.0, 0.6, 0.5, -2.4, 0.3, -3.2, '#4a3b30');
+    B(1.5, 0.85, 0.08, -2.4, 1.1, -3.4, '#111', false, glow(0x1a2a3a, 0.8));
+    B(2.2, 0.6, 0.9, -2.4, 0.3, -1.2, '#4b6a88'); B(2.2, 0.5, 0.2, -2.4, 0.8, -0.75, '#3e5a75', false);
+    B(1.8, 0.6, 2.6, 3.2, 0.3, -2.2, '#7a5a3a'); B(1.7, 0.2, 2.0, 3.2, 0.65, -1.9, '#d65d5d', false); B(1.2, 0.15, 0.5, 3.2, 0.7, -3.2, '#fff', false);
+    B(0.7, 0.9, 2.4, 4.0, 0.45, 1.2, '#c9c2b5'); B(0.7, 2.0, 0.7, 4.0, 1.0, 2.8, '#eaeaea');
+    B(1.2, 0.8, 1.2, 0.8, 0.4, -0.4, '#8a6a48'); B(3.0, 0.03, 2.0, -2.0, 0.02, -1.6, '#8c3b3b', false);
+    B(0.5, 0.6, 0.5, -4.0, 0.3, 2.9, '#6b4a2f'); B(0.7, 0.9, 0.7, -4.0, 0.95, 2.9, '#3f8f4a', false);
+  } else {
+    R.counter = [1.9, 0.4];
+    B(0.8, 1.1, 3.0, 3.0, 0.55, 0.4, '#6b4a2f'); B(0.4, 0.3, 0.4, 3.0, 1.25, 0.9, '#222', false);
+    const kp = new THREE.Group(); kp.position.set(OX + 3.95, 0, OZ + 0.4); g.add(kp);
+    for (const [w, h, d, y, c] of [[0.4, 0.8, 0.3, 0.4, '#3b3b58'], [0.5, 0.7, 0.34, 1.15, '#c0392b']]) { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mt(c)); m.position.y = y; kp.add(m); }
+    const hd = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), mt('#e0a97a')); hd.position.y = 1.7; kp.add(hd);
+    B(0.8, 2.0, 2.2, -4.0, 1.0, 1.6, '#9fd3ec', true, glow(0x9fd3ec, 0.35));
+    for (const sx of [-2.8, 0, 2.8]) {
+      B(2.4, 1.9, 0.5, sx, 0.95, -3.2, '#8d7b68');
+      for (let r = 0; r < 4; r++) for (let i = 0; i < 6; i++) B(0.3, 0.28, 0.3, sx - 1.0 + i * 0.4, 0.25 + r * 0.45, -2.9, '#fff', false, mt(rnd(cols)));
+    }
+    B(3.0, 1.4, 0.7, -0.8, 0.7, -0.2, '#8d7b68');
+    for (let i = 0; i < 12; i++) B(0.3, 0.28, 0.3, -2.0 + i * 0.22, 1.54, -0.2 + (i % 2) * 0.2, '#fff', false, mt(rnd(cols)));
+  }
+  g.traverse(o => { o.castShadow = false; o.receiveShadow = false; });
+  scene.add(g); return (ROOMS[type] = R);
+}
+function inBlocked(x, z) {
+  const R = inside.room;
+  if (x < R.ox - R.hw + PR || x > R.ox + R.hw - PR || z < R.oz - R.hd + PR || z > R.oz + R.hd - PR) return true;
+  for (const b of R.cols) if (x > b.minX - PR && x < b.maxX + PR && z > b.minZ - PR && z < b.maxZ + PR) return true;
+  return false;
+}
+function indoorLight() {   // ভেতরে সবসময় উজ্জ্বল আলো (দিন-রাত নির্বিশেষে), তারা/চাঁদ বন্ধ
+  hemi.intensity = 1.3; hemi.color.set(0xfff3e0); hemi.groundColor.set(0xb9a58d);
+  sun.intensity = 0.45; sun.color.set(0xfff0d8); stars.visible = false; moon.visible = false;
+}
+function drawMiniIn(c, R) {
+  const S = 7, room = inside.room, T = (x, z) => [R - (x - room.ox) * S, R - (z - room.oz) * S];
+  c.fillStyle = '#1c1c20'; c.fillRect(0, 0, 120, 120);
+  const rr = (x0, z0, w, d, col) => { const a = T(room.ox + x0, room.oz + z0), b = T(room.ox + x0 + w, room.oz + z0 + d); c.fillStyle = col; c.fillRect(Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1])); };
+  rr(-room.hw, -room.hd, 2 * room.hw, 2 * room.hd, '#4a4a50');
+  for (const p of room.plan) rr(p[0], p[1], p[2], p[3], '#8a8a92');
+  rr(-0.6, room.hd - 0.25, 1.2, 0.25, '#2ecc71');
+  c.fillStyle = '#fff'; c.beginPath(); c.arc(R - (player.x - room.ox) * S, R - (player.z - room.oz) * S, 3.5, 0, 6.283); c.fill();
+  const px = R - (player.x - room.ox) * S, pz = R - (player.z - room.oz) * S;
+  c.strokeStyle = '#ffd400'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(px, pz); c.lineTo(px - Math.sin(player.yaw) * 10, pz - Math.cos(player.yaw) * 10); c.stroke();
+}
+function setAct(k) {
+  if (k === actKey) return; actKey = k;
+  if (!k) { enterB.classList.remove('show'); return; }
+  const M = { enter: ['door', 'Enter'], exit: ['door', 'Exit'], shop: ['bag', 'Shop'], bed: ['cross', 'Rest'] }[k];
+  enterB.innerHTML = svgW(ICONS[M[0]]) + '<span>' + M[1] + '</span>'; enterB.classList.add('show');
+}
+function fadeTo(mid) {   // স্ক্রিন কালো → মাঝখানে জায়গা বদল → আবার পরিষ্কার
+  if (xfade) return; xfade = true; fadeEl.style.opacity = 1; setAct(null);
+  stance = 'stand'; setRun(false); aimOn = false; document.getElementById('aim').classList.remove('on');
+  setTimeout(mid, 330);
+  setTimeout(() => { fadeEl.style.opacity = 0; xfade = false; inLock = performance.now() + 1000; }, 560);
+}
+function goIn(d) {
+  fadeTo(() => {
+    inOut = { x: player.x, z: player.z, d };
+    const R = getRoom(d.type);
+    inHidden = []; for (const o of scene.children) if (!o.isLight && o !== char.group && !o.userData.indoor && o.visible) { o.visible = false; inHidden.push(o); }
+    R.group.visible = true; inside = { room: R };
+    player.x = R.ox; player.z = R.oz + 1.3; player.y = 0; player.yaw = Math.PI; camYaw = Math.PI; spd = 0; jumping = false; vy = 0;
+    camera.position.set(player.x, 1.8, player.z + 2.5);
+    toast(d.type === 'shop' ? '🏪 Shop' : '🏠 Home');
+  });
+}
+function leaveNow() {
+  if (!inside) return;
+  inside.room.group.visible = false; inside = null;
+  for (const o of inHidden) o.visible = true; inHidden = [];
+  const d = inOut.d; player.x = d.x + d.ox * 0.9; player.z = d.z + d.oz * 0.9; player.y = groundY(player.x, player.z);
+  player.yaw = Math.atan2(d.ox, d.oz); camYaw = player.yaw; spd = 0;
+  camera.position.set(player.x - Math.sin(camYaw) * 5, 2.2 + player.y, player.z - Math.cos(camYaw) * 5);
+}
+function doAct() {
+  if (xfade || !actKey) return;
+  if (actKey === 'enter' && doorHit) goIn(doorHit);
+  else if (actKey === 'exit') fadeTo(leaveNow);
+  else if (actKey === 'shop') document.getElementById('shop').dispatchEvent(new MouseEvent('click'));
+  else if (actKey === 'bed') fadeTo(() => { hp = HP_MAX; armor = 100; hurtT = 99; toast('😴 Rested — health restored'); });
+}
+bindTap(enterB, doAct);
+function doorStep(now) {
+  if (doorMarkMesh && !inside) doorMarkMesh.position.y = Math.sin(now / 300) * 0.15;
+  if (!started || paused || xfade || drv || ent || pDead) { setAct(null); return; }
+  let k = null; doorHit = null;
+  if (inside) {
+    const R = inside.room, lx = player.x - R.ox, lz = player.z - R.oz;
+    if (lz > 2.4 && Math.abs(lx) < 1.3) k = 'exit';
+    else if (R.counter && Math.hypot(lx - R.counter[0], lz - R.counter[1]) < 1.6) k = 'shop';
+    else if (R.bed && Math.hypot(lx - R.bed[0], lz - R.bed[1]) < 1.8) k = 'bed';
+    if (k === 'exit' && now > inLock && spd > 1.2 && Math.cos(player.yaw) > 0.6) { fadeTo(leaveNow); return; }
+  } else {
+    let bd = 2.9; for (const d of doors) { const q = (d.x - player.x) ** 2 + (d.z - player.z) ** 2; if (q < bd) { bd = q; doorHit = d; } }
+    if (doorHit) {
+      k = 'enter';
+      if (now > inLock && bd < 1.0 && spd > 1.2 && Math.sin(player.yaw) * -doorHit.ox + Math.cos(player.yaw) * -doorHit.oz > 0.6) { goIn(doorHit); return; }
+    }
+  }
+  setAct(k);
+}
+
 function loop(now) {
   requestAnimationFrame(loop);
   const el = now - last;
@@ -3852,19 +4017,20 @@ function loop(now) {
   dtS += (Math.min(el, 100) - dtS) * 0.15;   // ফ্রেম-সময় মসৃণ করা: ক্যামেরা/চরিত্র কাঁপে না, ল্যাগেও গতি কমে না
   const dt = Math.min(dtS / 1000, 0.066);
 
-  if (!paused) animateWorld(now / 1000, dt);
+  if (!paused && !inside) animateWorld(now / 1000, dt);
   // আটকে যাওয়া অবস্থা ঠিক করা: মানচিত্র বা এডিট বার বন্ধ থাকলে ফ্ল্যাগও বন্ধ (নইলে দৌড়/লাফ/বসা কাজ করে না)
   if (mapOpen && (bigWrap.style.display !== 'block' || !started || lbOn)) closeMap();
   if (editMode && document.getElementById('editbar').style.display !== 'flex') { editMode = false; document.body.classList.remove('editing'); }
   if (started && !editMode && !paused) { if (ent) stepEnter(dt); else if (drv) driveStep(dt); else update(dt); }
-  if (started) extra(dt);
+  if (started) { extra(dt); doorStep(now); }
   if (lbOn) updateLobby(dt, now / 1000); else updateDayNight(dt, !paused);
+  if (inside) indoorLight();
   if (mapOpen) mapCamUpdate();
   const mapOn = mapOpen && mapScene && started && !lbOn;
   renderer.render(mapOn ? mapScene : scene, mapOn ? mapCam : camera);
   if (snapFlag) shot();
   if (!mapOpen) renderEye();
-  if (started) { updateRoute(now); if (!mapOpen && (frameN & 1) === 0) drawMini(); if (mapOpen) drawBig(); }
+  if (started) { if (!inside) updateRoute(now); if (!mapOpen && (frameN & 1) === 0) drawMini(); if (mapOpen) drawBig(); }
 
   if (started && !paused && !mapOpen && !lbOn && el < 250) {
     qTime += el; qN++;
