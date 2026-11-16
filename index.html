@@ -147,7 +147,7 @@ body.driving #run,body.driving #crouch,body.driving #prone,body.driving #jump,bo
 .cashl{color:#8dff8d;font-size:13px;font-weight:700;text-shadow:0 1px 2px #000}
 #wheel{width:min(340px,calc(var(--vh)*94));height:min(340px,calc(var(--vh)*94));margin:0;transform:translate(-50%,-50%);background:none;border:0;border-radius:0}
 #wheel svg{width:100%;height:100%;display:block}
-#wheel .seg{cursor:pointer}#wheel .seg path{fill:#2a2a2d;stroke:#0d0d10;stroke-width:3}#wheel .seg.on path{fill:#f0b400}
+#wheel .seg{cursor:pointer}#wheel .seg path{fill:#fff;stroke:#aeb4be;stroke-width:3}#wheel .seg.on path{fill:#f0b400;stroke:#fff}#wheel .cnt{fill:#1c1c20}#wheel>svg{filter:drop-shadow(0 3px 10px rgba(0,0,0,.55))}
 #crosshair{position:fixed;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;display:none;z-index:6;pointer-events:none;border:2px solid #fff;border-radius:50%;box-shadow:0 0 3px #000}
 #crosshair::after{content:'';position:absolute;left:10px;top:10px;width:4px;height:4px;border-radius:50%;background:#f33}
 #flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:50;transition:opacity .35s}
@@ -2947,9 +2947,9 @@ document.querySelectorAll('[data-i]').forEach(el => { el.innerHTML = svgW(ICONS[
   let h = '<svg viewBox="0 0 340 340">';
   WEAPONS.forEach((w, i) => {
     const c = -90 + i * 45, [x0, y0] = pl(168, c - 22), [x1, y1] = pl(168, c + 22), [u1, v1] = pl(84, c + 22), [u0, v0] = pl(84, c - 22), [cx, cy] = pl(128, c);
-    h += '<g class="seg"><path d="M' + x0 + ' ' + y0 + 'A168 168 0 0 1 ' + x1 + ' ' + y1 + 'L' + u1 + ' ' + v1 + 'A84 84 0 0 0 ' + u0 + ' ' + v0 + 'Z"/><svg x="' + (cx - 20) + '" y="' + (cy - 26) + '" width="40" height="40" viewBox="0 0 48 48" fill="#fff" color="#fff" stroke-linecap="round">' + WICO[w.id] + '</svg><text x="' + cx + '" y="' + (+cy + 28) + '" text-anchor="middle" font-size="14" font-weight="700" fill="#fff" class="cnt"></text></g>';
+    h += '<g class="seg"><path d="M' + x0 + ' ' + y0 + 'A168 168 0 0 1 ' + x1 + ' ' + y1 + 'L' + u1 + ' ' + v1 + 'A84 84 0 0 0 ' + u0 + ' ' + v0 + 'Z"/><svg x="' + (cx - 20) + '" y="' + (cy - 26) + '" width="40" height="40" viewBox="0 0 48 48" fill="#1c1c20" color="#1c1c20" stroke-linecap="round">' + WICO[w.id] + '</svg><text x="' + cx + '" y="' + (+cy + 28) + '" text-anchor="middle" font-size="14" font-weight="700" fill="#1c1c20" class="cnt"></text></g>';
   });
-  h += '<circle id="whub" cx="170" cy="170" r="80" fill="#222226" stroke="#666" stroke-width="3"/><svg id="whi" x="132" y="108" width="76" height="76" viewBox="0 0 48 48" fill="#fff" color="#fff" stroke-linecap="round"></svg><text id="wht" x="170" y="226" text-anchor="middle" font-size="22" font-weight="700" fill="#fff"></text></svg>';
+  h += '<circle id="whub" cx="170" cy="170" r="80" fill="#ffffff" stroke="#aeb4be" stroke-width="3"/><svg id="whi" x="132" y="108" width="76" height="76" viewBox="0 0 48 48" fill="#1c1c20" color="#1c1c20" stroke-linecap="round"></svg><text id="wht" x="170" y="226" text-anchor="middle" font-size="22" font-weight="700" fill="#1c1c20"></text></svg>';
   wheelEl.innerHTML = h;
 }
 const cntOf = w => { const q = wst[w.id]; return !q ? '' : 'n' in q ? String(q.n) : q.mag + '/' + q.res; };
@@ -2965,10 +2965,31 @@ function toggleWheel() {
   const open = wheelEl.style.display !== 'block';
   wheelEl.style.display = open ? 'block' : 'none';
   clearTimeout(wheelT);
-  if (open) wheelT = setTimeout(() => { wheelEl.style.display = 'none'; }, 2500);   // ৩ সেকেন্ড ব্যবহার না হলে নিজে বন্ধ
+  if (open) wheelT = setTimeout(() => { wheelEl.style.display = 'none'; }, 4000);   // ৩ সেকেন্ড ব্যবহার না হলে নিজে বন্ধ
 }
-wheelEl.querySelectorAll('.seg').forEach((g, i) => bindTap(g, () => selectWeapon(i)));
-bindTap(document.getElementById('whub'), () => { wheelEl.style.display = 'none'; });
+// আঙুল চাকার ওপর ঘোরালেই অস্ত্র বদলায় (জয়স্টিকের মতো); আঙুল তুললে চাকা বন্ধ। শুধু ট্যাপ করলেও সেই অংশের অস্ত্র বাছা হয়।
+{
+  let drag = null;
+  const wp = e => { const r = wheelEl.getBoundingClientRect(), k = r.width / 340, dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2); return { d: Math.hypot(dx, dy) / k, a: Math.atan2(dy, dx) * 180 / Math.PI }; };
+  const idxOf = a => ((Math.round((a + 90) / 45) % 8) + 8) % 8;
+  const apply = i => { if (i === wIdx) return; wIdx = i; fireHeld = false; atkHeld = false; reloadT = 0; lastHud = ''; if (aimOn && WEAPONS[i].melee) aimOn = false; renderWheel(); };
+  const stop = e => { e.preventDefault(); e.stopPropagation(); };
+  wheelEl.addEventListener('pointerdown', e => {
+    stop(e); clearTimeout(wheelT);
+    const q = wp(e); drag = { id: e.pointerId };
+    try { wheelEl.setPointerCapture(e.pointerId); } catch (_) {}
+    if (q.d >= 80) apply(idxOf(q.a));
+  });
+  wheelEl.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    stop(e); const q = wp(e); if (q.d < 55) return;   // মাঝের গোল অংশে অস্ত্র বদলায় না
+    apply(idxOf(q.a));
+  });
+  const end = e => { if (!drag || e.pointerId !== drag.id) return; stop(e); drag = null; wheelEl.style.display = 'none'; };
+  wheelEl.addEventListener('pointerup', end); wheelEl.addEventListener('pointercancel', end);
+  for (const ev of ['touchstart', 'touchmove', 'mousedown', 'click']) wheelEl.addEventListener(ev, stop, { passive: false });
+  wheelEl.addEventListener('contextmenu', e => e.preventDefault());
+}
 { // ফায়ার বাটনের কোণার ব্যাজ চাপলে হুইল খোলে
   const fb = document.getElementById('atk'); let lt = 0;
   for (const ev of ['pointerdown', 'touchstart', 'mousedown']) fb.addEventListener(ev, e => {
@@ -3444,10 +3465,32 @@ while (profiles.length < MAX_PROFILES) profiles.push(null);
 function saveProfiles() { try { localStorage.setItem(PKEY, JSON.stringify({ slots: profiles })); } catch (e) {} }
 function saveProgress() {
   if (!activeProfile || !started) return;
-  Object.assign(activeProfile, { cash, bank, inv, kills, deaths, hp, armor, x: inside ? inOut.x : player.x, z: inside ? inOut.z : player.z, playSec: playBase + (performance.now() - playStart) / 1000 });
+  Object.assign(activeProfile, { cash, bank, inv, kills, deaths, hp, armor, x: inside ? inOut.x : player.x, z: inside ? inOut.z : player.z, playSec: playBase + (performance.now() - playStart) / 1000,
+    wst: JSON.parse(JSON.stringify(wst)), wIdx, stam, yaw: camYaw, saved: true, cars: carsToSave() });
   saveProfiles();
 }
-setInterval(saveProgress, 5000);
+// কেনা গাড়িগুলোর জায়গা/রঙ সেভ হয়, পরের বার ঠিক সেখানেই পাওয়া যায়
+function carsToSave() {
+  const out = [];
+  for (const c of ownedCars) {
+    try { const b = c.g.children[0]; out.push({ name: c.name, x: +c.g.position.x.toFixed(2), y: +c.g.position.y.toFixed(2), z: +c.g.position.z.toFixed(2), ry: +c.g.rotation.y.toFixed(3), color: b && b.material && b.material.color ? '#' + b.material.color.getHexString() : null, lights: !!c.lights }); } catch (e) {}
+  }
+  return out;
+}
+function restoreCars(list) {
+  for (const c of ownedCars) { scene.remove(c.g); let i = parkedCars.indexOf(c); if (i >= 0) parkedCars.splice(i, 1); i = cars.indexOf(c); if (i >= 0) cars.splice(i, 1); }
+  const pool = cars.concat(parkedCars, ownedCars.slice()); ownedCars.length = 0;
+  for (const o of (list || [])) {
+    const tpl = pool.find(c => c.name === o.name); if (!tpl) continue;
+    const g = tpl.g.clone(), body = g.children[0];
+    body.material = body.material.clone(); if (o.color) body.material.color.set(o.color);
+    g.position.set(o.x, o.y || 0, o.z); g.rotation.y = o.ry || 0; g.visible = true; scene.add(g);
+    const oc = { g, headM: g.children[4], tailM: g.children[5], name: o.name, lights: !!o.lights };
+    parkedCars.push(oc); ownedCars.push(oc); pool.push(oc);
+  }
+}
+setInterval(saveProgress, 3000);
+addEventListener('beforeunload', saveProgress);
 addEventListener('pagehide', saveProgress);
 document.addEventListener('visibilitychange', () => { if (document.hidden) saveProgress(); });
 function fmtTime(sec) { const m = Math.floor(sec / 60); return m < 60 ? m + ' min' : Math.floor(m / 60) + ' h ' + (m % 60) + ' m'; }
@@ -3765,7 +3808,7 @@ function setQuality(l) {
 
 // ---------- নতুন HUD ফিচার: স্ট্যামিনা, টাকা, দোকান, ব্যাগ, বিরতি, ক্যামেরা, এইম, গাড়ি ----------
 let cash = 300, bank = 0, inv = { med: 1, arm: 1, water: 0 }, stam = 500, paused = false, aimOn = false, drv = null, snapFlag = false, lastCash = -1, toastT = 0;
-const parkedCars = [], panelEl = document.getElementById('panel');
+const parkedCars = [], panelEl = document.getElementById('panel'), ownedCars = [];
 function toast(t) { const e = document.getElementById('toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => e.style.display = 'none', 1600); }
 let panelFn = null;
 let shopScale = 0.9;
@@ -3776,7 +3819,7 @@ function renderPanel() {
   const ctl = '<div class="pctl"><button class="pback">◀ Back</button>' + (corner ? '<span><button class="psz" data-d="-1">A−</button> <button class="psz" data-d="1">A+</button></span>' : '') + '</div>';
   panelEl.style.setProperty('--ps', shopScale);
   panelEl.innerHTML = '<div class="pbox">' + ctl + '<h3>' + dd.title + '</h3><div class="plist">' + dd.rows.map((r, i) => '<div class="prow"><span>' + r.t + '</span>' + (r.b ? '<button data-r="' + i + '">' + r.b + '</button>' : '') + '</div>').join('') + '</div><button class="pclose">✕ Close</button></div>';
-  panelEl.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { dd.rows[b.dataset.r].f(); renderPanel(); });
+  panelEl.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { dd.rows[b.dataset.r].f(); renderPanel(); saveProgress(); });
   panelEl.querySelector('.pclose').onclick = closePanel;
   panelEl.querySelector('.pback').onclick = closePanel;
   if (corner) {
@@ -3865,9 +3908,18 @@ bindTap(document.getElementById('wsel'), () => openPanel(() => ({ title: '🎒 B
   { t: '🔫 Rifle ' + cntOf(WEAPONS[0]) + ' · Pistol ' + cntOf(WEAPONS[1]) + ' · Sniper ' + cntOf(WEAPONS[2]) },
   { t: '💣 Grenade ' + wst.grenade.n + ' · Mine ' + wst.mine.n + ' · Bomb ' + wst.bomb.n },
   { t: '💥 Kills: ' + kills }] })));
+function newGameReset() {
+  if (!confirm('Erase all saved progress (money, items, cars, position) and start fresh?')) return;
+  const p = activeProfile; if (!p) return;
+  returnToLobby();
+  for (const k of ['cash', 'bank', 'inv', 'x', 'z', 'wst', 'wIdx', 'stam', 'yaw', 'cars', 'saved']) delete p[k];
+  Object.assign(p, { hp: 100, armor: 100, kills: 0, deaths: 0, playSec: 0 });
+  saveProfiles(); renderLobby();
+}
 bindTap(document.getElementById('pausebtn'), () => openPanel(() => ({ title: '⚙ Settings', rows: [
   { t: 'Resume game', b: '▶ Resume', f: closePanel }, { t: 'Return to lobby', b: '🏠 Lobby', f: () => returnToLobby() }, { t: 'Health bar', b: hudPref('hp') ? 'Hide' : 'Show', f: () => setHud('hp', !hudPref('hp')) }, { t: 'Water bar', b: hudPref('ep') ? 'Hide' : 'Show', f: () => setHud('ep', !hudPref('ep')) }, { t: 'Move buttons', b: 'Customize', f: () => { closePanel(); toggleEdit(); } },
-  { t: '🏦 Bank (cash 💵' + cash + ' · Bank 💵' + bank + ')', b: 'Open', f: () => openPanel(bankPanel) }] })));
+  { t: '🏦 Bank (cash 💵' + cash + ' · Bank 💵' + bank + ')', b: 'Open', f: () => openPanel(bankPanel) },
+  { t: '🗑 Erase save & start a new game', b: 'New game', f: newGameReset }] })));
 bindTap(document.getElementById('aim'), () => { if (drv) return; aimOn = !aimOn; document.getElementById('aim').classList.toggle('on', aimOn); });
 bindTap(document.getElementById('nade'), () => { if (!pDead && !drv) throwGrenade(); });
 bindTap(document.getElementById('reload'), () => { if (!pDead && !drv) startReload(); });
@@ -4073,7 +4125,8 @@ function buyCar(tpl, price) {
   cash -= price; const g = tpl.g.clone(), body = g.children[0];
   body.material = body.material.clone(); body.material.color.set(['#c0392b', '#2e86de', '#f1c40f', '#ecf0f1', '#2c3e50'][Math.floor(Math.random() * 5)]);
   const d = inOut.d; g.position.set(d.out[0], 0, d.out[1]); g.rotation.y = Math.atan2(d.ox, d.oz) + Math.PI / 2; g.visible = false; scene.add(g);
-  parkedCars.push({ g, headM: g.children[4], tailM: g.children[5], name: tpl.name, lights: false }); inHidden.push(g);
+  const oc = { g, headM: g.children[4], tailM: g.children[5], name: tpl.name, lights: false }; parkedCars.push(oc); ownedCars.push(oc); inHidden.push(g);
+  saveProgress();
   toast('🚗 ' + tpl.name + ' delivered outside the door');
 }
 function tradeAct(t) {
@@ -4400,9 +4453,13 @@ async function startGame(p) {
   if (typeof p.x === 'number') { player.x = p.x; player.z = p.z; if (blocked(player.x, player.z)) player.x = Math.round(player.x / SPACING) * SPACING; }
   if (blocked(player.x, player.z, 0)) { player.x = 0; player.z = 20; }   // বাধার ভেতরে আটকে থাকলে মুক্ত জায়গায় সরানো
   kills = p.kills || 0; deaths = p.deaths || 0; hp = p.hp > 0 ? p.hp : HP_MAX; armor = p.armor == null ? 100 : p.armor;
-  cash = p.cash == null ? 300 : p.cash; bank = p.bank == null ? 0 : p.bank; if (p.inv) inv = p.inv;
+  cash = p.cash == null ? 300 : p.cash; bank = p.bank == null ? 0 : p.bank; inv = p.inv ? p.inv : { med: 1, arm: 1, water: 0 };
+  { const f = freshW(); if (p.wst) for (const k in f) if (p.wst[k]) Object.assign(f[k], p.wst[k]); wst = f; }   // বুলেট/গ্রেনেড/মাইন যা ছিল তাই
+  wIdx = (typeof p.wIdx === 'number' && WEAPONS[p.wIdx]) ? p.wIdx : 0; reloadT = 0; lastHud = ''; fireHeld = false; atkHeld = false;
+  stam = typeof p.stam === 'number' ? Math.max(0, Math.min(500, p.stam)) : 500;
+  try { restoreCars(p.cars); } catch (e) { console.warn('car restore', e); }
   if (p.layout && p.layout.v === 2) { layout = Object.assign({ op: 1, v: 2 }, p.layout); applyLayout(); }
-  camYaw = 0; player.yaw = 0;
+  camYaw = typeof p.yaw === 'number' ? p.yaw : 0; player.yaw = camYaw;
   started = true; playBase = p.playSec || 0; playStart = performance.now();
 
   document.getElementById('start').style.display = 'none';
@@ -4416,6 +4473,7 @@ async function startGame(p) {
   document.getElementById('pname').textContent = '👤 ' + p.name;
   document.querySelectorAll('.act').forEach(b => b.style.display = 'block');
   document.getElementById('nade').style.display = 'none';   // বোমা এখন ফায়ার বাটন দিয়েই ছোড়া হয়
+  if (p.saved) toast('▶ Game resumed');
 }
 
 addEventListener('resize', () => {
@@ -4542,6 +4600,7 @@ function renderLobby() {
   document.getElementById('lb-lvl').textContent = 'Level ' + lvl;
   document.getElementById('lb-xp').style.width = (xp % 100) + '%';
   document.getElementById('lb-cash').textContent = '$' + (p.cash == null ? 300 : p.cash).toLocaleString('en-US');
+  { const gb = document.getElementById('lb-go'); if (gb && gb.lastChild && gb.lastChild.nodeType === 3) gb.lastChild.textContent = p.saved ? 'Resume' : 'Start'; }
   enterLobby(p);
 }
 function ensureProfile() {
@@ -4558,10 +4617,10 @@ async function enterGame() {
   navPush();
   const intro = document.getElementById('intro'), sub = document.getElementById('intro-sub'), fill = document.getElementById('ibarfill');
   showScr('intro');
-  let dots = 0, base = 'Connecting to server';
+  let dots = 0, base = p.saved ? 'Resuming your game' : 'Connecting to server';
   const setSub = t => { base = t; dots = 0; sub.textContent = base; };
   const dt = setInterval(() => { dots = (dots + 1) % 4; sub.textContent = base + '.'.repeat(dots); }, 380);
-  setSub('Connecting to server');
+  setSub(p.saved ? 'Resuming your game' : 'Connecting to server');
   fill.style.transition = 'none'; fill.style.width = '0%'; void fill.offsetWidth;
   fill.style.transition = 'width 4.2s linear'; fill.style.width = '94%';
   const run = startGame(p);
