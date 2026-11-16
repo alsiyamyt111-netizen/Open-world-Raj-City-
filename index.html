@@ -2319,7 +2319,9 @@ function update(dt) {
         char.group.updateMatrixWorld(true);
         const hipLocalY = char.hips.matrixWorld.elements[13] - char.group.position.y;
         const seatHipY = rest.s.sy + REST_TUNE.sitHip;
-        const minRootY = seatHipY - hipLocalY - rest.s.lift;
+        // group.position.y ইতিমধ্যেই absolute world Y (player.y + rest.lift);
+        // তাই এখানে seat lift আবার বাদ দিলে correction কম হয়ে যায় এবং Hips মাটির নিচে ঢুকে যেতে পারে।
+        const minRootY = seatHipY - hipLocalY;
         if (char.group.position.y < minRootY) {
           char.group.position.y = minRootY;
           rest.lift = Math.max(0, minRootY - player.y);
@@ -4207,8 +4209,34 @@ st = (t > 0.3 && t < 0.85) ? 'walk' : 'idle';
 }
 e.door.pivot.rotation.y = -sg * 1.15 * eio(a);
 player.x = p[0]; player.z = p[1]; player.y = 0; player.yaw = yaw;
-if (char.mixer) { charAnimTo(st); char.mixer.update(dt); e.lift = useAnim && (st === 'entercar' || st === 'exitcar') ? CAR_TUNE.seatLift : 0; char.group.position.set(p[0], e.lift, p[1]); char.group.rotation.set(0, yaw, 0); }
-else { char.group.position.set(p[0], 0, p[1]); char.group.rotation.set(0, yaw, 0); }
+if (char.mixer) {
+  charAnimTo(st);
+  char.mixer.update(dt);
+  let rootY = 0;
+  if (useAnim && char.hips && Number.isFinite(e.hipBase)) {
+    // গাড়িতে ঢোকা/বেরোনোর প্রতিটি ফ্রেমে Hips-এর আসল উচ্চতা মাপি।
+    // অ্যানিমেশন হাঁটু/কোমর ভাঁজ করলেও Hips যেন মাটির নিচে না নামে।
+    let blend = 0;
+    if (e.mode === 'in' && st === 'entercar') {
+      const u = cl01((t - 0.55) / (char.dur.entercar || 2));
+      blend = eio(cl01((u - CAR_TUNE.slideFrom) / (CAR_TUNE.slideTo - CAR_TUNE.slideFrom)));
+    } else if (e.mode === 'out' && st === 'exitcar') {
+      const u = cl01(t / (char.dur.exitcar || 2));
+      blend = 1 - eio(cl01((u - 0.1) / 0.6));
+    }
+    char.group.position.set(p[0], 0, p[1]);
+    char.group.rotation.set(0, yaw, 0);
+    char.group.updateMatrixWorld(true);
+    const hipLocalY = char.hips.matrixWorld.elements[13] - char.group.position.y;
+    const targetHipY = e.hipBase + CAR_TUNE.seatLift * blend;
+    rootY = Math.max(0, targetHipY - hipLocalY);
+  } else {
+    rootY = useAnim && (st === 'entercar' || st === 'exitcar') ? CAR_TUNE.seatLift : 0;
+  }
+  e.lift = rootY;
+  char.group.position.set(p[0], rootY, p[1]);
+  char.group.rotation.set(0, yaw, 0);
+} else { char.group.position.set(p[0], 0, p[1]); char.group.rotation.set(0, yaw, 0); }
 if (!done) return;
 c.g.remove(e.door.pivot); ent = null;
 if (e.mode === 'in') {
@@ -4229,7 +4257,9 @@ function toggleVeh() {
     let sgn = -1; { const o = carToWorld(c, sgn * (carHalfW(c) + 0.9), 0.2); if (blocked(o[0], o[1])) sgn = 1; }
     const seat = carToWorld(c, -0.4, 0.15); player.x = seat[0]; player.z = seat[1]; player.y = 0;
     char.group.visible = true; charAnimTo('idle');
-    ent = { c, mode: 'out', t: 0, sgn, door: makeDoor(c, sgn) };
+    if (char.hips && char.group.updateMatrixWorld) char.group.updateMatrixWorld(true);
+    const hipBase = char.hips ? (char.hips.matrixWorld.elements[13] - char.group.position.y) : null;
+    ent = { c, mode: 'out', t: 0, sgn, door: makeDoor(c, sgn), hipBase };
     return;
   }
   let best = null, bd = 81;
@@ -4238,7 +4268,9 @@ function toggleVeh() {
   const i = cars.indexOf(best); if (i >= 0) cars.splice(i, 1); else parkedCars.splice(parkedCars.indexOf(best), 1);
   stance = 'stand'; setRun(false); aimOn = false; document.getElementById('aim').classList.remove('on'); wheelEl.style.display = 'none';
   const y = best.g.rotation.y, lx = (player.x - best.g.position.x) * Math.cos(y) - (player.z - best.g.position.z) * Math.sin(y), sgn = lx < 0 ? -1 : 1;
-  ent = { c: best, mode: 'in', t: 0, sgn, door: makeDoor(best, sgn), from: [player.x, player.z] };
+  if (char.hips && char.group.updateMatrixWorld) char.group.updateMatrixWorld(true);
+  const hipBase = char.hips ? (char.hips.matrixWorld.elements[13] - char.group.position.y) : null;
+  ent = { c: best, mode: 'in', t: 0, sgn, door: makeDoor(best, sgn), from: [player.x, player.z], hipBase };
 }
 bindTap(document.getElementById('veh'), toggleVeh);
 function driveStep(dt) {
