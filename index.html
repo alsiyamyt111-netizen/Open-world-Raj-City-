@@ -113,7 +113,7 @@ body.playing .ib{display:flex!important}
 .ib svg{width:58%;height:58%;pointer-events:none}
 .ib span{font-size:10px;margin-top:1px;text-shadow:0 1px 2px #000;pointer-events:none}
 .ib.on{background:rgba(240,180,0,.92);color:#222;border-color:#fff}
-#atk{overflow:visible}#atk>svg{width:66%;height:66%}
+#atk{overflow:visible}#atk>svg{width:22%;height:22%}
 #atk .wbadge{position:absolute;left:-8px;top:-8px;width:34px;height:34px;border-radius:50%;background:#1b1b1f;border:2px solid #fff;display:flex;align-items:center;justify-content:center}
 #atk .wbadge svg{width:70%;height:70%}
 #atk .amm{position:absolute;bottom:5px;font-size:11px;text-shadow:0 1px 2px #000}
@@ -129,7 +129,7 @@ body.playing .ib{display:flex!important}
 #cardash.cock #cdbig{display:block}
 #cardash.cock #cdwheel{display:none}
 #cardash.cock #cdrow{position:absolute;left:50%;bottom:34px;transform:translateX(-50%) scale(.8);transform-origin:50% 100%}
-#cdbtns{position:fixed;right:24px;bottom:14px;display:grid;grid-template-columns:repeat(2,58px);gap:8px;pointer-events:none}
+#cdbtns{position:fixed;right:24px;bottom:14px;display:grid;grid-template-columns:repeat(3,58px);gap:8px;pointer-events:none}
 #cdbtns button{pointer-events:auto;width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.25);color:#fff;border:2px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;touch-action:none;-webkit-tap-highlight-color:transparent}
 #cdbtns button b{font-size:20px;line-height:1;font-style:normal}
 #cdbtns button i{font-size:9px;font-style:normal;margin-top:1px;text-shadow:0 1px 2px #000}
@@ -532,6 +532,7 @@ body.playing #enterb.show{display:flex!important}
   <button id="cb-gear"><b>D</b><i>Gear · R</i></button>
   <button id="cb-view"><b>👁</b><i>View · V</i></button>
   <button id="cb-horn"><b>📯</b><i>Horn · H</i></button>
+  <button id="cb-auto"><b>🅰</b><i>Auto · T</i></button>
 </div>
 </div>
 <div id="crosshair"></div><div id="flash"></div><div id="toast"></div><div id="panel"></div>
@@ -1782,8 +1783,8 @@ async function buildCharacter(gender) {
   model.traverse(o => { if (o.isBone || o.type === 'Bone') boneMap.set(normBone(o.name), o.name); });
   // এই মডেলের নিজের Hips হাড়ের দাঁড়ানো-অবস্থার Y (বাইন্ড-পোজ) — ক্রাউচ/প্রোন ক্লিপ অন্য একটা মডেলের
   // হাইট/অনুপাত ধরে বানানো হলেও এই মডেলের নিজস্ব উচ্চতার সাপেক্ষে বসা/শোয়ার গভীরতা বসাতে এটা লাগবে
-  let modelHipsRestY = 0;
-  { const hn = boneMap.get('hips'); if (hn) { const hb = model.getObjectByName(hn); if (hb) modelHipsRestY = hb.position.y; } }
+  let modelHipsRestY = 0, hipsObj = null;
+  { const hn = boneMap.get('hips'); if (hn) { const hb = model.getObjectByName(hn); if (hb) { modelHipsRestY = hb.position.y; hipsObj = hb; } } }
   const KEEP_Y = ['crouchidle', 'crouchwalk', 'prone', 'standtosit', 'sittostand', 'lyingdown', 'sleepingidle', 'entercar', 'exitcar'];      // এগুলোতে নিতম্বের উচ্চতা রাখতে হবে (নইলে শূন্যে ভাসবে)
   const ONCE = { jump: 0.75, walljump: 0.9, punch: 0.9, kick: 1.1, entercar: 2.2, exitcar: 2.2 };   // entercar/exitcar: বেশি লম্বা হলে ২.২ সেকেন্ডে দ্রুত চলবে        // একবার চলবে, সর্বোচ্চ এত সেকেন্ডে শেষ হবে (ক্লিপ ছোট হলে নিজের স্বাভাবিক সময়ে)
   const dur = {};
@@ -1849,7 +1850,7 @@ async function buildCharacter(gender) {
   }
   console.log('Loaded animations:', Object.keys(actions).join(', '));
   for (const k of Object.keys(ANIMS)) if (!actions[k]) console.warn('Animation failed to load:', k);
-  return { group, mixer, actions, speed, dur, gun, current: null, state: null, key: null };
+  return { group, mixer, actions, speed, dur, gun, hips: hipsObj, current: null, state: null, key: null };
 }
 
 // মডেল না পেলে সাধারণ চরিত্র (ব্যাকআপ)
@@ -1925,6 +1926,7 @@ addEventListener('keydown', e => {
       if (e.code === 'KeyL') setLights(!drv.lights);
       else if (e.code === 'KeyR') setGear(drv.gear === 'D' ? 'R' : 'D');
       else if (e.code === 'KeyV') setCock(!drvCock);
+      else if (e.code === 'KeyT') setAuto(!drv.auto);
       else if (e.code === 'KeyH') sfx('horn');
     }
     if (e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
@@ -2025,7 +2027,7 @@ function nearSeat() {
 function startRest(h) {
   const R = h.R, sp = h.s, sit = h.kind === 'sit', nm = sit ? 'standtosit' : 'lyingdown';
   const cd = char.dur[nm] || 2, k = cd / Math.min(cd, sit ? REST_TUNE.sitCap : REST_TUNE.sleepCap);
-  rest = { kind: h.kind, R, s: sp, phase: 'in', t: 0, anim: nm, rev: false, sp: k, dur: cd / k, fx: player.x, fz: player.z, fyaw: player.yaw, tx: R.ox + sp.x, tz: R.oz + sp.z, lift: 0, ox: 0, oz: 0, rested: false };
+  rest = { kind: h.kind, R, s: sp, phase: 'in', t: 0, anim: nm, rev: false, sp: k, dur: cd / k, fx: player.x, fz: player.z, fyaw: player.yaw, tx: R.ox + sp.x, tz: R.oz + sp.z, lift: 0, adj: 0, ox: 0, oz: 0, rested: false };
   stance = 'stand'; setRun(false); aimOn = false; document.getElementById('aim').classList.remove('on');
   atk = null; gunT = 0; combatT = 0; spd = 0;
   if (!sit) toast('😴 Sleeping — move the joystick to wake up');
@@ -2036,10 +2038,18 @@ function restStep(dt, wake) {
   if (r.phase === 'in') {
     const q = ease(Math.min(1, r.t / Math.min(r.dur, 0.9)));
     player.x = r.fx + (r.tx - r.fx) * q; player.z = r.fz + (r.tz - r.fz) * q;
-    player.yaw = r.fyaw + wrap(r.s.ry - r.fyaw) * q; r.lift = r.s.lift * q;
+    player.yaw = r.fyaw + wrap(r.s.ry - r.fyaw) * q; r.lift = (r.s.lift + r.adj) * q;
     if (r.t >= r.dur) { r.phase = 'hold'; r.t = 0; r.sp = 1; if (!sit) r.anim = 'sleepingidle'; }
   } else if (r.phase === 'hold') {
-    player.x = r.tx; player.z = r.tz; player.yaw = r.s.ry; r.lift = r.s.lift;
+    player.x = r.tx; player.z = r.tz; player.yaw = r.s.ry;
+    // নিতম্বের আসল উচ্চতা মেপে আসন/বিছানার ওপরে বসানো — মডেলের মাপ যাই হোক, মাটিতে ঢুকবে না
+    if (char.hips && r.s.sy !== undefined) {
+      char.group.updateMatrixWorld(true);
+      const relY = char.hips.matrixWorld.elements[13] - char.group.position.y;
+      const want = r.s.sy + (sit ? REST_TUNE.sitHip : REST_TUNE.sleepHip) - relY - r.s.lift;
+      r.adj += (Math.max(-0.3, Math.min(0.8, want)) - r.adj) * (1 - Math.exp(-dt * 6));
+    }
+    r.lift = r.s.lift + r.adj;
     if (!sit) {
       hp = Math.min(HP_MAX, hp + 14 * dt); armor = Math.min(100, armor + 20 * dt); hurtT = 99;
       if (!r.rested && hp >= HP_MAX && armor >= 100) { r.rested = true; toast('😴 Rested — health restored'); }
@@ -2054,7 +2064,7 @@ function restStep(dt, wake) {
     }
   } else {
     const q = ease(Math.max(0, Math.min(1, (r.t / r.dur - 0.3) / 0.7)));
-    player.x = r.tx + (r.ox - r.tx) * q; player.z = r.tz + (r.oz - r.tz) * q; r.lift = r.s.lift * (1 - q);
+    player.x = r.tx + (r.ox - r.tx) * q; player.z = r.tz + (r.oz - r.tz) * q; r.lift = (r.s.lift + r.adj) * (1 - q);
     if (r.t >= r.dur) { rest = null; spd = 0; }
   }
 }
@@ -2106,13 +2116,15 @@ const player = { x: 0, y: 0, z: 20, yaw: 0 };
 let stance = 'stand', jumping = false, vy = 0, cr = 0, pr = 0;
 // ===== বসা / ঘুমানো: মাপ ঠিক না লাগলে শুধু এই সংখ্যাগুলো বদলান =====
 const REST_TUNE = {
-  chairLift: 0,      // চেয়ারে বসলে শরীর কতটা ওপরে (মিটার) — বসা ভাসলে কমান, ডুবলে বাড়ান
-  sofaLift: 0.09,    // সোফায়
-  bedLift: 0.58,     // শোয়ার সময় বিছানার উচ্চতা
+  chairLift: 0.25,      // চেয়ারে বসলে শরীর কতটা ওপরে (মিটার) — বসা ভাসলে কমান, ডুবলে বাড়ান
+  sofaLift: 0.30,    // সোফায়
+  bedLift: 0.70,     // শোয়ার সময় বিছানার উচ্চতা
   sitZ: 0.05,        // বসার সময় সামনে(+)/পিছনে(-) সরানো
   bedZ: 0.05,        // শোয়ার সময় বিছানার মাথা(-)/পায়ের(+) দিকে সরানো
   sitCap: 2.0,       // বসা/ওঠার সর্বোচ্চ সময় (সেকেন্ড) — ক্লিপ লম্বা হলে এর মধ্যে চেপে দেয়
-  sleepCap: 3.0      // শোয়া/ওঠার সর্বোচ্চ সময়
+  sleepCap: 3.0,     // শোয়া/ওঠার সর্বোচ্চ সময়
+  sitHip: 0.12,      // বসা অবস্থায় নিতম্ব (Hips হাড়) আসনের ওপরে কতটা থাকবে — স্বয়ংক্রিয় উচ্চতা মেলানোর মাপ
+  sleepHip: 0.14     // শোয়া অবস্থায় নিতম্ব বিছানার ওপরে কতটা থাকবে
 };
 let rest = null, restWake = false, seatHit = null;
 let char = null, started = false;
@@ -4006,7 +4018,7 @@ function shot() {
 const $id = id => document.getElementById(id);
 const dashEl = $id('cardash'), cdArc = $id('cdarc'), cdNeedle = $id('cdneedle'), cdNum = $id('cdnum'), cdGear = $id('cdgear'), cdW = $id('cdwsvg'), cdBrot = $id('cdbrot');
 const armL = $id('armL'), armR = $id('armR'), cuffL = $id('cuffL'), cuffR = $id('cuffR');
-const bLight = $id('cb-light'), bGear = $id('cb-gear'), bView = $id('cb-view'), bHorn = $id('cb-horn');
+const bLight = $id('cb-light'), bGear = $id('cb-gear'), bView = $id('cb-view'), bHorn = $id('cb-horn'), bAuto = $id('cb-auto');
 let drvCock = false, wheelAng = 0, cdLast = '', drvX = 0, drvY = 0;
 { const tk = $id('cdticks'); let h = '';
   for (let i = 0; i <= 6; i++) { const a = (-90 + i * 30) * Math.PI / 180, x1 = 50 + Math.sin(a) * 33, y1 = 52 - Math.cos(a) * 33, x2 = 50 + Math.sin(a) * 28, y2 = 52 - Math.cos(a) * 28; h += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '"/>'; }
@@ -4029,23 +4041,28 @@ function setLights(v) {
   if (!drv) return; drv.lights = v; drv.c.lights = v; bLight.classList.toggle('on', v);
   applyCarLights(); toast(v ? '💡 Headlights ON' : '💡 Headlights OFF');
 }
+function setAuto(v) {
+  if (!drv) return; drv.auto = v; bAuto.classList.toggle('on', v);
+  toast(v ? '🅰 Auto drive ON — brake to stop' : '🅰 Auto drive OFF');
+}
 function setGear(g) {
   if (!drv || drv.gear === g) return;
   if (Math.abs(drv.sp) > 2.5) { toast('Stop the car first'); return; }
   drv.gear = g; bGear.firstChild.textContent = g; bGear.classList.toggle('on', g === 'R'); cdLast = '';
-  toast(g === 'R' ? '🔙 Reverse: push joystick up to back up' : '⬆ Drive: push joystick up to go, down to brake');
+  toast(g === 'R' ? '🔙 Reverse: pull joystick back/down to reverse' : '⬆ Drive: push joystick up to go, down to brake');
   applyCarLights();
 }
 bindTap(bLight, () => setLights(!(drv && drv.lights)));
 bindTap(bGear, () => { if (drv) setGear(drv.gear === 'D' ? 'R' : 'D'); });
 bindTap(bView, () => setCock(!drvCock));
+bindTap(bAuto, () => { if (drv) setAuto(!drv.auto); });
 bindTap(bHorn, () => { if (drv) sfx('horn'); });
 function dashShow() {
   const sl = (activeProfile && activeProfile.dress) || '#3498db';
   armL.setAttribute('stroke', sl); armR.setAttribute('stroke', sl);
   dashEl.style.display = 'block'; dashEl.classList.remove('cock'); drvCock = false; cdLast = '';
   document.body.classList.add('driving');
-  bLight.classList.toggle('on', !!drv.lights); bView.classList.remove('on'); bGear.classList.remove('on'); bGear.firstChild.textContent = 'D';
+  bLight.classList.toggle('on', !!drv.lights); bView.classList.remove('on'); bGear.classList.remove('on'); bGear.firstChild.textContent = 'D'; bAuto.classList.remove('on');
 }
 function dashHide() {
   dashEl.style.display = 'none'; dashEl.classList.remove('cock'); drvCock = false;
@@ -4091,7 +4108,7 @@ function charAnimTo(st) {
   nx.reset().fadeIn(0.15).play(); nx.timeScale = char.speed[st] || 1; char.current = nx; char.state = st; char.key = st;
 }
 // গাড়িতে ওঠা/নামার অ্যানিমেশন টিউনিং — ভঙ্গি ঠিক না লাগলে শুধু এই সংখ্যাগুলো বদলান
-const CAR_TUNE = { yawIn: 0, yawOut: 0, seatLift: 0, slideFrom: 0.35, slideTo: 0.85 };
+const CAR_TUNE = { yawIn: 0, yawOut: 0, seatLift: 0.25, slideFrom: 0.35, slideTo: 0.85 };
 function stepEnter(dt) {
 const e = ent, c = e.c, y = c.g.rotation.y; e.t += dt; const t = e.t, sg = e.sgn;
 const outP = carToWorld(c, sg * (e.door.hw + 0.9), 0.2), seatP = carToWorld(c, -0.4, 0.15);
@@ -4132,12 +4149,12 @@ st = (t > 0.3 && t < 0.85) ? 'walk' : 'idle';
 }
 e.door.pivot.rotation.y = -sg * 1.15 * eio(a);
 player.x = p[0]; player.z = p[1]; player.y = 0; player.yaw = yaw;
-if (char.mixer) { charAnimTo(st); char.mixer.update(dt); char.group.position.set(p[0], (useAnim && st !== 'walk' ? CAR_TUNE.seatLift : 0), p[1]); char.group.rotation.set(0, yaw, 0); }
+if (char.mixer) { charAnimTo(st); char.mixer.update(dt); e.lift = (e.lift || 0) + ((useAnim && st !== 'walk' ? CAR_TUNE.seatLift : 0) - (e.lift || 0)) * (1 - Math.exp(-dt * 10)); char.group.position.set(p[0], e.lift, p[1]); char.group.rotation.set(0, yaw, 0); }
 else { char.group.position.set(p[0], 0, p[1]); char.group.rotation.set(0, yaw, 0); }
 if (!done) return;
 c.g.remove(e.door.pivot); ent = null;
 if (e.mode === 'in') {
-drv = { c, sp: 0, gear: 'D', brk: false, beepT: 0, lights: c.lights !== undefined ? c.lights : nightK > 0.5 };
+drv = { c, sp: 0, gear: 'D', auto: false, lookYaw: 0, lookPitch: 0, lcy: camYaw, lcp: camPitch, brk: false, beepT: 0, lights: c.lights !== undefined ? c.lights : nightK > 0.5 };
 char.group.visible = false; document.getElementById('veh').classList.add('on');
 dashShow(); applyCarLights();
 toast('🚗 ' + (c.name || 'Car') + ' · WASD drive · Space brake · E exit');
@@ -4171,11 +4188,14 @@ function driveStep(dt) {
   // জয়স্টিক + কিবোর্ড (WASD / তীর চিহ্ন) মিলিয়ে ইনপুট; Space = ব্রেক
   const kx = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
   const ky = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0);
-  drvX = Math.max(-1, Math.min(1, kx + jx)); drvY = keys.has('Space') ? -1 : Math.max(-1, Math.min(1, ky + jy));
-  // গিয়ার D: জয়স্টিক ওপরে = চলা, নিচে = ব্রেক. গিয়ার R: ওপরে = পেছনে যাওয়া, নিচে = ব্রেক
-  const rev = drv.gear === 'R', braking = drvY < -0.1;
-  const target = drvY > 0.05 ? (rev ? -drvY * 6 : drvY * 15) : 0;
-  drv.sp += (target - drv.sp) * (1 - Math.exp(-dt * (braking ? 4.5 : Math.abs(drvY) > 0.1 ? 1.4 : 2.5)));
+  drvX = Math.max(-1, Math.min(1, kx + jx)); drvY = Math.max(-1, Math.min(1, ky + jy));
+  // গিয়ার D: জয়স্টিক ওপরে = সামনে চলা, নিচে = ব্রেক. গিয়ার R: জয়স্টিক নিচে/পেছনে = ব্যাক করা, ওপরে = ব্রেক. Space = ব্রেক
+  const rev = drv.gear === 'R', dirIn = rev ? -drvY : drvY;
+  const braking = keys.has('Space') || dirIn < -0.1;
+  if (braking && drv.auto) setAuto(false);
+  let target = dirIn > 0.05 ? (rev ? -dirIn * 6 : dirIn * 15) : 0;
+  if (drv.auto && !braking) { const as = rev ? -6 : 13; if (Math.abs(target) < Math.abs(as)) target = as; }   // অটো ড্রাইভ: জয়স্টিক না টানলেও চলবে
+  drv.sp += (target - drv.sp) * (1 - Math.exp(-dt * (braking ? 4.5 : (dirIn > 0.1 || drv.auto) ? 1.4 : 2.5)));
   drv.brk = braking && Math.abs(drv.sp) > 0.5;
   if (rev && drv.sp < -0.3) { drv.beepT -= dt; if (drv.beepT <= 0) { drv.beepT = 0.7; sfx('beep'); } } else drv.beepT = 0;
   c.g.rotation.y -= drvX * dt * 1.9 * Math.max(-1, Math.min(1, drv.sp / 6));
@@ -4186,9 +4206,13 @@ function driveStep(dt) {
   applyCarLights();
   if (drv.lights) { const fx = Math.sin(y), fz = Math.cos(y); carBeam.position.set(c.g.position.x + fx * 2, 0.8 + player.y, c.g.position.z + fz * 2); carBeam.target.position.set(c.g.position.x + fx * 24, player.y, c.g.position.z + fz * 24); }
   dashUpdate(dt);
-  if (drvCock) {   // চালকের আসনের দৃশ্য: গাড়ির ভেতর থেকে সামনে তাকানো
-    camera.position.set(player.x + Math.sin(y) * 0.5, 1.25 + player.y, player.z + Math.cos(y) * 0.5);
-    camera.lookAt(player.x + Math.sin(y) * 20, 1.15 + player.y, player.z + Math.cos(y) * 20);
+  if (drvCock) {   // চালকের চোখের দৃশ্য: চালকের আসন থেকে, টেনে চারপাশে তাকানো যায়, ছাড়লে সামনে ফিরে আসে
+    const dY = camYaw - drv.lcy, dP = camPitch - drv.lcp; drv.lcy = camYaw; drv.lcp = camPitch;
+    if (dragId !== null) { drv.lookYaw = Math.max(-1.9, Math.min(1.9, drv.lookYaw + dY)); drv.lookPitch = Math.max(-0.45, Math.min(0.6, drv.lookPitch + dP)); }
+    else { const k = 1 - Math.exp(-dt * 3); drv.lookYaw -= drv.lookYaw * k; drv.lookPitch -= drv.lookPitch * k; }
+    const ep = carToWorld(c, -0.2, 0.3), vy = y + drv.lookYaw, vp = drv.lookPitch - 0.04, cp = Math.cos(vp);
+    camera.position.set(ep[0], 1.22 + player.y, ep[1]);
+    camera.lookAt(ep[0] + Math.sin(vy) * cp * 20, 1.22 + player.y + Math.sin(vp) * 20, ep[1] + Math.cos(vy) * cp * 20);
     return;
   }
   camera.position.lerp(new THREE.Vector3(player.x - Math.sin(y) * 9, 4.2 + player.y, player.z - Math.cos(y) * 9), 1 - Math.exp(-dt * 5));
@@ -4291,15 +4315,15 @@ function getRoom(type) {
   const banner = (x, y, z, w, ry) => { const m = new THREE.Mesh(UB, signMat); m.scale.set(w, w * 0.25, 0.05); m.position.set(x, y, z); m.rotation.y = ry || 0; L.add(m); };
   // ---- আসবাব ও জিনিসপত্র ----
   // বসার জায়গা / বিছানার জায়গা নথিভুক্ত করা (ঘরের লোকাল কোঅর্ডিনেট)
-  const mkSeat = (x, z, ry, lx, lz, lift, ex) => {
+  const mkSeat = (x, z, ry, lx, lz, lift, ex, sy) => {
     const c = Math.cos(ry), sn = Math.sin(ry), W = (a, b) => ({ x: x + a * c + b * sn, z: z - a * sn + b * c });
     const p = W(lx, lz);
-    return { x: p.x, z: p.z, ry, lift, exits: (ex || [[lx, lz + 0.9], [lx - 0.85, lz + 0.5], [lx + 0.85, lz + 0.5], [lx, lz - 0.9]]).map(e => W(e[0], e[1])) };
+    return { x: p.x, z: p.z, ry, lift, sy, exits: (ex || [[lx, lz + 0.9], [lx - 0.85, lz + 0.5], [lx + 0.85, lz + 0.5], [lx, lz - 0.9]]).map(e => W(e[0], e[1])) };
   };
   const rug = (x, z, w, d, c) => { k.b(w, 0.02, d, x, 0.012, z, c); k.b(w - 0.3, 0.025, d - 0.3, x, 0.014, z, shade(c, 1.35)); };
-  const chair = (x, z, ry, col) => { R.seats.push(mkSeat(x, z, ry, 0, REST_TUNE.sitZ, REST_TUNE.chairLift)); return F(x, z, ry, 0.5, 0.5, q => { q.b(0.46, 0.06, 0.46, 0, 0.46, 0, col); q.b(0.46, 0.45, 0.05, 0, 0.72, -0.2, col); for (const a of [-1, 1]) for (const b of [-1, 1]) q.b(0.04, 0.44, 0.04, a * 0.19, 0.22, b * 0.19, '#3a2a1c'); }); };
+  const chair = (x, z, ry, col) => { R.seats.push(mkSeat(x, z, ry, 0, REST_TUNE.sitZ, REST_TUNE.chairLift, undefined, 0.49)); return F(x, z, ry, 0.5, 0.5, q => { q.b(0.46, 0.06, 0.46, 0, 0.46, 0, col); q.b(0.46, 0.45, 0.05, 0, 0.72, -0.2, col); for (const a of [-1, 1]) for (const b of [-1, 1]) q.b(0.04, 0.44, 0.04, a * 0.19, 0.22, b * 0.19, '#3a2a1c'); }); };
   const rtable = (x, z, c) => F(x, z, 0, 1.3, 1.3, q => { q.c(0.62, 0.05, 0, 0.76, 0, c); q.c(0.07, 0.72, 0, 0.38, 0, '#444'); q.c(0.3, 0.04, 0, 0.02, 0, '#444'); });
-  const sofa = (x, z, ry, col) => { for (const sx of [-0.72, 0, 0.72]) R.seats.push(mkSeat(x, z, ry, sx, REST_TUNE.sitZ, REST_TUNE.sofaLift)); return F(x, z, ry, 2.3, 1.0, q => {
+  const sofa = (x, z, ry, col) => { for (const sx of [-0.72, 0, 0.72]) R.seats.push(mkSeat(x, z, ry, sx, REST_TUNE.sitZ, REST_TUNE.sofaLift, undefined, 0.585)); return F(x, z, ry, 2.3, 1.0, q => {
     const lt = shade(col, 1.18); q.b(2.2, 0.3, 0.9, 0, 0.28, 0, col); q.b(2.2, 0.55, 0.2, 0, 0.72, -0.38, col);
     for (const sx of [-0.72, 0, 0.72]) { q.b(0.7, 0.17, 0.72, sx, 0.5, 0.05, lt); q.b(0.66, 0.38, 0.14, sx, 0.78, -0.24, lt); }
     for (const sx of [-1.06, 1.06]) q.b(0.2, 0.5, 0.9, sx, 0.5, 0, shade(col, 0.9));
@@ -4312,7 +4336,7 @@ function getRoom(type) {
     q.b(len + 0.02, 0.05, 0.64, 0, 0.88, 0, '#3d3d42', { roughness: 0.3 }); q.b(0.6, 0.02, 0.4, -len / 4, 0.91, 0, '#9aa0a6', { metalness: 0.8 }); q.c(0.02, 0.25, -len / 4, 1.03, -0.2, '#bbb', { metalness: 0.9 });
     for (const a of [0.15, 0.45]) for (const b of [-0.12, 0.12]) q.c(0.09, 0.012, len / 4 + a - 0.3, 0.915, b, '#111'); q.b(len, 0.6, 0.35, 0, 1.9, -0.13, '#e4ddcc');
   });
-  const bed = (x, z, ry, col) => { R.beds.push(mkSeat(x, z, ry, 0, REST_TUNE.bedZ, REST_TUNE.bedLift, [[1.3, 0.2], [-1.3, 0.2], [0, 1.7], [1.3, -0.8], [-1.3, -0.8]])); return F(x, z, ry, 1.9, 2.2, q => {
+  const bed = (x, z, ry, col) => { R.beds.push(mkSeat(x, z, ry, 0, REST_TUNE.bedZ, REST_TUNE.bedLift, [[1.3, 0.2], [-1.3, 0.2], [0, 1.7], [1.3, -0.8], [-1.3, -0.8]], 0.63)); return F(x, z, ry, 1.9, 2.2, q => {
     q.b(1.9, 0.28, 2.2, 0, 0.24, 0, '#5a4030'); q.b(1.8, 0.22, 2.1, 0, 0.46, 0.02, '#f3f0ea'); q.b(1.84, 0.1, 1.3, 0, 0.58, 0.45, col); q.b(1.84, 0.14, 0.18, 0, 0.6, -0.2, shade(col, 1.25)); q.b(1.9, 0.95, 0.1, 0, 0.7, -1.1, '#5a4030');
     for (const sx of [-0.45, 0.45]) q.s(0.34, 0.1, 0.22, sx, 0.62, -0.82, '#fff');
   }); };
