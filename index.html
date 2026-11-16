@@ -819,7 +819,7 @@ function addCompound(cx, cz, gs, w, d, shop, hasGarage, enterable) {
   if (enterable) {   // সামনের দেয়ালে দরজা + দোকানের সাইনবোর্ড + ঢোকার চিহ্ন
     const ty = enterable, dcol = { home: '#6a4226', food: '#d63c2f', cloth: '#8e44ad', car: '#2c3e50', med: '#1e9e5a', bank: '#1b4f8a' }[ty];
     box(-0.75, bfz, 0.75, bfz + 0.05, 0, 2.3, '#2b2b2b', false);
-    box(-0.6, bfz, 0.6, bfz + 0.1, 0, 2.15, dcol, false);
+    box(-0.6, bfz + 0.015, 0.6, bfz + 0.125, 0, 2.15, dcol, false);
     const P = rc(0, bfz + 0.6);
     if (ty !== 'home') { const q = rc(0, bfz + 0.09); doorSigns.push({ t: ty, p: [q[0], 0.15 + 4.0, q[1]], ry: Math.atan2(S, C) }); }
     doors.push({ x: P[0], z: P[1], ox: S, oz: C, type: ty, out: rc(0, 17.5) });
@@ -3367,10 +3367,10 @@ function renderProfile() {
   ensureProfile();
   const p = curP(); if (!p) return;
   document.getElementById('pcard').classList.remove('cs-box');
-  if (!ppDraft || ppDraft.id !== p.id) ppDraft = { id: p.id, gender: p.gender, name: p.name, career: p.career || '', address: p.address || '', bio: p.about || '' };
+  if (!ppDraft || ppDraft.id !== p.id) ppDraft = { id: p.id, gender: p.gender, avatar: p.avatar || p.gender, name: p.name, career: p.career || '', address: p.address || '', bio: p.about || '' };
   const d = ppDraft;
   const box = document.getElementById('pcard'); box.innerHTML = ''; box.classList.remove('cmenu');
-  const pc = CHARACTERS.find(c => c.id === d.gender) || CHARACTERS[0];
+  const pc = CHARACTERS.find(c => c.id === d.avatar) || CHARACTERS[0];
   const xp = p.xp || 0, lvl = p.level || (Math.floor(xp / 100) + 1);
 
   const wrap = mk('div', '', 'pp-wrap');
@@ -3381,7 +3381,7 @@ function renderProfile() {
   const save = mk('button', 'SAVE', 'pp-save');
   save.onclick = () => {
     p.name = (d.name || '').trim() || p.name;
-    p.gender = d.gender;
+    p.avatar = d.avatar;
     p.career = (d.career || '').trim();
     p.address = (d.address || '').trim();
     p.about = (d.bio || '').trim().slice(0, 120);
@@ -3403,12 +3403,12 @@ function renderProfile() {
     const b = mk('button', '', 'opt'); b.style.cssText = 'padding:3px;min-width:0';
     b.append(charThumb(c, 40));
     b.onclick = () => {
-      d.gender = c.id;
+      d.avatar = c.id;
       av.innerHTML = ''; av.append(charThumb(c, 110));
       avCards.forEach(x => x.classList.remove('on')); b.classList.add('on');
       pick.style.display = 'none';
     };
-    if (c.id === d.gender) b.classList.add('on');
+    if (c.id === d.avatar) b.classList.add('on');
     return b;
   });
   pick.append(...avCards);
@@ -4380,7 +4380,7 @@ function renderLobby() {
   if (!p) return;
   activeProfile = p;
   const xp = p.xp || 0, lvl = p.level || (Math.floor(xp / 100) + 1);
-  { const av = document.querySelector('#lobby .lb-av'), c = CHARACTERS.find(x => x.id === p.gender);
+  { const av = document.querySelector('#lobby .lb-av'), c = CHARACTERS.find(x => x.id === (p.avatar || p.gender));
     if (av && c && av.dataset.cid !== c.id) { av.dataset.cid = c.id; av.innerHTML = ''; const t = charThumb(c, 48); t.style.width = t.style.height = '100%'; t.style.borderRadius = '50%'; av.append(t); } }
   document.getElementById('lb-name').textContent = p.name || 'Player';
   document.getElementById('lb-lvl').textContent = 'Level ' + lvl;
