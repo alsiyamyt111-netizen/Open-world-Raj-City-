@@ -145,7 +145,7 @@ body.driving #run,body.driving #crouch,body.driving #prone,body.driving #jump,bo
 #bars .bar{flex:1;height:14px;margin:0;border:2px solid #111;background:rgba(0,0,0,.65);border-radius:8px}
 #stf{background:linear-gradient(#7fd8ff,#1e90ff)}
 .cashl{color:#8dff8d;font-size:13px;font-weight:700;text-shadow:0 1px 2px #000}
-#wheel{width:min(340px,calc(var(--vh)*94));height:min(340px,calc(var(--vh)*94));margin:0;transform:translate(-50%,-50%);background:none;border:0;border-radius:0}
+#wheel{width:min(226.7px,calc(var(--vh)*62.7));height:min(226.7px,calc(var(--vh)*62.7));margin:0;transform:translate(-50%,-50%);background:none;border:0;border-radius:0}
 #wheel svg{width:100%;height:100%;display:block}
 #wheel .seg{cursor:pointer}#wheel .seg path{fill:#fff;stroke:#aeb4be;stroke-width:3}#wheel .seg.on path{fill:#f0b400;stroke:#fff}#wheel .cnt{fill:#1c1c20}#wheel>svg{filter:drop-shadow(0 3px 10px rgba(0,0,0,.55))}
 #crosshair{position:fixed;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;display:none;z-index:6;pointer-events:none;border:2px solid #fff;border-radius:50%;box-shadow:0 0 3px #000}
@@ -158,7 +158,7 @@ body.driving #run,body.driving #crouch,body.driving #prone,body.driving #jump,bo
 .prow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #333;font-size:13px}
 .pbox button{padding:6px 12px;border:0;border-radius:8px;background:#f0b400;color:#222;font-weight:700;font-size:13px}
 .pbox .pclose{display:block;margin:10px auto 0;background:#eee}
-#pausebtn{left:10px;top:10px;right:auto;bottom:auto;width:44px;height:44px;font-size:12px}
+#pausebtn{left:66px;top:66px;right:auto;bottom:auto;width:26px;height:26px;min-width:26px;min-height:26px;font-size:9px;border-width:1.5px}
 #wsel{left:12px;top:66px;right:auto;bottom:auto;width:48px;height:48px;font-size:12px}
 #shop{left:12px;top:122px;right:auto;bottom:auto;width:48px;height:48px;font-size:12px}
 #eyebtn{left:74px;top:132px;right:auto;bottom:auto;width:40px;height:40px;font-size:12px}
@@ -235,6 +235,14 @@ body.playing #enterb.show{display:flex!important}
 .pctl .pback { background: #e67e22; color: #fff; }
 #panel.corner .prow { flex-direction: column; align-items: stretch; gap: 4px; border: 1px solid #555; border-radius: 8px; padding: 6px; border-bottom: 1px solid #555; }
 #panel.corner .prow button { width: 100%; }
+/* ম্যাচের Resume প্যানেল: আগের Settings প্যানেলের ৩/৫ মাপ, Backpack-এর পাশে */
+#panel.resume { background: transparent; pointer-events: none; align-items: flex-start; justify-content: flex-start; padding: 66px 0 0 68px; box-sizing: border-box; }
+#panel.resume .pbox { pointer-events: auto; box-sizing: border-box; width: min(252px, calc(var(--vw)*62)); max-height: calc(var(--vh)*70); padding: 7px 8px; border-width: 1px; border-radius: 9px; font-size: 7.8px; }
+#panel.resume .pbox h3 { font-size: 9.6px; margin: 0 0 5px; }
+#panel.resume .plist { display: block; overflow-y: auto; min-height: 0; }
+#panel.resume .prow { gap: 5px; padding: 3.6px 0; font-size: 7.8px; }
+#panel.resume .pbox button { padding: 3.6px 7.2px; border-radius: 5px; font-size: 7.8px; }
+#panel.resume .pclose { display: none; }
 #bars .bar { width: 110px !important; height: 9px !important; }
 #bars .brow b svg { width: 14px; height: 14px; }
 #medbtn { left: 12px; top: 250px; right: auto; bottom: auto; width: 48px; height: 48px; font-size: 12px; padding: 0; }
@@ -2038,7 +2046,7 @@ function restStep(dt, wake) {
   if (r.phase === 'in') {
     const q = ease(Math.min(1, r.t / Math.min(r.dur, 0.9)));
     player.x = r.fx + (r.tx - r.fx) * q; player.z = r.fz + (r.tz - r.fz) * q;
-    player.yaw = r.fyaw + wrap(r.s.ry - r.fyaw) * q; r.lift = (r.s.lift + r.adj) * q;
+    player.yaw = r.fyaw + wrap(r.s.ry - r.fyaw) * q; r.lift = Math.max(0, r.s.lift + r.adj) * Math.min(1, q * 2.5);
     if (r.t >= r.dur) { r.phase = 'hold'; r.t = 0; r.sp = 1; if (!sit) r.anim = 'sleepingidle'; }
   } else if (r.phase === 'hold') {
     player.x = r.tx; player.z = r.tz; player.yaw = r.s.ry;
@@ -2049,7 +2057,7 @@ function restStep(dt, wake) {
       const want = r.s.sy + (sit ? REST_TUNE.sitHip : REST_TUNE.sleepHip) - relY - r.s.lift;
       r.adj += (Math.max(-0.3, Math.min(0.8, want)) - r.adj) * (1 - Math.exp(-dt * 6));
     }
-    r.lift = r.s.lift + r.adj;
+    r.lift = Math.max(0, r.s.lift + r.adj);
     if (!sit) {
       hp = Math.min(HP_MAX, hp + 14 * dt); armor = Math.min(100, armor + 20 * dt); hurtT = 99;
       if (!r.rested && hp >= HP_MAX && armor >= 100) { r.rested = true; toast('😴 Rested — health restored'); }
@@ -2064,7 +2072,7 @@ function restStep(dt, wake) {
     }
   } else {
     const q = ease(Math.max(0, Math.min(1, (r.t / r.dur - 0.3) / 0.7)));
-    player.x = r.tx + (r.ox - r.tx) * q; player.z = r.tz + (r.oz - r.tz) * q; r.lift = (r.s.lift + r.adj) * (1 - q);
+    player.x = r.tx + (r.ox - r.tx) * q; player.z = r.tz + (r.oz - r.tz) * q; r.lift = Math.max(0, r.s.lift + r.adj) * (1 - q);
     if (r.t >= r.dur) { rest = null; spd = 0; }
   }
 }
@@ -3915,8 +3923,8 @@ function renderPanel() {
     });
   }
 }
-function openPanel(fn, corner) { if (panelEl.style.display !== 'flex') navPush(); panelEl.classList.toggle('corner', !!corner); panelFn = fn; paused = !corner; fireHeld = false; atkHeld = false; jx = 0; jy = 0; panelEl.style.display = 'flex'; renderPanel(); }
-function closePanelRaw() { panelFn = null; paused = false; panelEl.style.display = 'none'; panelEl.classList.remove('corner'); }
+function openPanel(fn, corner, resume) { if (panelEl.style.display !== 'flex') navPush(); panelEl.classList.toggle('corner', !!corner); panelEl.classList.toggle('resume', !!resume); panelFn = fn; paused = !corner; fireHeld = false; atkHeld = false; jx = 0; jy = 0; panelEl.style.display = 'flex'; renderPanel(); }
+function closePanelRaw() { panelFn = null; paused = false; panelEl.style.display = 'none'; panelEl.classList.remove('corner', 'resume'); }
 function closePanel() { if (panelEl.style.display === 'flex') navPop(); closePanelRaw(); }
 let navDepth = 0, navIgnore = 0;
 function navPush() { history.pushState({ g: 1 }, ''); navDepth++; }
@@ -4001,10 +4009,9 @@ function newGameReset() {
   Object.assign(p, { hp: 100, armor: 100, kills: 0, deaths: 0, playSec: 0 });
   saveProfiles(); renderLobby();
 }
-bindTap(document.getElementById('pausebtn'), () => openPanel(() => ({ title: '⚙ Settings', rows: [
-  { t: 'Resume game', b: '▶ Resume', f: closePanel }, { t: 'Return to lobby', b: '🏠 Lobby', f: () => returnToLobby() }, { t: 'Health bar', b: hudPref('hp') ? 'Hide' : 'Show', f: () => setHud('hp', !hudPref('hp')) }, { t: 'Water bar', b: hudPref('ep') ? 'Hide' : 'Show', f: () => setHud('ep', !hudPref('ep')) }, { t: 'Move buttons', b: 'Customize', f: () => { closePanel(); toggleEdit(); } },
-  { t: '🏦 Bank (cash 💵' + cash + ' · Bank 💵' + bank + ')', b: 'Open', f: () => openPanel(bankPanel) },
-  { t: '🗑 Erase save & start a new game', b: 'New game', f: newGameReset }] })));
+bindTap(document.getElementById('pausebtn'), () => openPanel(() => ({ title: 'Resume', rows: [
+  { t: 'Save current game', b: '💾 Save', f: () => { saveProgress(); toast('💾 Game saved'); closePanel(); } }
+] }), false, true));
 bindTap(document.getElementById('aim'), () => { if (drv) return; aimOn = !aimOn; document.getElementById('aim').classList.toggle('on', aimOn); });
 bindTap(document.getElementById('nade'), () => { if (!pDead && !drv) throwGrenade(); });
 bindTap(document.getElementById('reload'), () => { if (!pDead && !drv) startReload(); });
@@ -4149,7 +4156,7 @@ st = (t > 0.3 && t < 0.85) ? 'walk' : 'idle';
 }
 e.door.pivot.rotation.y = -sg * 1.15 * eio(a);
 player.x = p[0]; player.z = p[1]; player.y = 0; player.yaw = yaw;
-if (char.mixer) { charAnimTo(st); char.mixer.update(dt); e.lift = (e.lift || 0) + ((useAnim && st !== 'walk' ? CAR_TUNE.seatLift : 0) - (e.lift || 0)) * (1 - Math.exp(-dt * 10)); char.group.position.set(p[0], e.lift, p[1]); char.group.rotation.set(0, yaw, 0); }
+if (char.mixer) { charAnimTo(st); char.mixer.update(dt); e.lift = useAnim && st !== 'walk' ? CAR_TUNE.seatLift : 0; char.group.position.set(p[0], e.lift, p[1]); char.group.rotation.set(0, yaw, 0); }
 else { char.group.position.set(p[0], 0, p[1]); char.group.rotation.set(0, yaw, 0); }
 if (!done) return;
 c.g.remove(e.door.pivot); ent = null;
