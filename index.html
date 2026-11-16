@@ -314,18 +314,56 @@ body.driving #run,body.driving #crouch,body.driving #prone,body.driving #jump,bo
 .cs-tag { align-self: flex-end; font-size: 11px; color: #7fd8ff; font-style: italic; font-weight: 700; }
 .cs-card.on .cs-tag { color: #ffd400; }
 
-/* লবি (landscape): আপনার দাগ অনুযায়ী জায়গা */
-#lobby .p-profile { right: 1%; top: 3%; display: flex; }            /* ডান উপরে প্রোফাইল */
-#lobby .p-settings { left: 1%; top: 3%; font-size: 26px; padding: 0; }   /* বাম উপরে গিয়ার */
-#lobby .p-balance { left: 50%; top: 3%; transform: translateX(-50%); font-size: 15px; color: #fff; background: rgba(230,90,90,.9); padding: 3px 10px; border-radius: 12px; }
-#lobby .p-balance b { color: #6dff6d; margin-left: 6px; }
-#lobby .p-invite { right: 1%; top: 19%; font-size: 15px; color: #fff; }
-#lobby .p-store { left: 1%; top: 22%; font-size: 26px; color: #ff6b6b; }
-#lobby .p-char { left: 1%; top: 37%; font-size: 24px; color: #fff; }
-#lobby .p-vault { left: 1%; top: 52%; font-size: 24px; color: #f5c451; }
-#lobby .p-mission { left: 1%; top: 66%; font-size: 24px; color: #fff; }
-#lobby .p-mods { right: 14%; bottom: 0; font-size: 36px; color: #fff; background: #fff; color: #111; padding: 10px 22px; border-radius: 6px 6px 0 0; }
-#lobby .p-start { right: 0; bottom: 0; font-size: 30px; color: #fff; background: #111; padding: 12px 24px; border-radius: 6px 0 0 0; }
+/* ===== লবি: প্রফেশনাল গ্লাস ডিজাইন ===== */
+#lobby .lbx { position: absolute; z-index: 2; display: flex; align-items: center; margin: 0; padding: 0; color: #fff; cursor: pointer; font-family: 'Trebuchet MS', 'Hind Siliguri', sans-serif; -webkit-tap-highlight-color: transparent; box-sizing: border-box; transition: transform .12s, filter .12s; }
+#lobby .lbx:active { transform: scale(.95); filter: brightness(1.25); }
+#lobby .lbx svg { display: block; }
+#lobby .glass { background: linear-gradient(135deg, rgba(22,30,48,.74), rgba(8,10,18,.56)); border: 1px solid rgba(255,255,255,.24); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); box-shadow: 0 4px 14px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.14); }
+
+/* বাম উপরে সেটিংস */
+#lobby .lb-gearbtn { left: max(2%, env(safe-area-inset-left)); top: 3%; width: clamp(38px, 12vh, 46px); height: clamp(38px, 12vh, 46px); border-radius: 50%; justify-content: center; }
+#lobby .lb-gearbtn svg { width: 56%; height: 56%; }
+
+/* বাম মেনু */
+#lobby .lb-menu { position: absolute; z-index: 2; left: max(2%, env(safe-area-inset-left)); top: 22%; display: flex; flex-direction: column; gap: clamp(6px, 2vh, 10px); }
+#lobby .lb-mb { position: relative; width: clamp(128px, 24vw, 176px); height: clamp(36px, 12vh, 50px); padding: 0 12px 0 6px; gap: 10px; border-radius: 12px; font-size: clamp(13px, 4.3vh, 18px); font-weight: 800; letter-spacing: .4px; text-shadow: 0 1px 2px #000; }
+#lobby .lb-mb::before { content: ''; position: absolute; left: 0; top: 18%; bottom: 18%; width: 3px; border-radius: 3px; background: var(--c); box-shadow: 0 0 8px var(--c); }
+#lobby .lb-mb .ic { height: 76%; aspect-ratio: 1; border-radius: 9px; background: linear-gradient(145deg, var(--c), color-mix(in srgb, var(--c) 55%, #000)); display: flex; align-items: center; justify-content: center; color: #101010; flex: none; box-shadow: 0 2px 6px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.4); }
+#lobby .lb-mb .ic svg { width: 62%; height: 62%; }
+
+/* উপরে মাঝে ব্যালেন্স */
+#lobby .lb-bal { left: 50%; top: 3%; transform: translateX(-50%); gap: 8px; height: clamp(32px, 10vh, 40px); padding: 0 16px 0 6px; border-radius: 30px; border-color: rgba(245,196,0,.7); }
+#lobby .lb-bal:active { transform: translateX(-50%); filter: none; }
+#lobby .lb-bal svg { width: clamp(22px, 7vh, 28px); height: clamp(22px, 7vh, 28px); }
+#lobby .lb-bal small { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #bfc8d8; line-height: 1; }
+#lobby .lb-bal b { display: block; font-size: clamp(15px, 5vh, 19px); font-weight: 900; color: #6dff6d; line-height: 1.1; text-shadow: 0 1px 3px #000; margin: 0; }
+
+/* ডান উপরে প্রোফাইল */
+#lobby .lb-pf { right: max(2%, env(safe-area-inset-right)); top: 3%; gap: 10px; padding: 5px 16px 5px 5px; border-radius: 40px; }
+#lobby .lb-pf .lb-av { width: clamp(38px, 12vh, 48px); height: clamp(38px, 12vh, 48px); border-radius: 50%; border: 2px solid #f5c400; box-shadow: 0 0 10px rgba(245,196,0,.55); background: radial-gradient(circle at 35% 30%, #2f4a78, #111a2c); display: flex; align-items: center; justify-content: center; font-size: clamp(18px, 6vh, 24px); flex: none; }
+#lobby .lb-pf .lb-av { overflow: hidden; padding: 0; }
+#lobby .lb-pf .lb-av > div { border-radius: 50% !important; background: transparent !important; }
+#lobby .lb-pf .lb-info { min-width: clamp(84px, 16vw, 120px); }
+#lobby .lb-pf .lb-name { font-size: clamp(13px, 4.2vh, 16px); font-weight: 800; color: #fff; line-height: 1.15; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#lobby .lb-pf .lb-lvl { display: inline-block; margin-top: 2px; font-size: 11px; font-weight: 800; color: #1b1408; background: linear-gradient(#ffe27a, #f5b800); padding: 1px 8px; border-radius: 10px; }
+#lobby .lb-pf .lb-xp { width: 100%; height: 5px; background: rgba(0,0,0,.55); border: 0; border-radius: 4px; overflow: hidden; margin-top: 4px; }
+#lobby .lb-pf .lb-xp i { background: linear-gradient(90deg, #f5c400, #fff1a8); }
+
+/* Invite */
+#lobby .lb-inv { right: max(2%, env(safe-area-inset-right)); top: 25%; height: clamp(32px, 10vh, 40px); padding: 0 14px 0 10px; gap: 8px; border-radius: 20px; font-size: clamp(12px, 3.8vh, 15px); font-weight: 800; }
+#lobby .lb-inv svg { width: 18px; height: 18px; color: #7fd8ff; }
+
+/* নিচে ডানে Mods + Start */
+#lobby .lb-bot { position: absolute; z-index: 2; right: max(2%, env(safe-area-inset-right)); bottom: 5%; display: flex; align-items: flex-end; gap: 10px; }
+#lobby .lb-bot .lbx { position: relative; }
+#lobby .lb-mods { height: clamp(40px, 13vh, 54px); padding: 0 18px; gap: 8px; border-radius: 14px; font-size: clamp(14px, 4.6vh, 19px); font-weight: 800; }
+#lobby .lb-mods svg { width: 1.2em; height: 1.2em; color: #ffd400; }
+#lobby .lb-start { height: clamp(48px, 16vh, 66px); padding: 0 clamp(22px, 5vw, 38px); gap: 10px; border-radius: 16px; border: 2px solid #fff3b8; background: linear-gradient(180deg, #ffe680 0%, #f5b800 55%, #c98a00 100%); color: #2a1a00; font-size: clamp(18px, 6.4vh, 26px); font-weight: 900; font-style: italic; letter-spacing: 1.5px; text-shadow: 0 1px 0 rgba(255,255,255,.55); box-shadow: 0 5px 0 #8a5d00, 0 8px 20px rgba(0,0,0,.5); animation: lbPulse 2s ease-in-out infinite; overflow: hidden; }
+#lobby .lb-start svg { width: 1em; height: 1em; }
+#lobby .lb-start::after { content: ''; position: absolute; top: 0; bottom: 0; width: 36%; left: -50%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.65), transparent); transform: skewX(-20deg); animation: lbShine 2.8s ease-in-out infinite; }
+#lobby .lb-start:active { transform: translateY(3px); box-shadow: 0 2px 0 #8a5d00, 0 4px 12px rgba(0,0,0,.5); filter: brightness(1.08); }
+@keyframes lbPulse { 0%, 100% { box-shadow: 0 5px 0 #8a5d00, 0 8px 20px rgba(0,0,0,.5), 0 0 0 rgba(255,210,80,0); } 50% { box-shadow: 0 5px 0 #8a5d00, 0 8px 20px rgba(0,0,0,.5), 0 0 22px rgba(255,210,80,.75); } }
+@keyframes lbShine { 0% { left: -50%; } 55%, 100% { left: 130%; } }
 /* ছোট বর্গাকার ব্যাকপ্যাক: তালিকা ভেতরে স্ক্রল */
 #panel.corner .pbox { width: calc(210px * var(--ps, 1)) !important; max-height: calc(230px * var(--ps, 1)) !important; font-size: calc(11px * var(--ps, 1)); padding: 6px 8px; }
 #panel.corner .pbox h3 { font-size: calc(12px * var(--ps, 1)); margin: 0 0 4px; }
@@ -360,25 +398,27 @@ body.driving #run,body.driving #crouch,body.driving #prone,body.driving #jump,bo
 </div>
 <div id="lobby" class="scr">
   <div id="lb-drag" style="position:absolute;inset:0;z-index:0"></div>
-  <div class="lm p-profile" role="button">
-    <div class="lb-prof">
-      <div class="lb-av">🎧</div>
-      <div class="lb-info">
-        <div class="lb-name" id="lb-name">Player</div>
-        <div class="lb-lvl" id="lb-lvl">Level 1</div>
-        <div class="lb-xp"><i id="lb-xp" style="width:0%"></i></div>
-      </div>
+  <button class="lbx glass lb-gearbtn p-settings" id="lb-settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+  <div class="lbx glass lb-bal p-balance"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5" fill="#f5c400" stroke="#b88700" stroke-width="1.5"/><circle cx="12" cy="12" r="7.5" fill="none" stroke="#b88700" stroke-width="1"/><text x="12" y="16.3" text-anchor="middle" font-size="11" font-weight="900" fill="#7a5400" font-family="sans-serif">$</text></svg><div><small>Balance</small><b id="lb-cash">$0</b></div></div>
+  <div class="lbx glass lb-pf p-profile" role="button">
+    <div class="lb-av">🎧</div>
+    <div class="lb-info">
+      <div class="lb-name" id="lb-name">Player</div>
+      <div class="lb-lvl" id="lb-lvl">Level 1</div>
+      <div class="lb-xp"><i id="lb-xp" style="width:0%"></i></div>
     </div>
   </div>
-  <div class="lm p-balance">Balance <b id="lb-cash">$0</b></div>
-  <button class="lm p-settings" id="lb-settings" aria-label="Settings">⚙</button>
-  <button class="lm p-invite lb-soon">Invite</button>
-  <button class="lm p-store" id="lb-store">Store</button>
-  <button class="lm p-char" id="lb-char">Character</button>
-  <button class="lm p-vault lb-soon">Vault</button>
-  <button class="lm p-mission lb-soon">Mission</button>
-  <button class="lm p-mods lb-soon">Mods</button>
-  <button class="lm p-start" id="lb-go">Start</button>
+  <button class="lbx glass lb-inv p-invite lb-soon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6.5 7-6.5s7 2.5 7 6.5"/><path d="M19 8v6M16 11h6"/></svg>Invite</button>
+  <div class="lb-menu">
+    <button class="lbx glass lb-mb p-store" id="lb-store" style="--c:#ff6b6b"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span>Store</button>
+    <button class="lbx glass lb-mb p-char" id="lb-char" style="--c:#4fc3f7"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></span>Character</button>
+    <button class="lbx glass lb-mb p-vault lb-soon" style="--c:#f5c451"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.3"/></svg></span>Vault</button>
+    <button class="lbx glass lb-mb p-mission lb-soon" style="--c:#7be07b"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg></span>Mission</button>
+  </div>
+  <div class="lb-bot">
+    <button class="lbx glass lb-mods p-mods lb-soon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8 6.2 21l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6z"/></svg>Mods</button>
+    <button class="lbx lb-start p-start" id="lb-go"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>Start</button>
+  </div>
   <div class="lb-msg" id="lb-msg"></div>
 </div>
 <div id="start" class="scr" style="display:none">
@@ -462,7 +502,7 @@ body.driving #run,body.driving #crouch,body.driving #prone,body.driving #jump,bo
 <div id="crosshair"></div><div id="flash"></div><div id="toast"></div><div id="panel"></div>
 <button id="gear" class="act">⚙</button>
 <div id="editbar"><div id="edtxt">Drag to move · tap to select</div><div class="row"><label>Size <input id="szr" type="range" min="0.5" max="2" step="0.05" value="1"></label><label>Opacity <input id="opr" type="range" min="0.3" max="1" step="0.05" value="1"></label></div><div class="row"><button id="edflip">⇅ Flip</button><button id="edreset" style="background:#e67e22;color:#fff">Reset</button><button id="edsave" style="background:#2ecc71;color:#fff">✔ Save</button></div></div>
-<div id="bigmap"><canvas id="bm"></canvas><div id="bmbar"><span id="bmtxt">Tap the map to set a destination</span><button id="bmclear" style="background:#e67e22;color:#fff">Clear mark</button><button id="bmclose" style="background:#fff">◀ Back</button></div></div>
+<div id="bigmap"><canvas id="bm"></canvas><div id="bmbar"><span id="bmtxt">Tap the map to set a destination</span><button id="bmin" style="background:#2ecc71;color:#fff;font-weight:bold">＋</button><button id="bmout" style="background:#2ecc71;color:#fff;font-weight:bold">－</button><button id="bmme" style="background:#1f7ae0;color:#fff">📍 Me</button><button id="bmplaces" style="background:#f1c40f;color:#222">⭐ Places</button><button id="bmclear" style="background:#e67e22;color:#fff">Clear mark</button><button id="bmclose" style="background:#fff">◀ Back</button></div></div>
 
 <script type="module">
 import * as THREE from 'three';
@@ -509,9 +549,9 @@ const MODEL_YAW = 0;          // চরিত্র উল্টো দিকে
 // ---------- সেটআপ ----------
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x8fb6e0);
-scene.fog = new THREE.Fog(0x8fb6e0, 90, 280);
+scene.fog = new THREE.Fog(0x8fb6e0, 110, 460);
 
-const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 400);
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 750);
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.domElement.id = 'game';
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
@@ -753,34 +793,253 @@ function finalizeCompounds() {
   mkI(new THREE.SphereGeometry(1, 7, 5), pm, compPlants, false);
 }
 
-function buildWorld() {
-  const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(MAP * 2, MAP * 2),
-    new THREE.MeshStandardMaterial({ map: grassTex, roughness: 1 })
-  );
-  ground.rotation.x = -Math.PI / 2;
-  ground.receiveShadow = true;
-  scene.add(ground);
 
-  for (let i = -5; i <= 5; i++) {
-    const p = i * SPACING;
-    roadCenters.push(p);
-    const h = new THREE.Mesh(
-      new THREE.PlaneGeometry(MAP * 2, ROAD_W),
-      roadMats.push(new THREE.MeshStandardMaterial({ map: roadTexH, roughness: 0.95 })) && roadMats[roadMats.length - 1]
-    );
-    h.rotation.x = -Math.PI / 2; h.position.set(0, 0.02, p); h.receiveShadow = true;
-    const v = new THREE.Mesh(
-      new THREE.PlaneGeometry(ROAD_W, MAP * 2),
-      roadMats.push(new THREE.MeshStandardMaterial({ map: roadTexV, roughness: 0.95 })) && roadMats[roadMats.length - 1]
-    );
-    v.rotation.x = -Math.PI / 2; v.position.set(p, 0.03, 0); v.receiveShadow = true;
-    scene.add(h, v);
+// ================= দ্বীপ: ভূমি, দুই শহর, বন্দর, পাহাড়ি হাইওয়ে =================
+const CITIES = [
+  { name: 'City 1', bn: 'শহর ১', ox: 0, oz: 0, nx: 15, nz: 10 },      // ৬০০×৪০০ মি
+  { name: 'City 2', bn: 'শহর ২', ox: 1250, oz: -380, nx: 12, nz: 7 }  // ৫০০×৩০০ মি
+];
+for (const C of CITIES) {
+  C.kx0 = -Math.floor(C.nx / 2); C.kz0 = -Math.floor(C.nz / 2);
+  C.x0 = C.ox + C.kx0 * SPACING - ROAD_W / 2; C.x1 = C.ox + (C.kx0 + C.nx) * SPACING + ROAD_W / 2;
+  C.z0 = C.oz + C.kz0 * SPACING - ROAD_W / 2; C.z1 = C.oz + (C.kz0 + C.nz) * SPACING + ROAD_W / 2;
+  C.cx = (C.x0 + C.x1) / 2; C.cz = (C.z0 + C.z1) / 2;
+}
+const PORT = { cx: 0, cz: 520, x0: -50, x1: 50, z0: 470, z1: 570 };   // ১০০×১০০ মি
+const MX0 = -470, MX1 = 1710, MZ0 = -740, MZ1 = 720;                  // দুনিয়ার সীমা
+const HW_W = 16;                                                      // ৪ লেন হাইওয়ের প্রস্থ
+const hwElev = t => 34 * Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, t))), 1.5);
+function makePoly(ctrl) {   // Catmull-Rom → ঘন বিন্দু + আর্ক-দৈর্ঘ্য
+  const pts = [], P = ctrl;
+  for (let i = 0; i < P.length - 1; i++) {
+    const p0 = P[Math.max(0, i - 1)], p1 = P[i], p2 = P[i + 1], p3 = P[Math.min(P.length - 1, i + 2)];
+    const n = Math.max(2, Math.round(Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) / 8));
+    for (let k = 0; k < n; k++) {
+      const t = k / n, t2 = t * t, t3 = t2 * t, f = (a, b, c, d) => 0.5 * ((2 * b) + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (-a + 3 * b - 3 * c + d) * t3);
+      pts.push({ x: f(p0[0], p1[0], p2[0], p3[0]), z: f(p0[1], p1[1], p2[1], p3[1]), s: 0 });
+    }
   }
+  pts.push({ x: P[P.length - 1][0], z: P[P.length - 1][1], s: 0 });
+  let s = 0; for (let i = 1; i < pts.length; i++) { s += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].z - pts[i - 1].z); pts[i].s = s; }
+  return { pts, len: s };
+}
+const C1 = CITIES[0], C2 = CITIES[1];
+const HWY = makePoly([[C1.ox + (C1.kx0 + C1.nx) * SPACING, 0], [480, 70], [640, -70], [790, -240], [900, -350], [C2.ox + C2.kx0 * SPACING, C2.oz]]);
+const PRD = makePoly([[0, C1.oz + (C1.kz0 + C1.nz) * SPACING], [0, 300], [-60, 385], [-25, 440], [0, PORT.z0], [0, PORT.cz]]);
+const rd = (x, z, x0, x1, z0, z1) => Math.hypot(Math.max(x0 - x, 0, x - x1), Math.max(z0 - z, 0, z - z1));
+function nearPoly(P, x, z) {
+  let bd = 1e9, bs = 0; const a = P.pts;
+  for (let i = 0; i < a.length - 1; i++) {
+    const A = a[i], B = a[i + 1], dx = B.x - A.x, dz = B.z - A.z, l2 = dx * dx + dz * dz || 1;
+    let t = ((x - A.x) * dx + (z - A.z) * dz) / l2; t = t < 0 ? 0 : t > 1 ? 1 : t;
+    const d = Math.hypot(x - (A.x + dx * t), z - (A.z + dz * t));
+    if (d < bd) { bd = d; bs = A.s + (B.s - A.s) * t; }
+  }
+  return { d: bd, s: bs };
+}
+const hsh = (x, y) => { const h = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return h - Math.floor(h); };
+const vnz = (x, y) => { const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy, u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy);
+  return hsh(ix, iy) * (1 - u) * (1 - v) + hsh(ix + 1, iy) * u * (1 - v) + hsh(ix, iy + 1) * (1 - u) * v + hsh(ix + 1, iy + 1) * u * v; };
+const fbmz = (x, y) => { let a = 0.5, s = 0; for (let i = 0; i < 5; i++) { s += a * vnz(x, y); x = x * 2.03 + 17; y = y * 2.03 + 9; a *= 0.5; } return s; };
+function rawH(x, z) {
+  let dC = 1e9, cover = 0;
+  for (const c of CITIES) { const d = rd(x, z, c.x0, c.x1, c.z0, c.z1); dC = Math.min(dC, d); cover = Math.max(cover, 1 - d / 170); }
+  const dP = rd(x, z, PORT.x0, PORT.x1, PORT.z0, PORT.z1); dC = Math.min(dC, dP); cover = Math.max(cover, 1 - dP / 60);
+  const h1 = nearPoly(HWY, x, z), h2 = nearPoly(PRD, x, z);
+  cover = Math.max(cover, 1 - h1.d / 330, 1 - h2.d / 150);
+  const n = fbmz(x / 180, z / 180), ridge = 1 - Math.abs(2 * fbmz(x / 260 + 50, z / 260) - 1);
+  let h = 70 * (0.55 * n + 0.6 * ridge * ridge) * sstep(60, 220, dC) * sstep(30, 170, h2.d);
+  const w1 = 1 - sstep(15, 55, h1.d); h = h * (1 - w1) + hwElev(h1.s / HWY.len) * w1;
+  const w2 = 1 - sstep(12, 45, h2.d); h = h * (1 - w2);
+  return -9 + (h + 9) * sstep(0, 0.28, cover);
+}
+const TS = 6, TNX = Math.round((MX1 - MX0) / TS) + 1, TNZ = Math.round((MZ1 - MZ0) / TS) + 1;
+const HM = new Float32Array(TNX * TNZ);
+for (let j = 0; j < TNZ; j++) for (let i = 0; i < TNX; i++) HM[j * TNX + i] = rawH(MX0 + i * TS, MZ0 + j * TS);
+function terrainAt(x, z) {
+  const fx = (x - MX0) / TS, fz = (z - MZ0) / TS;
+  if (fx < 0 || fz < 0 || fx > TNX - 1.001 || fz > TNZ - 1.001) return -9;
+  const i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j, k = j * TNX + i;
+  return HM[k] * (1 - u) * (1 - v) + HM[k + 1] * u * (1 - v) + HM[k + TNX] * (1 - u) * v + HM[k + TNX + 1] * u * v;
+}
+function landCol(h, ny, out) {   // উচ্চতা ও ঢাল অনুযায়ী রঙ (ম্যাপ ও ৩ডি দুইয়েই এক)
+  const L = (a, b, t) => a + (b - a) * t;
+  let r, g, b;
+  if (h < -0.8) { const t = Math.min(1, (-h - 0.8) / 7); r = L(120, 28, t); g = L(190, 105, t); b = L(205, 150, t); }
+  else if (h < 0.7) { r = 226; g = 214; b = 165; }
+  else if (h < 14) { const t = h / 14; r = L(150, 125, t); g = L(196, 168, t); b = L(104, 84, t); }
+  else if (h < 34) { const t = (h - 14) / 20; r = L(125, 92, t); g = L(168, 135, t); b = L(84, 68, t); }
+  else if (h < 52) { const t = (h - 34) / 18; r = L(92, 140, t); g = L(135, 128, t); b = L(68, 112, t); }
+  else { const t = Math.min(1, (h - 52) / 20); r = L(140, 196, t); g = L(128, 190, t); b = L(112, 180, t); }
+  if (h > 0.7 && ny < 0.8) { const t = Math.min(1, (0.8 - ny) / 0.25); r = L(r, 128, t); g = L(g, 118, t); b = L(b, 106, t); }
+  out[0] = r; out[1] = g; out[2] = b;
+}
+function buildTerrain() {
+  const NX = TNX, NZ = TNZ, pos = new Float32Array(NX * NZ * 3), col = new Float32Array(NX * NZ * 3), idx = new Uint32Array((NX - 1) * (NZ - 1) * 6);
+  for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) { const k = (j * NX + i) * 3; pos[k] = MX0 + i * TS; pos[k + 1] = Math.max(HM[j * NX + i], -9) - 0.06; pos[k + 2] = MZ0 + j * TS; }
+  let q = 0;
+  for (let j = 0; j < NZ - 1; j++) for (let i = 0; i < NX - 1; i++) { const a = j * NX + i, b = a + 1, c = a + NX, d = c + 1; idx.set([a, c, b, b, c, d], q); q += 6; }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setIndex(new THREE.BufferAttribute(idx, 1)); g.computeVertexNormals();
+  const nrm = g.attributes.normal.array, tmp = [0, 0, 0];
+  for (let k = 0; k < NX * NZ; k++) { landCol(HM[k], nrm[k * 3 + 1], tmp); col[k * 3] = tmp[0] / 255; col[k * 3 + 1] = tmp[1] / 255; col[k * 3 + 2] = tmp[2] / 255; }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }));
+  m.receiveShadow = true; m.frustumCulled = false; scene.add(m);
+  const sea = new THREE.Mesh(new THREE.PlaneGeometry(7000, 7000), new THREE.MeshStandardMaterial({ color: 0x2f88ad, roughness: 0.25, metalness: 0.15 }));
+  sea.rotation.x = -Math.PI / 2; sea.position.set(600, -1, -10); scene.add(sea);
+}
+function ribbon(P, w, y0, tex, vLen, elev) {
+  const a = P.pts, pos = [], uv = [], ix = [];
+  for (let i = 0; i < a.length; i++) {
+    const p = a[i], q = a[Math.min(a.length - 1, i + 1)], o = a[Math.max(0, i - 1)];
+    let tx = q.x - o.x, tz = q.z - o.z; const l = Math.hypot(tx, tz) || 1; tx /= l; tz /= l;
+    const y = (elev ? elev(p.s / P.len) : 0) + y0;
+    pos.push(p.x - tz * w / 2, y, p.z + tx * w / 2, p.x + tz * w / 2, y, p.z - tx * w / 2);
+    uv.push(0, p.s / vLen, 1, p.s / vLen);
+    if (i < a.length - 1) { const k = i * 2; ix.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(ix); g.computeVertexNormals();
+  const m = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+  roadMats.push(m);
+  const mesh = new THREE.Mesh(g, m); mesh.receiveShadow = true; mesh.frustumCulled = false; scene.add(mesh);
+}
+function hwyTex(lanes) {
+  const c = document.createElement('canvas'); c.width = 128; c.height = 256; const x = c.getContext('2d');
+  x.fillStyle = '#3b3e44'; x.fillRect(0, 0, 128, 256);
+  x.fillStyle = '#f2f2f2'; x.fillRect(7, 0, 3, 256); x.fillRect(118, 0, 3, 256);
+  if (lanes === 4) {
+    x.fillStyle = '#f5c518'; x.fillRect(61, 0, 2, 256); x.fillRect(66, 0, 2, 256);
+    x.fillStyle = '#f2f2f2'; for (const lx of [31, 96]) for (const y of [20, 148]) x.fillRect(lx, y, 2, 40);
+  } else { x.fillStyle = '#f2f2f2'; for (const y of [20, 148]) x.fillRect(63, y, 2, 40); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+}
 
-  for (let kx = -4; kx <= 3; kx++) {
-    for (let kz = -4; kz <= 3; kz++) {
-      const cx = kx * SPACING + 20, cz = kz * SPACING + 20;
+function strip3D(P, l, r, yb, yt, color, elev, rough) {   // রাস্তার পাশ বরাবর ৩ডি পাটা (ভিত, কার্ব, ডিভাইডার)
+  const a = P.pts, pos = [], ix = [], faces = [[[l, yt], [r, yt]], [[l, yb], [l, yt]], [[r, yt], [r, yb]]];
+  faces.forEach((f, fi) => {
+    const base = pos.length / 3;
+    for (let i = 0; i < a.length; i++) {
+      const p = a[i], q = a[Math.min(a.length - 1, i + 1)], o = a[Math.max(0, i - 1)];
+      let tx = q.x - o.x, tz = q.z - o.z; const L = Math.hypot(tx, tz) || 1; tx /= L; tz /= L;
+      const e = elev ? elev(p.s / P.len) : 0;
+      for (const [off, y] of f) pos.push(p.x - tz * off, e + y, p.z + tx * off);
+      if (i < a.length - 1) { const k = base + i * 2; ix.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); }
+    }
+  });
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(ix); g.computeVertexNormals();
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color, roughness: rough || 0.9, side: THREE.DoubleSide }));
+  m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; scene.add(m);
+}
+function hwy3D() {
+  strip3D(HWY, -HW_W / 2 - 0.7, HW_W / 2 + 0.7, -1.5, 0.0, 0x77797d, hwElev);     // রাস্তার ভিত (পাহাড়ে কংক্রিটের স্ল্যাব)
+  strip3D(HWY, -HW_W / 2 - 0.7, -HW_W / 2, 0, 0.3, 0xb9b9b4, hwElev);               // দুই পাশের কার্ব
+  strip3D(HWY, HW_W / 2, HW_W / 2 + 0.7, 0, 0.3, 0xb9b9b4, hwElev);
+  strip3D(HWY, -0.45, 0.45, 0, 0.95, 0xc8c8c2, hwElev);                             // মাঝের কংক্রিট ডিভাইডার
+  strip3D(HWY, -0.2, 0.2, 0.95, 1.1, 0xf5c518, hwElev);                             // ডিভাইডারের মাথায় হলুদ ফিতা
+  // স্ট্রিটলাইট (ডিভাইডারের ওপর, দুই দিকে হাত)
+  const L = []; for (let i = 6; i < HWY.pts.length - 6; i += 6) { const p = HWY.pts[i], q = HWY.pts[i + 1]; L.push([p.x, hwElev(p.s / HWY.len), p.z, Math.atan2(q.x - p.x, q.z - p.z)]); }
+  const mk = (geo, mat, fn) => { const im = new THREE.InstancedMesh(geo, mat, L.length), M = new THREE.Matrix4(), Q = new THREE.Quaternion(); L.forEach((l, i) => { Q.setFromAxisAngle(UPV, l[3]); const [dx, dy, dz, sc] = fn(l); M.compose(new THREE.Vector3(l[0] + dx, l[1] + dy, l[2] + dz), Q, new THREE.Vector3(1, sc || 1, 1)); im.setMatrixAt(i, M); }); im.frustumCulled = false; im.castShadow = true; scene.add(im); };
+  const steel = new THREE.MeshStandardMaterial({ color: 0x555a60, roughness: 0.5, metalness: 0.6 });
+  mk(new THREE.CylinderGeometry(0.1, 0.14, 1, 8), steel, () => [0, 4.6, 0, 8]);
+  mk(new THREE.BoxGeometry(9, 0.15, 0.15), steel, () => [0, 8.5, 0]);
+  const bulb = new THREE.MeshBasicMaterial({ color: 0xfff1b0 });
+  for (const sx of [-4.2, 4.2]) mk(new THREE.BoxGeometry(0.9, 0.12, 0.35), bulb, l => { const c = Math.cos(l[3]), s = Math.sin(l[3]); return [c * sx, 8.4, -s * sx]; });
+}
+function buildVegetation() {
+  let sd = 20260; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const trees = [], pines = [], bushes = [], stems = [], plumes = [], STEP = 8;
+  for (let z = MZ0 + 20; z < MZ1 - 20; z += STEP) for (let x = MX0 + 20; x < MX1 - 20; x += STEP) {
+    const px = x + (rnd() - 0.5) * STEP, pz = z + (rnd() - 0.5) * STEP, h = terrainAt(px, pz);
+    if (h < 1.0 || h > 54) continue;
+    if (rd(px, pz, PORT.x0, PORT.x1, PORT.z0, PORT.z1) < 22) continue;
+    let near = false; for (const c of CITIES) if (rd(px, pz, c.x0, c.x1, c.z0, c.z1) < 20) { near = true; break; }
+    if (near || nearPoly(HWY, px, pz).d < 24 || nearPoly(PRD, px, pz).d < 16) continue;
+    if (Math.hypot(terrainAt(px + 3, pz) - terrainAt(px - 3, pz), terrainAt(px, pz + 3) - terrainAt(px, pz - 3)) / 6 > 0.8) continue;
+    const zn = fbmz(px / 110 + 300, pz / 110 - 70), dens = fbmz(px / 50, pz / 50 + 500), r = rnd();
+    if (dens < 0.38 || zn < 0.36) continue;
+    if (zn < 0.44) {                              // কাশফুলের ঝাড়
+      const n = 4 + Math.floor(rnd() * 3);
+      for (let k = 0; k < n; k++) { const ox = (rnd() - 0.5) * 1.1, oz = (rnd() - 0.5) * 1.1, s = 0.8 + rnd() * 0.7; stems.push([px + ox, h, pz + oz, s, (rnd() - 0.5) * 0.35, rnd() * 6.28, (rnd() - 0.5) * 0.35]); }
+    } else if (zn < 0.52) {                        // ঝোপ
+      if (r < 0.7) bushes.push([px, h, pz, 0.6 + rnd() * 0.9, rnd() * 6.28]);
+    } else if (r < 0.75) (h > 26 ? pines : trees).push([px, h, pz, 0.8 + rnd() * 1.1, rnd() * 6.28]);
+  }
+  const col = new THREE.Color(), M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler();
+  const mk = (geo, mat, list, fn, colorFn) => {
+    if (!list.length) return; const im = new THREE.InstancedMesh(geo, mat, list.length);
+    list.forEach((t, i) => { const [pp, sc, eu] = fn(t); Q.setFromEuler(E.set(eu[0], eu[1], eu[2])); M.compose(new THREE.Vector3(pp[0], pp[1], pp[2]), Q, new THREE.Vector3(sc[0], sc[1], sc[2])); im.setMatrixAt(i, M); if (colorFn) im.setColorAt(i, colorFn(t)); });
+    im.frustumCulled = false; scene.add(im);
+  };
+  const mat = new THREE.MeshStandardMaterial({ roughness: 0.9 }), wood = new THREE.MeshStandardMaterial({ color: 0x6b4a2b, roughness: 1 });
+  mk(new THREE.CylinderGeometry(0.14, 0.2, 2.4, 5), wood, trees, t => [[t[0], t[1] + 1.2 * t[3], t[2]], [t[3], t[3], t[3]], [0, t[4], 0]]);
+  mk(new THREE.IcosahedronGeometry(1.5, 0), mat, trees, t => [[t[0], t[1] + 3.3 * t[3], t[2]], [t[3], t[3] * 1.25, t[3]], [0, t[4], 0]], t => col.setHSL(0.27 + Math.sin(t[4] * 3) * 0.05, 0.5, 0.26 + (t[4] % 1) * 0.12));
+  mk(new THREE.CylinderGeometry(0.12, 0.18, 2, 5), wood, pines, t => [[t[0], t[1] + 1 * t[3], t[2]], [t[3], t[3], t[3]], [0, t[4], 0]]);
+  mk(new THREE.ConeGeometry(1.3, 4.6, 7), mat, pines, t => [[t[0], t[1] + 3.6 * t[3], t[2]], [t[3], t[3], t[3]], [0, t[4], 0]], t => col.setHSL(0.36, 0.45, 0.17 + (t[4] % 1) * 0.08));
+  mk(new THREE.IcosahedronGeometry(0.85, 0), mat, bushes, t => [[t[0], t[1] + 0.3 * t[3], t[2]], [t[3] * 1.2, t[3] * 0.75, t[3] * 1.2], [0, t[4], 0]], t => col.setHSL(0.24 + (t[4] % 1) * 0.1, 0.5, 0.25 + (t[4] % 0.7) * 0.15));
+  mk(new THREE.ConeGeometry(0.06, 1.7, 4), new THREE.MeshStandardMaterial({ color: 0xa4ad63, roughness: 1 }), stems, t => [[t[0], t[1] + 0.8 * t[3], t[2]], [1, t[3], 1], [t[4], t[5], t[6]]]);
+  const pl = new THREE.SphereGeometry(0.13, 5, 4);
+  mk(pl, new THREE.MeshStandardMaterial({ color: 0xf6f1e4, roughness: 1 }), stems, t => [[t[0] + Math.sin(t[6]) * 0.85 * t[3], t[1] + 1.55 * t[3], t[2] + Math.sin(t[4]) * 0.85 * t[3]], [1, 3.2 * t[3] * 0.8, 1], [t[4], t[5], t[6]]]);
+}
+
+function buildHighway() {
+  ribbon(HWY, HW_W, 0.02, hwyTex(4), 24, hwElev);
+  hwy3D();
+  ribbon(PRD, 10, 0.02, hwyTex(2), 24, null);
+  // হাইওয়ের ধারে রেলিং (শুধু দেখার জন্য)
+  const rail = []; const rm = new THREE.MeshStandardMaterial({ color: 0xb8bcc2, roughness: 0.5, metalness: 0.6 });
+  for (let i = 0; i < HWY.pts.length - 1; i += 2) {
+    const p = HWY.pts[i], q = HWY.pts[i + 1], dx = q.x - p.x, dz = q.z - p.z, l = Math.hypot(dx, dz) || 1, y = hwElev(p.s / HWY.len);
+    if (p.s < 40 || p.s > HWY.len - 40) continue;
+    for (const sg of [-1, 1]) rail.push([p.x - dz / l * sg * (HW_W / 2 + 0.4), y + 0.55, p.z + dx / l * sg * (HW_W / 2 + 0.4), Math.atan2(dx, dz), l * 2.05]);
+  }
+  const im = new THREE.InstancedMesh(new THREE.BoxGeometry(0.12, 0.5, 1), rm, rail.length), M = new THREE.Matrix4(), Q = new THREE.Quaternion();
+  rail.forEach((r, i) => { Q.setFromAxisAngle(UPV, r[3]); M.compose(new THREE.Vector3(r[0], r[1], r[2]), Q, new THREE.Vector3(1, 1, r[4])); im.setMatrixAt(i, M); });
+  im.frustumCulled = false; scene.add(im);
+}
+function buildPort() {
+  const P = PORT, add = (w, h, d, x, y, z, color, name, solid = true) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color, roughness: 0.8 }));
+    m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; scene.add(m);
+    if (solid) boxes.push({ minX: x - w / 2, maxX: x + w / 2, minZ: z - d / 2, maxZ: z + d / 2, h: y + h / 2, ...(name ? { name } : {}) });
+  };
+  add(100, 0.1, 100, P.cx, 0.02, P.cz, 0x9d9d97, null, false);
+  add(16, 1.4, 55, P.cx, -0.5, P.z1 + 27, 0x8a8a84, null, false);          // জেটি
+  add(100, 1.2, 3, P.cx, -0.3, P.z1 + 1.5, 0x77776f, null, false);         // ঘাট
+  add(16, 6, 10, P.cx - 32, 3, P.z0 + 12, 0xe8e2d0, 'Port Office');
+  const cc = [0xc0392b, 0x2980b9, 0xd68910, 0x27ae60, 0x7d3c98, 0x16a085];
+  let n = 0;
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) { if ((r + c) % 5 === 4) continue; add(12, 2.6, 2.5, P.cx - 36 + c * 24 + 0, 1.3 + (n % 3 === 0 ? 2.6 : 0), P.z0 + 34 + r * 9, cc[n++ % 6], 'Container'); }
+  for (const x of [-30, 30]) {   // ক্রেন
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) add(0.7, 22, 0.7, P.cx + x + sx * 6, 11, P.z1 - 10 + sz * 3, 0xf1c40f, null, false);
+    add(16, 1.2, 8, P.cx + x, 22.5, P.z1 - 10, 0xf1c40f, null, false); add(2, 1.2, 34, P.cx + x, 22.5, P.z1 + 4, 0xd4ac0d, null, false);
+  }
+}
+
+function buildWorld() {
+  buildTerrain();
+  CITIES.forEach(C => {
+    const W = C.x1 - C.x0, D = C.z1 - C.z0;
+    const gt = grassTex.clone(); gt.repeat.set((W + 40) / 8, (D + 40) / 8); gt.needsUpdate = true;
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(W + 40, D + 40), new THREE.MeshStandardMaterial({ map: gt, roughness: 1 }));
+    ground.rotation.x = -Math.PI / 2; ground.position.set(C.cx, 0, C.cz); ground.receiveShadow = true; scene.add(ground);
+    const tH = roadTexH.clone(); tH.repeat.set(W / 8, 1); tH.needsUpdate = true;
+    const tV = roadTexV.clone(); tV.repeat.set(1, D / 8); tV.needsUpdate = true;
+    for (let j = C.kz0; j <= C.kz0 + C.nz; j++) {
+      const h = new THREE.Mesh(new THREE.PlaneGeometry(W, ROAD_W), roadMats.push(new THREE.MeshStandardMaterial({ map: tH, roughness: 0.95 })) && roadMats[roadMats.length - 1]);
+      h.rotation.x = -Math.PI / 2; h.position.set(C.cx, 0.02, C.oz + j * SPACING); h.receiveShadow = true; scene.add(h);
+    }
+    for (let i = C.kx0; i <= C.kx0 + C.nx; i++) {
+      const v = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W, D), roadMats.push(new THREE.MeshStandardMaterial({ map: tV, roughness: 0.95 })) && roadMats[roadMats.length - 1]);
+      v.rotation.x = -Math.PI / 2; v.position.set(C.ox + i * SPACING, 0.03, C.cz); v.receiveShadow = true; scene.add(v);
+    }
+  });
+  buildHighway(); buildPort(); buildVegetation();
+  for (const CY of CITIES) {
+  for (let kx = CY.kx0; kx < CY.kx0 + CY.nx; kx++) {
+    for (let kz = CY.kz0; kz < CY.kz0 + CY.nz; kz++) {
+      const cx = CY.ox + kx * SPACING + 20, cz = CY.oz + kz * SPACING + 20;
       addSidewalk(cx, cz, (kx + kz) % 3 === 0);
 
       // পার্ক ব্লক
@@ -825,10 +1084,12 @@ function buildWorld() {
       addTree(cx - 14, cz - 14, 0.7);
     }
   }
+  }
   finalizeCompounds();
   buildStreet();
   buildNPCs();
   buildPickups();
+  bakeMap();
 }
 
 // ---------- গাছ (ওক গাছের মতো ঘন পাতা, বাতাসে দোলে) ----------
@@ -930,9 +1191,13 @@ const slabGeo = new THREE.BoxGeometry(30, 0.15, 30);
 const parkGroundMat = new THREE.MeshStandardMaterial({ color: 0x6fbf55, roughness: 1 });
 let gyS = 0;
 function groundY(x, z) {
-  if (Math.abs(x) > 155 || Math.abs(z) > 155) return 0;
-  const mx = ((x % 40) + 40) % 40, mz = ((z % 40) + 40) % 40;
-  return (mx > 5 && mx < 35 && mz > 5 && mz < 35) ? 0.15 : 0;
+  for (const c of CITIES) {
+    if (x > c.x0 + 5 && x < c.x1 - 5 && z > c.z0 + 5 && z < c.z1 - 5) {
+      const mx = (((x - c.ox) % 40) + 40) % 40, mz = (((z - c.oz) % 40) + 40) % 40;
+      return (mx > 5 && mx < 35 && mz > 5 && mz < 35) ? 0.15 : 0;
+    }
+  }
+  return Math.max(terrainAt(x, z), -1);
 }
 function addSidewalk(cx, cz, park) {
   blocksList.push({ cx, cz, park });
@@ -999,8 +1264,8 @@ function buildStreet() {
       wp.push(px, py, pz, x, y, z); px = x; py = y; pz = z;
     }
   };
-  for (let kx = -4; kx <= 3; kx++) for (let kz = -4; kz <= 3; kz++) {
-    const cx = kx * SPACING + 20, cz = kz * SPACING + 20;
+  for (const C of CITIES) for (let kx = C.kx0; kx < C.kx0 + C.nx; kx++) for (let kz = C.kz0; kz < C.kz0 + C.nz; kz++) {
+    const cx = C.ox + kx * SPACING + 20, cz = C.oz + kz * SPACING + 20;
     for (const [ox, oz] of [[-7, -14], [7, 14]]) {
       const x = cx + ox, z = cz + oz;
       lamps.push({ x, z });
@@ -1009,11 +1274,11 @@ function buildStreet() {
     const px = cx + 14.3, pz = cz + 14.3;
     poleL.push([px, 4.65, pz, 1, 9, 1]); armZ.push([px, 8.4, pz]); armX.push([px, 7.6, pz]);
     boxes.push({ minX: px - 0.3, maxX: px + 0.3, minZ: pz - 0.3, maxZ: pz + 0.3 });
-    if (kx < 3) for (const o of [-0.9, 0, 0.9]) wire(px, 8.4, pz + o, px + SPACING, 8.4, pz + o);
-    if (kz < 3) for (const o of [-0.9, 0.9]) wire(px + o, 7.6, pz, px + o, 7.6, pz + SPACING);
+    if (kx < C.kx0 + C.nx - 1) for (const o of [-0.9, 0, 0.9]) wire(px, 8.4, pz + o, px + SPACING, 8.4, pz + o);
+    if (kz < C.kz0 + C.nz - 1) for (const o of [-0.9, 0.9]) wire(px + o, 7.6, pz, px + o, 7.6, pz + SPACING);
   }
-  for (let i = -4; i <= 4; i++) for (let j = -4; j <= 4; j++) {
-    const x = i * SPACING + 6.5, z = j * SPACING + 6.5;
+  for (const C of CITIES) for (let i = C.kx0; i <= C.kx0 + C.nx; i++) for (let j = C.kz0; j <= C.kz0 + C.nz; j++) {
+    const x = C.ox + i * SPACING + 6.5, z = C.oz + j * SPACING + 6.5;
     sPole.push([x, 2.25, z, 1, 4.5, 1]); sHead.push([x, 4.7, z]);
     sH.push([x - 0.23, 4.7, z]); sV.push([x, 4.7, z - 0.23]);
   }
@@ -1181,7 +1446,10 @@ function buildCars() {
     g.add(body, cab, new THREE.Mesh(st.g.dark, tyre), new THREE.Mesh(st.g.chrome, st.rimMat || chrome), headM, tailM);
     if (st.g.acc) { if (!st.accMat) st.accMat = new THREE.MeshStandardMaterial({ color: st.accent || 0xf5c518, roughness: 0.4, metalness: 0.3 }); g.add(new THREE.Mesh(st.g.acc, st.accMat)); }
     scene.add(g);
-    cars.push({ g, headM, tailM, name: st.name, axis: Math.random() < 0.5 ? 'x' : 'z', p: (Math.floor(Math.random() * 9) - 4) * SPACING, dir: Math.random() < 0.5 ? 1 : -1, pos: -170 + Math.random() * 340, speed: 0, vmax: 6 + Math.random() * 4 });
+    const CT = CITIES[Math.random() < 0.6 ? 0 : 1], axis = Math.random() < 0.5 ? 'x' : 'z';
+    const lo = (axis === 'x' ? CT.kx0 : CT.kz0) * SPACING - 5, hi = (axis === 'x' ? CT.kx0 + CT.nx : CT.kz0 + CT.nz) * SPACING + 5;
+    const p = axis === 'x' ? (CT.kz0 + Math.floor(Math.random() * (CT.nz + 1))) * SPACING : (CT.kx0 + Math.floor(Math.random() * (CT.nx + 1))) * SPACING;
+    cars.push({ g, headM, tailM, name: st.name, axis, cy: CT, ox: CT.ox, oz: CT.oz, lo, hi, p, dir: Math.random() < 0.5 ? 1 : -1, pos: lo + Math.random() * (hi - lo), speed: 0, vmax: 6 + Math.random() * 4 });
   }
 }
 let lampTick = 0;
@@ -1200,15 +1468,15 @@ function animateWorld(t, dt) {
     const d = (n - c.pos) * c.dir;
     if (!go && d > 6.8 && d < 14) target = Math.min(target, (d - 7.2) * 1.5);
     for (const o of cars) {
-      if (o === c || o.axis !== c.axis || o.dir !== c.dir || o.p !== c.p) continue;
+      if (o === c || o.axis !== c.axis || o.dir !== c.dir || o.p !== c.p || o.cy !== c.cy) continue;
       const gap = (o.pos - c.pos) * c.dir;
       if (gap > 0 && gap < 10) target = Math.min(target, (gap - 5.5) * 1.5);
     }
     c.speed += (Math.max(0, target) - c.speed) * (1 - Math.exp(-dt * 3));
     c.pos += c.dir * c.speed * dt;
-    if (c.pos * c.dir > 185) c.pos = -185 * c.dir;
-    if (c.axis === 'x') { c.g.position.set(c.pos, 0, c.p - 2.5 * c.dir); c.g.rotation.y = c.dir > 0 ? Math.PI / 2 : -Math.PI / 2; }
-    else { c.g.position.set(c.p + 2.5 * c.dir, 0, c.pos); c.g.rotation.y = c.dir > 0 ? 0 : Math.PI; }
+    if (c.dir > 0 ? c.pos > c.hi : c.pos < c.lo) c.pos = c.dir > 0 ? c.lo : c.hi;
+    if (c.axis === 'x') { c.g.position.set(c.ox + c.pos, 0, c.oz + c.p - 2.5 * c.dir); c.g.rotation.y = c.dir > 0 ? Math.PI / 2 : -Math.PI / 2; }
+    else { c.g.position.set(c.ox + c.p + 2.5 * c.dir, 0, c.oz + c.pos); c.g.rotation.y = c.dir > 0 ? 0 : Math.PI; }
   }
   if (lampLights.length && (lampTick++ % 8 === 0)) {
     const near = lamps.map(l => ({ l, d: (l.x - player.x) ** 2 + (l.z - player.z) ** 2 })).sort((a, b) => a.d - b.d).slice(0, 4);
@@ -1581,6 +1849,7 @@ const CLIMB_MAX = 2.8;
 const topOf = b => b.h + 0.15;
 const canOver = (b, y) => b.h !== undefined && b.h <= CLIMB_MAX && y >= topOf(b) - 0.2;
 function blocked(x, z, y = -9) {
+  if (terrainAt(x, z) < -0.7) return true;
   for (const b of boxes) {
     if (x > b.minX - PR && x < b.maxX + PR && z > b.minZ - PR && z < b.maxZ + PR) {
       if (canOver(b, y)) continue;
@@ -1631,8 +1900,8 @@ function update(dt) {
     const nz = player.z + dz * speed * dt;
     if (!blocked(nx, player.z, player.y)) player.x = nx;
     if (!blocked(player.x, nz, player.y)) player.z = nz;
-    player.x = Math.max(-180, Math.min(180, player.x));
-    player.z = Math.max(-180, Math.min(180, player.z));
+    player.x = Math.max(MX0 + 5, Math.min(MX1 - 5, player.x));
+    player.z = Math.max(MZ0 + 5, Math.min(MZ1 - 5, player.z));
 
     phase += dt * (run ? 12 : 7) * mag;
   }
@@ -1777,35 +2046,67 @@ const rectW = (c, T, x0, z0, x1, z1) => {
   const a = T(x0, z0), b = T(x1, z1);
   c.fillRect(Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1]));
 };
+const BK = 0.6, BW = Math.round((MX1 - MX0) * BK), BH = Math.round((MZ1 - MZ0) * BK);
+let mapImg = null;
+const bkP = (x, z) => [(MX1 - x) * BK, (MZ1 - z) * BK];
+function bakeMap() {
+  const cv = document.createElement('canvas'); cv.width = BW; cv.height = BH; const c = cv.getContext('2d');
+  const hh = new Float32Array(BW * BH);
+  for (let v = 0; v < BH; v++) for (let u = 0; u < BW; u++) hh[v * BW + u] = terrainAt(MX1 - u / BK, MZ1 - v / BK);
+  const img = c.createImageData(BW, BH), d = img.data, col = [0, 0, 0], px = 1 / BK;
+  for (let v = 1; v < BH - 1; v++) for (let u = 1; u < BW - 1; u++) {
+    const k = v * BW + u, h = hh[k];
+    const gx = (hh[k + 1] - hh[k - 1]) / (2 * px) * 2.2, gy = (hh[k + BW] - hh[k - BW]) / (2 * px) * 2.2;
+    const il = 1 / Math.hypot(gx, gy, 1), nz = il;
+    let sh = 0.55 + 0.75 * Math.max(0, (-gx * il * -0.55) + (-gy * il * -0.55) + nz * 0.63) - 0.25;
+    if (h < -0.8) sh = 0.92 + 0.1 * sh;
+    landCol(h, nz, col);
+    const o = k * 4; d[o] = Math.min(255, col[0] * sh); d[o + 1] = Math.min(255, col[1] * sh); d[o + 2] = Math.min(255, col[2] * sh); d[o + 3] = 255;
+  }
+  c.putImageData(img, 0, 0);
+  const rectP = (x0, z0, x1, z1) => { const a = bkP(x0, z0), b = bkP(x1, z1); return [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1])]; };
+  // শহরের মাটি + ব্লক + রাস্তা
+  for (const C of CITIES) {
+    c.fillStyle = '#8fcf6a'; c.fillRect(...rectP(C.x0 - 10, C.z0 - 10, C.x1 + 10, C.z1 + 10));
+    c.strokeStyle = '#4a4f57'; c.lineWidth = ROAD_W * BK; c.lineCap = 'butt'; c.beginPath();
+    for (let j = C.kz0; j <= C.kz0 + C.nz; j++) { const a = bkP(C.x0, C.oz + j * SPACING), b = bkP(C.x1, C.oz + j * SPACING); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); }
+    for (let i = C.kx0; i <= C.kx0 + C.nx; i++) { const a = bkP(C.ox + i * SPACING, C.z0), b = bkP(C.ox + i * SPACING, C.z1); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); }
+    c.stroke();
+  }
+  for (const k of blocksList) { c.fillStyle = k.park ? '#5fae4d' : '#c9c6bd'; c.fillRect(...rectP(k.cx - (k.park ? 13 : 15), k.cz - (k.park ? 13 : 15), k.cx + (k.park ? 13 : 15), k.cz + (k.park ? 13 : 15))); }
+  // হাইওয়ে ও বন্দরের সড়ক
+  const strokePoly = (P, w, col2) => { c.beginPath(); P.pts.forEach((q, i) => { const t = bkP(q.x, q.z); i ? c.lineTo(t[0], t[1]) : c.moveTo(t[0], t[1]); }); c.lineJoin = 'round'; c.lineCap = 'round'; c.strokeStyle = col2; c.lineWidth = w; c.stroke(); };
+  strokePoly(HWY, HW_W * BK + 5, 'rgba(40,30,20,.8)'); strokePoly(HWY, HW_W * BK + 2, '#f3b73c'); strokePoly(HWY, 1, '#fff');
+  strokePoly(PRD, 10 * BK + 4, 'rgba(40,30,20,.8)'); strokePoly(PRD, 10 * BK + 1.5, '#e9d8a6');
+  // ৩ডি-ঢঙে দালান: ছায়া + দেয়াল + ছাদ
+  for (const b of boxes) {
+    if (!(b.h > 3) || b.maxX - b.minX > 80) continue;
+    const r = rectP(b.minX, b.minZ, b.maxX, b.maxZ), e = Math.min(4, b.h * 0.18);
+    c.fillStyle = 'rgba(0,0,0,.28)'; c.fillRect(r[0] + e * 0.9, r[1] + e * 0.9, r[2], r[3]);
+    c.fillStyle = b.name === 'Container' ? '#c0623a' : '#6f7580'; c.fillRect(r[0] + e * 0.35, r[1] + e * 0.35, r[2], r[3]);
+    c.fillStyle = b.name === 'Container' ? '#e08a5a' : b.h > 22 ? '#c7ccd4' : '#a9afb9'; c.fillRect(r[0], r[1], r[2], r[3]);
+  }
+  c.fillStyle = '#9d9d97'; c.fillRect(...rectP(PORT.x0, PORT.z0, PORT.x1, PORT.z1));
+  c.fillStyle = '#8a8a84'; c.fillRect(...rectP(PORT.cx - 8, PORT.z1, PORT.cx + 8, PORT.z1 + 55));
+  c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = 2; for (const C of CITIES) c.strokeRect(...rectP(C.x0 - 10, C.z0 - 10, C.x1 + 10, C.z1 + 10));
+  mapImg = cv;
+}
 function drawLayer(c, T, big, size) {
-  c.fillStyle = '#8fcf6a'; c.fillRect(0, 0, size, size);
-  c.fillStyle = '#c9c6bd';
-  for (const k of blocksList) rectW(c, T, k.cx - 15, k.cz - 15, k.cx + 15, k.cz + 15);
-  c.fillStyle = '#5fae4d';
-  for (const k of blocksList) if (k.park) rectW(c, T, k.cx - 13, k.cz - 13, k.cx + 13, k.cz + 13);
-  c.fillStyle = '#4a4f57';
-  for (const p of roadCenters) {
-    rectW(c, T, -200, p - ROAD_W / 2, 200, p + ROAD_W / 2);
-    rectW(c, T, p - ROAD_W / 2, -200, p + ROAD_W / 2, 200);
-  }
-  c.fillStyle = '#7d838c';
-  for (const b of boxes) rectW(c, T, b.minX, b.minZ, b.maxX, b.maxZ);
-  c.strokeStyle = '#6b5b4b'; c.lineWidth = big ? 2 : 1;
-  for (const k of compounds) {
-    const a = T(k.cx - 12.5, k.cz - 12.5), b = T(k.cx + 12.5, k.cz + 12.5);
-    c.strokeRect(Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1]));
-  }
-  c.fillStyle = '#ffd400';
-  for (const k of compounds) { const q = T(k.gate[0], k.gate[1]); c.fillRect(q[0] - 1.5, q[1] - 1.5, 3, 3); }
+  c.fillStyle = '#1f6f8f'; c.fillRect(0, 0, size, size);
+  const o = T(MX1, MZ1), s = T(MX0, MZ0);
+  c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high';
+  if (mapImg) c.drawImage(mapImg, o[0], o[1], s[0] - o[0], s[1] - o[1]);
+  if (big && bmZoom >= 3) drawDetail(c, T);
+  if (!big) { c.fillStyle = '#ffd400'; c.strokeStyle = '#000'; c.lineWidth = 1; for (const pl of PLACES) { const q = T(pl.x, pl.z); c.beginPath(); c.arc(q[0], q[1], 3, 0, 6.283); c.fill(); c.stroke(); } }
   c.fillStyle = '#ffb84d';
   for (const car of cars) { const q = T(car.g.position.x, car.g.position.z); c.fillRect(q[0] - 1.5, q[1] - 1.5, 3, 3); }
   if (big) {
-    c.fillStyle = '#ffe27a';
-    for (const l of lamps) { const q = T(l.x, l.z); c.fillRect(q[0] - 1, q[1] - 1, 2, 2); }
-    c.font = 'bold 11px sans-serif'; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.7)'; c.fillStyle = '#fff';
-    const lab = (t, x, z) => { const q = T(x, z); c.strokeText(t, q[0], q[1] + 4); c.fillText(t, q[0], q[1] + 4); };
-    for (const b of boxes) if (b.name) lab(b.name, (b.minX + b.maxX) / 2, (b.minZ + b.maxZ) / 2);
-    for (const k of parks) lab('Park', k.x, k.z);
+    c.textAlign = 'center'; c.lineJoin = 'round';
+    const lab = (t, x, z, sz, col) => { const q = T(x, z); c.font = 'bold ' + sz + 'px sans-serif'; c.lineWidth = 4; c.strokeStyle = 'rgba(0,0,0,.75)'; c.fillStyle = col || '#fff'; c.strokeText(t, q[0], q[1]); c.fillText(t, q[0], q[1]); };
+    const z3 = Math.max(0.9, Math.min(2.2, size / 300));
+    for (const C of CITIES) { lab(C.bn, C.cx, C.cz + 8, 20 * z3, '#fff3b0'); lab(C.name + ' · ' + Math.round(C.x1 - C.x0 - 10) + '×' + Math.round(C.z1 - C.z0 - 10) + ' m', C.cx, C.cz - 12, 11 * z3); }
+    lab('বন্দর', PORT.cx, PORT.cz + 4, 16 * z3, '#bdf3ff'); lab('Port · 100 m', PORT.cx, PORT.cz - 12, 10 * z3);
+    const mid = HWY.pts[Math.floor(HWY.pts.length / 2)]; lab('⛰ 4-lane Hill Highway', mid.x, mid.z + 28, 11 * z3, '#ffe08a');
   }
 }
 function drawRoute(c, T, lw) {
@@ -1832,32 +2133,43 @@ function drawMini() {
   c.lineTo(R - Math.sin(player.yaw) * 14, R - Math.cos(player.yaw) * 14); c.stroke();
   c.restore();
 }
+let bmW = 300, bmH = 300, bmZoom = 1, bmCx = 0, bmCz = 0;
+const bmT = (x, z) => [bmW / 2 - (x - bmCx) * bmS, bmH / 2 - (z - bmCz) * bmS];
 function drawBig() {
-  const c = bmx, side = bmSide, S = bmS;
-  const T = (x, z) => [side / 2 - x * S, side / 2 - z * S];
-  c.clearRect(0, 0, side, side);
-  drawLayer(c, T, true, side); drawRoute(c, T, 4);
+  const c = bmx;
+  if (bmZoom <= 1) { bmZoom = 1; bmCx = (MX0 + MX1) / 2; bmCz = (MZ0 + MZ1) / 2; }
+  bmS = bmFit * bmZoom;
+  const T = bmT;
+  c.clearRect(0, 0, bmW, bmH);
+  c.save(); c.beginPath(); c.rect(0, 0, bmW, bmH); c.clip();
+  drawLayer(c, T, true, Math.max(bmW, bmH)); drawRoute(c, T, 4);
   if (marker) {
     const [X, Y] = T(marker.x, marker.z);
     c.fillStyle = '#ff3b3b'; c.strokeStyle = '#fff'; c.lineWidth = 3;
     c.beginPath(); c.arc(X, Y, 8, 0, 6.283); c.fill(); c.stroke();
     c.beginPath(); c.arc(X, Y, 14, 0, 6.283); c.stroke();
   }
+  drawPlaces(c, T);
   const [X, Y] = T(player.x, player.z);
   c.fillStyle = '#fff'; c.strokeStyle = '#1f7ae0'; c.lineWidth = 3;
   c.beginPath(); c.arc(X, Y, 6, 0, 6.283); c.fill(); c.stroke();
   c.strokeStyle = '#ffd400'; c.beginPath(); c.moveTo(X, Y);
   c.lineTo(X - Math.sin(player.yaw) * 18, Y - Math.cos(player.yaw) * 18); c.stroke();
+  c.restore();
 }
+let bmFit = 0.3;
 function openMap() {
   if (!started) return;
   mapOpen = true; jx = 0; jy = 0; fireHeld = false; dragId = null;
-  const side = Math.floor(Math.min(innerWidth - 16, innerHeight - 90));
-  bmSide = side; bmS = side / 380; bm.width = bm.height = side;
+  const aspect = (MZ1 - MZ0) / (MX1 - MX0);
+  let w = Math.min(innerWidth - 16, 1100), h = w * aspect;
+  if (h > innerHeight - 100) { h = innerHeight - 100; w = h / aspect; }
+  bmW = Math.floor(w); bmH = Math.floor(h); bm.width = bmW; bm.height = bmH; bmFit = bmW / (MX1 - MX0); bmZoom = 1; bmSide = bmW; bmCx = (MX0 + MX1) / 2; bmCz = (MZ0 + MZ1) / 2; plShow(false);
   bigWrap.style.display = 'flex';
 }
-function closeMap() { mapOpen = false; bigWrap.style.display = 'none'; }
+function closeMap() { plShow(false); mapOpen = false; bigWrap.style.display = 'none'; }
 function snapOut(pt) {
+  if (false) return;
   for (const b of boxes) {
     if (pt.x > b.minX - 0.8 && pt.x < b.maxX + 0.8 && pt.z > b.minZ - 0.8 && pt.z < b.maxZ + 0.8) {
       const d = [pt.x - b.minX, b.maxX - pt.x, pt.z - b.minZ, b.maxZ - pt.z], m = Math.min(...d), k = d.indexOf(m);
@@ -1866,75 +2178,160 @@ function snapOut(pt) {
   }
 }
 function setMarker(x, z) {
-  x = Math.max(-175, Math.min(175, x)); z = Math.max(-175, Math.min(175, z));
-  let name = 'Road/sidewalk';
+  x = Math.max(MX0 + 10, Math.min(MX1 - 10, x)); z = Math.max(MZ0 + 10, Math.min(MZ1 - 10, z));
+  let name = 'Open land';
+  for (const C of CITIES) if (x > C.x0 && x < C.x1 && z > C.z0 && z < C.z1) name = C.name + ' road';
+  if (nearPoly(HWY, x, z).d < 12) name = 'Hill Highway'; else if (nearPoly(PRD, x, z).d < 9) name = 'Port Road';
+  if (x > PORT.x0 && x < PORT.x1 && z > PORT.z0 && z < PORT.z1) name = 'Port';
   for (const b of boxes) if (b.name && x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ) name = b.name;
   for (const k of parks) if (Math.abs(x - k.x) < 13 && Math.abs(z - k.z) < 13) name = 'Park';
-  for (const k of compounds) if (Math.abs(x - k.cx) < 12.6 && Math.abs(z - k.cz) < 12.6) { if (name === 'Road/sidewalk') name = 'House yard'; x = k.out[0]; z = k.out[1]; }
+  for (const k of compounds) if (Math.abs(x - k.cx) < 12.6 && Math.abs(z - k.cz) < 12.6) { if (name.endsWith('road')) name = 'House yard'; x = k.out[0]; z = k.out[1]; }
   const pt = { x, z, name }; snapOut(pt);
   marker = pt; lastRoute = 0; updateRoute(performance.now());
   document.getElementById('bmtxt').textContent = 'Destination: ' + name + ' · ' + Math.round(routeLen) + ' m';
 }
-bm.addEventListener('pointerup', e => {
-  const r = bm.getBoundingClientRect(), f = bmSide / r.width;
-  const X = (e.clientX - r.left) * f, Y = (e.clientY - r.top) * f;
-  setMarker((bmSide / 2 - X) / bmS, (bmSide / 2 - Y) / bmS);
+const bmPtr = new Map(); let bmDrag = false, bmPin0 = 0, bmZ0 = 1;
+const clampBm = () => { bmCx = Math.max(MX0, Math.min(MX1, bmCx)); bmCz = Math.max(MZ0, Math.min(MZ1, bmCz)); };
+function setBmZoom(z) { bmZoom = Math.max(1, Math.min(12, z)); if (bmZoom <= 1) { bmCx = (MX0 + MX1) / 2; bmCz = (MZ0 + MZ1) / 2; } clampBm(); }
+bm.addEventListener('pointerdown', e => {
+  bm.setPointerCapture(e.pointerId); bmPtr.set(e.pointerId, { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY });
+  if (bmPtr.size === 1) bmDrag = false;
+  if (bmPtr.size === 2) { const [a, b] = [...bmPtr.values()]; bmPin0 = Math.hypot(a.x - b.x, a.y - b.y) || 1; bmZ0 = bmZoom; }
 });
+bm.addEventListener('pointermove', e => {
+  const p = bmPtr.get(e.pointerId); if (!p) return;
+  const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+  if (bmPtr.size === 2) { const [a, b] = [...bmPtr.values()]; setBmZoom(bmZ0 * Math.hypot(a.x - b.x, a.y - b.y) / bmPin0); bmDrag = true; }
+  else if (bmDrag || Math.hypot(e.clientX - p.sx, e.clientY - p.sy) > 8) { bmDrag = true; const f = bmW / bm.getBoundingClientRect().width; bmCx += dx * f / bmS; bmCz += dy * f / bmS; clampBm(); }
+});
+const bmEnd = e => { bmPtr.delete(e.pointerId); };
+bm.addEventListener('pointercancel', bmEnd);
+bm.addEventListener('pointerup', e => {
+  const wasTap = bmPtr.size === 1 && !bmDrag; bmEnd(e); if (!wasTap) return;
+  const r = bm.getBoundingClientRect(), f = bmW / r.width;
+  const X = (e.clientX - r.left) * f, Y = (e.clientY - r.top) * f;
+  const wx = (bmW / 2 - X) / bmS + bmCx, wz = (bmH / 2 - Y) / bmS + bmCz;
+  if (terrainAt(wx, wz) < -0.7) { document.getElementById('bmtxt').textContent = 'That is sea — pick land'; return; }
+  setMarker(wx, wz);
+});
+bm.addEventListener('wheel', e => { e.preventDefault(); setBmZoom(bmZoom * (e.deltaY < 0 ? 1.25 : 0.8)); }, { passive: false });
+document.getElementById('bmin').addEventListener('click', () => setBmZoom(bmZoom * 1.7));
+document.getElementById('bmout').addEventListener('click', () => setBmZoom(bmZoom / 1.7));
+document.getElementById('bmme').addEventListener('click', () => { if (bmZoom < 3) bmZoom = 4; bmCx = player.x; bmCz = player.z; clampBm(); });
+
+function drawDetail(c, T) {   // বেশি জুমে পরিষ্কার ভেক্টর রাস্তা, ব্লক ও দালান
+  const W = bmW, H = bmH, vis = (q, m) => q[0] > -m && q[0] < W + m && q[1] > -m && q[1] < H + m;
+  c.strokeStyle = '#4a4f57'; c.lineWidth = ROAD_W * bmS; c.lineCap = 'butt'; c.beginPath();
+  for (const C of CITIES) {
+    for (let j = C.kz0; j <= C.kz0 + C.nz; j++) { const a = T(C.x0, C.oz + j * SPACING), b = T(C.x1, C.oz + j * SPACING); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); }
+    for (let i = C.kx0; i <= C.kx0 + C.nx; i++) { const a = T(C.ox + i * SPACING, C.z0), b = T(C.ox + i * SPACING, C.z1); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); }
+  }
+  c.stroke();
+  for (const [P, w, col] of [[HWY, HW_W, '#3d4047'], [PRD, 10, '#4a4f57']]) { c.beginPath(); P.pts.forEach((q, i) => { const t = T(q.x, q.z); i ? c.lineTo(t[0], t[1]) : c.moveTo(t[0], t[1]); }); c.lineJoin = 'round'; c.strokeStyle = col; c.lineWidth = w * bmS; c.stroke(); c.strokeStyle = '#f5c518'; c.lineWidth = Math.max(1, 0.6 * bmS); c.stroke(); }
+  for (const k of blocksList) { const q = T(k.cx, k.cz); if (!vis(q, 40 * bmS)) continue; const s = (k.park ? 26 : 30) * bmS; c.fillStyle = k.park ? '#5fae4d' : '#c9c6bd'; c.fillRect(q[0] - s / 2, q[1] - s / 2, s, s); }
+  for (const b of boxes) {
+    if (!(b.h > 3) || b.maxX - b.minX > 80) continue;
+    const a = T(b.minX, b.minZ), d = T(b.maxX, b.maxZ), x = Math.min(a[0], d[0]), y = Math.min(a[1], d[1]), w = Math.abs(d[0] - a[0]), h = Math.abs(d[1] - a[1]);
+    if (!vis([x, y], Math.max(w, h) + 5)) continue;
+    const e = Math.min(6, b.h * 0.18 * bmS * 0.6 + 1);
+    c.fillStyle = 'rgba(0,0,0,.3)'; c.fillRect(x + e, y + e, w, h);
+    c.fillStyle = b.name === 'Container' ? '#c0623a' : '#6f7580'; c.fillRect(x + e * 0.4, y + e * 0.4, w, h);
+    c.fillStyle = b.name === 'Container' ? '#e08a5a' : b.h > 22 ? '#c7ccd4' : '#a9afb9'; c.fillRect(x, y, w, h);
+  }
+}
+
+// ----- সেভ করা জায়গা (বাড়ি, হাসপাতাল ...) -----
+let PLACES = []; try { PLACES = JSON.parse(localStorage.getItem('gbrc_places') || '[]'); } catch (e) {}
+function plStore() { try { localStorage.setItem('gbrc_places', JSON.stringify(PLACES)); } catch (e) {} }
+function plIcon(n) { n = n.toLowerCase(); return /home|ঘর|বাড়ি|bari/.test(n) ? '🏠' : /hosp|হাসপাতাল|clinic|ক্লিনিক|doctor|ডাক্তার/.test(n) ? '🏥' : /shop|দোকান|market|বাজার|mall/.test(n) ? '🛒' : /school|স্কুল|college|কলেজ/.test(n) ? '🏫' : /office|অফিস|work/.test(n) ? '💼' : /port|বন্দর/.test(n) ? '⚓' : /friend|বন্ধু/.test(n) ? '👥' : /police|থানা|পুলিশ/.test(n) ? '🚓' : /fuel|পাম্প|petrol/.test(n) ? '⛽' : '📌'; }
+const plp = document.createElement('div');
+plp.style.cssText = 'display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,380px);max-height:74vh;overflow:auto;background:rgba(18,22,32,.97);border:2px solid #fff;border-radius:14px;padding:12px;color:#fff;font-size:14px;z-index:30;text-align:left;user-select:text;-webkit-user-select:text';
+plp.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>⭐ সেভ করা জায়গা</b><button id="plx" style="border:0;border-radius:8px;padding:6px 12px">✕</button></div>' +
+  '<input id="plname" maxlength="24" placeholder="নাম লিখুন (বাড়ি, হাসপাতাল…)" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:0;font-size:15px;user-select:text;-webkit-user-select:text">' +
+  '<div id="plchips" style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0"></div>' +
+  '<button id="plsave" style="width:100%;padding:10px;border:0;border-radius:8px;background:#2ecc71;color:#fff;font-size:15px">💾 সেভ করুন (মার্ক করা জায়গা, না থাকলে আমার অবস্থান)</button>' +
+  '<div id="pllist" style="margin-top:10px"></div>';
+bigWrap.appendChild(plp);
+const plShow = v => { plp.style.display = v ? 'block' : 'none'; if (v) plRender(); };
+function plRender() {
+  const L = plp.querySelector('#pllist'); L.innerHTML = '';
+  if (!PLACES.length) L.innerHTML = '<div style="opacity:.7;padding:6px">এখনো কিছু সেভ করা নেই</div>';
+  PLACES.forEach((p, i) => {
+    const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;align-items:center;padding:8px 4px;border-top:1px solid #444';
+    const d = Math.round(Math.hypot(p.x - player.x, p.z - player.z));
+    const go = document.createElement('button'); go.style.cssText = 'flex:1;text-align:left;border:0;background:none;color:#fff;font-size:15px;padding:4px';
+    go.textContent = plIcon(p.n) + ' ' + p.n + ' · ' + d + ' m';
+    go.onclick = () => { setMarker(p.x, p.z); plShow(false); };
+    const del = document.createElement('button'); del.textContent = '🗑'; del.style.cssText = 'border:0;border-radius:8px;padding:6px 10px';
+    del.onclick = () => { PLACES.splice(i, 1); plStore(); plRender(); };
+    row.append(go, del); L.appendChild(row);
+  });
+}
+for (const n of ['বাড়ি', 'হাসপাতাল', 'দোকান', 'অফিস', 'স্কুল', 'বন্ধু']) {
+  const b = document.createElement('button'); b.textContent = plIcon(n) + ' ' + n; b.style.cssText = 'border:0;border-radius:14px;padding:6px 10px;background:#33415c;color:#fff';
+  b.onclick = () => { plp.querySelector('#plname').value = n; }; plp.querySelector('#plchips').appendChild(b);
+}
+plp.querySelector('#plx').onclick = () => plShow(false);
+plp.querySelector('#plsave').onclick = () => {
+  const inp = plp.querySelector('#plname'), n = inp.value.trim();
+  if (!n) { inp.focus(); return; }
+  const at = marker ? { x: marker.x, z: marker.z } : { x: player.x, z: player.z };
+  PLACES.push({ n, x: at.x, z: at.z }); plStore(); inp.value = ''; plRender();
+  document.getElementById('bmtxt').textContent = 'Saved: ' + plIcon(n) + ' ' + n;
+};
+document.getElementById('bmplaces').addEventListener('click', () => plShow(plp.style.display === 'none'));
+function drawPlaces(c, T) {
+  c.textAlign = 'center'; c.lineJoin = 'round';
+  for (const p of PLACES) {
+    const [X, Y] = T(p.x, p.z); if (X < -20 || Y < -20 || X > bmW + 20 || Y > bmH + 20) continue;
+    c.fillStyle = '#fff'; c.strokeStyle = '#f1c40f'; c.lineWidth = 3; c.beginPath(); c.arc(X, Y, 11, 0, 6.283); c.fill(); c.stroke();
+    c.font = '14px sans-serif'; c.fillStyle = '#000'; c.fillText(plIcon(p.n), X, Y + 5);
+    c.font = 'bold 12px sans-serif'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.8)'; c.fillStyle = '#ffe27a'; c.strokeText(p.n, X, Y + 25); c.fillText(p.n, X, Y + 25);
+  }
+}
 document.getElementById('mini').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); openMap(); });
 document.getElementById('bmclose').addEventListener('click', closeMap);
 document.getElementById('bmclear').addEventListener('click', () => {
   marker = null; route = []; routeLen = 0; lastRoute = 0; updateRoute(performance.now());
   document.getElementById('bmtxt').textContent = 'Tap the map to set a destination';
 });
-addEventListener('keydown', e => { if (e.code === 'KeyM') mapOpen ? closeMap() : openMap(); });
+addEventListener('keydown', e => { if (e.target && e.target.tagName === 'INPUT') return; if (e.code === 'KeyM') mapOpen ? closeMap() : openMap(); });
 
-// রাস্তার গ্রিড ধরে পথ (৯×৯ মোড়, ডাইক্সট্রা)
-const nid = (i, j) => (i + 4) * 9 + (j + 4);
-const cl160 = v => Math.max(-160, Math.min(160, v));
-function snapRoad(x, z) {
-  const vi = Math.max(-4, Math.min(4, Math.round(x / 40))), hj = Math.max(-4, Math.min(4, Math.round(z / 40)));
-  return Math.abs(x - vi * 40) <= Math.abs(z - hj * 40)
-    ? { x: vi * 40, z: cl160(z), axis: 'v', k: vi, t: cl160(z) }
-    : { x: cl160(x), z: hj * 40, axis: 'h', k: hj, t: cl160(x) };
+// রাস্তার গ্রিড ধরে পথ: দুই শহর + হাইওয়ে + বন্দর-সড়ক (ডাইক্সট্রা)
+let RGN = null, RGE = null;
+function buildRG() {
+  RGN = []; RGE = []; const id = new Map();
+  const add = (k, x, z) => { if (!id.has(k)) { id.set(k, RGN.length); RGN.push({ x, z }); RGE.push([]); } return id.get(k); };
+  const lk = (a, b) => { const w = Math.hypot(RGN[a].x - RGN[b].x, RGN[a].z - RGN[b].z); RGE[a].push([b, w]); RGE[b].push([a, w]); };
+  CITIES.forEach((C, ci) => {
+    for (let i = C.kx0; i <= C.kx0 + C.nx; i++) for (let j = C.kz0; j <= C.kz0 + C.nz; j++) {
+      const a = add(ci + '_' + i + '_' + j, C.ox + i * SPACING, C.oz + j * SPACING);
+      if (i > C.kx0) lk(a, id.get(ci + '_' + (i - 1) + '_' + j));
+      if (j > C.kz0) lk(a, id.get(ci + '_' + i + '_' + (j - 1)));
+    }
+  });
+  const chain = (P, s, e, tag) => { let prev = s; for (let k = 4; k < P.pts.length - 1; k += 4) { const q = P.pts[k], n = add(tag + k, q.x, q.z); lk(prev, n); prev = n; } lk(prev, e); };
+  chain(HWY, id.get('0_' + (C1.kx0 + C1.nx) + '_0'), id.get('1_' + C2.kx0 + '_0'), 'h');
+  chain(PRD, id.get('0_0_' + (C1.kz0 + C1.nz)), add('port', PORT.cx, PORT.cz), 'p');
 }
+function nearNode(x, z) { let b = 0, bd = 1e12; RGN.forEach((n, i) => { const d = (n.x - x) ** 2 + (n.z - z) ** 2; if (d < bd) { bd = d; b = i; } }); return b; }
 function planRoute(P, M) {
-  const s = snapRoad(P.x, P.z), e = snapRoad(M.x, M.z), S0 = 81, E0 = 82;
-  const adj = Array.from({ length: 83 }, () => []);
-  const link = (a, b, w) => { adj[a].push([b, w]); adj[b].push([a, w]); };
-  for (let i = -4; i <= 4; i++) for (let j = -4; j <= 4; j++) {
-    if (i < 4) link(nid(i, j), nid(i + 1, j), 40);
-    if (j < 4) link(nid(i, j), nid(i, j + 1), 40);
-  }
-  const attach = (n, pt) => {
-    const a = Math.max(-4, Math.min(4, Math.floor(pt.t / 40))), b = Math.min(4, a + 1);
-    const idOf = q => pt.axis === 'v' ? nid(pt.k, q) : nid(q, pt.k);
-    link(n, idOf(a), Math.abs(pt.t - a * 40));
-    if (b !== a) link(n, idOf(b), Math.abs(pt.t - b * 40));
-  };
-  attach(S0, s); attach(E0, e);
-  if (s.axis === e.axis && s.k === e.k) link(S0, E0, Math.abs(s.t - e.t));
-  const dist = new Array(83).fill(Infinity), prev = new Array(83).fill(-1), done = new Array(83).fill(false);
+  if (!RGN) buildRG();
+  const n = RGN.length, S0 = nearNode(P.x, P.z), E0 = nearNode(M.x, M.z);
+  const dist = new Float32Array(n).fill(1e12), prev = new Int32Array(n).fill(-1), done = new Uint8Array(n);
   dist[S0] = 0;
-  for (let it = 0; it < 83; it++) {
-    let u = -1;
-    for (let v = 0; v < 83; v++) if (!done[v] && (u < 0 || dist[v] < dist[u])) u = v;
-    if (u < 0 || dist[u] === Infinity) break;
-    done[u] = true;
-    for (const [v, w] of adj[u]) if (dist[u] + w < dist[v]) { dist[v] = dist[u] + w; prev[v] = u; }
+  for (let it = 0; it < n; it++) {
+    let u = -1; for (let v = 0; v < n; v++) if (!done[v] && (u < 0 || dist[v] < dist[u])) u = v;
+    if (u < 0 || dist[u] >= 1e12 || u === E0) break;
+    done[u] = 1; for (const [v, w] of RGE[u]) if (dist[u] + w < dist[v]) { dist[v] = dist[u] + w; prev[v] = u; }
   }
   const ids = []; for (let v = E0; v !== -1; v = prev[v]) ids.unshift(v);
-  const pts = [{ x: P.x, z: P.z }];
-  for (const id of ids) {
-    if (id === S0) pts.push({ x: s.x, z: s.z });
-    else if (id === E0) pts.push({ x: e.x, z: e.z });
-    else pts.push({ x: (Math.floor(id / 9) - 4) * 40, z: (id % 9 - 4) * 40 });
-  }
-  pts.push({ x: M.x, z: M.z });
+  const pts = [{ x: P.x, z: P.z }, ...ids.map(i => ({ x: RGN[i].x, z: RGN[i].z })), { x: M.x, z: M.z }];
   return pts.filter((q, i) => i === 0 || Math.hypot(q.x - pts[i - 1].x, q.z - pts[i - 1].z) > 0.1);
 }
 
 // ৩ডি জগতে পথের লাইন ও গন্তব্যের আলোকস্তম্ভ
-const ribGeo = new THREE.BufferGeometry(), ribPos = new Float32Array(60 * 18);
+const ribGeo = new THREE.BufferGeometry(), ribPos = new Float32Array(260 * 18);
 ribGeo.setAttribute('position', new THREE.BufferAttribute(ribPos, 3)); ribGeo.setDrawRange(0, 0);
 const ribMesh = new THREE.Mesh(ribGeo, new THREE.MeshBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide }));
 ribMesh.frustumCulled = false; ribMesh.renderOrder = 2; scene.add(ribMesh);
@@ -1954,15 +2351,15 @@ function updateRoute(now) {
   }
   route = planRoute(player, marker);
   routeLen = 0;
-  const n = Math.min(60, route.length - 1);
+  const n = Math.min(260, route.length - 1);
   for (let k = 0; k < n; k++) {
     const a = route[k], b = route[k + 1], dx = b.x - a.x, dz = b.z - a.z, L = Math.hypot(dx, dz) || 1;
     routeLen += L;
-    const nx = -dz / L * 0.45, nz = dx / L * 0.45, y = 0.34, o = k * 18;
-    ribPos.set([a.x + nx, y, a.z + nz, a.x - nx, y, a.z - nz, b.x + nx, y, b.z + nz, b.x + nx, y, b.z + nz, a.x - nx, y, a.z - nz, b.x - nx, y, b.z - nz], o);
+    const nx = -dz / L * 0.45, nz = dx / L * 0.45, ya = groundY(a.x, a.z) + 0.34, yb = groundY(b.x, b.z) + 0.34, o = k * 18;
+    ribPos.set([a.x + nx, ya, a.z + nz, a.x - nx, ya, a.z - nz, b.x + nx, yb, b.z + nz, b.x + nx, yb, b.z + nz, a.x - nx, ya, a.z - nz, b.x - nx, yb, b.z - nz], o);
   }
   ribGeo.attributes.position.needsUpdate = true; ribGeo.setDrawRange(0, n * 6);
-  beacon.position.set(marker.x, 20, marker.z); beacon.visible = true;
+  beacon.position.set(marker.x, groundY(marker.x, marker.z) + 20, marker.z); beacon.visible = true;
   nav.textContent = '🎯 ' + marker.name + ' · ' + Math.round(routeLen) + ' m';
 }
 
@@ -2081,7 +2478,7 @@ function updateGrenades(dt) {
     const g = grenades[i];
     if (g.mine) { g.t += dt; let hit = g.t > 60; if (g.t > 1) for (const n of npcs) if (!n.dead && Math.hypot(n.g.position.x - g.p.x, n.g.position.z - g.p.z) < 2.5) hit = true; if (hit) { explode(g.p, 1.2); scene.remove(g.m); grenades.splice(i, 1); } continue; }
     g.v.y -= 20 * dt; g.p.addScaledVector(g.v, dt); g.t += dt;
-    if (g.p.y < 0.2) { g.p.y = 0.2; g.v.set(g.v.x * 0.4, Math.abs(g.v.y) * 0.3, g.v.z * 0.4); }
+    const gyy = groundY(g.p.x, g.p.z) + 0.2; if (g.p.y < gyy) { g.p.y = gyy; g.v.set(g.v.x * 0.4, Math.abs(g.v.y) * 0.3, g.v.z * 0.4); }
     if (g.p.y < 9 && blocked(g.p.x, g.p.z)) { g.p.x -= g.v.x * dt; g.p.z -= g.v.z * dt; g.v.x *= -0.3; g.v.z *= -0.3; }
     g.m.position.copy(g.p);
     if (g.t > (g.fuse || 1.6)) { explode(g.p, g.k || 1); scene.remove(g.m); grenades.splice(i, 1); }
@@ -2315,8 +2712,8 @@ setFireBtn('');
 // NPC (মার খায়, পড়ে যায়, ৬ সেকেন্ড পর আবার ওঠে)
 function buildNPCs() {
   const cols = [0xe74c3c, 0xf39c12, 0x27ae60, 0x8e44ad, 0x16a085, 0xd35400], segs = [];
-  for (let i = 0; i < 14; i++) {
-    const cx = (-4 + Math.floor(Math.random() * 8)) * SPACING + 20, cz = (-4 + Math.floor(Math.random() * 8)) * SPACING + 20, sd = Math.random() < 0.5 ? 1 : -1;
+  for (let i = 0; i < 24; i++) {
+    const CT = CITIES[i < 14 ? 0 : 1], cx = CT.ox + (CT.kx0 + Math.floor(Math.random() * CT.nx)) * SPACING + 20, cz = CT.oz + (CT.kz0 + Math.floor(Math.random() * CT.nz)) * SPACING + 20, sd = Math.random() < 0.5 ? 1 : -1;
     segs.push(Math.random() < 0.5 ? [[cx - 10, cz + 14.5 * sd], [cx + 10, cz + 14.5 * sd]] : [[cx + 14.5 * sd, cz - 10], [cx + 14.5 * sd, cz + 10]]);
   }
   for (const [x, z] of [[3, 32], [-3, 40], [4, 48]]) segs.push([[x, z - 2], [x, z + 2]]);
@@ -2495,8 +2892,8 @@ function updateNPCs(dt) {
 const pickups = [];
 function buildPickups() {
   const spots = [[4, 26, 'med'], [-4, 26, 'vest']];
-  for (let i = 0; i < 12; i++) {
-    const cx = (-4 + Math.floor(Math.random() * 8)) * SPACING + 20, cz = (-4 + Math.floor(Math.random() * 8)) * SPACING + 20, sd = Math.random() < 0.5 ? 1 : -1;
+  for (let i = 0; i < 20; i++) {
+    const CT = CITIES[i < 12 ? 0 : 1], cx = CT.ox + (CT.kx0 + Math.floor(Math.random() * CT.nx)) * SPACING + 20, cz = CT.oz + (CT.kz0 + Math.floor(Math.random() * CT.nz)) * SPACING + 20, sd = Math.random() < 0.5 ? 1 : -1;
     spots.push([cx + 14.5 * sd, cz + (Math.random() * 16 - 8), i % 3 === 0 ? 'vest' : 'med']);
   }
   for (const [x, z, type] of spots) {
@@ -2729,7 +3126,7 @@ function renderProfile() {
   const av = mk('div', '', 'pp-av');
   av.append(charThumb(pc, 110));
   const chg = mk('button', 'Change Avatar', 'pp-wide');
-  chg.onclick = () => renderCharSelect(d.gender, id => { d.gender = id; renderProfile(); });
+  chg.onclick = () => renderCharSelect(d.gender, id => { d.gender = id; p.gender = id; saveProfiles(); renderProfile(); });
   left.append(av, chg);
 
   // right: fields
@@ -3134,19 +3531,19 @@ function driveStep(dt) {
   if (rev && drv.sp < -0.3) { drv.beepT -= dt; if (drv.beepT <= 0) { drv.beepT = 0.7; sfx('beep'); } } else drv.beepT = 0;
   c.g.rotation.y -= drvX * dt * 1.9 * Math.max(-1, Math.min(1, drv.sp / 6));
   const y = c.g.rotation.y, nx = c.g.position.x + Math.sin(y) * drv.sp * dt, nz = c.g.position.z + Math.cos(y) * drv.sp * dt;
-  if (blocked(nx, nz) || Math.abs(nx) > 195 || Math.abs(nz) > 195) drv.sp *= -0.3; else { c.g.position.x = nx; c.g.position.z = nz; }
+  if (blocked(nx, nz)) drv.sp *= -0.3; else { c.g.position.x = nx; c.g.position.z = nz; }
   if (Math.abs(drv.sp) > 5) for (const n of npcs) { if (n.dead) continue; const dx = n.g.position.x - c.g.position.x, dz = n.g.position.z - c.g.position.z; if (Math.hypot(dx, dz) < 2.2) hurtNPC(n, 45, dx, dz, 10); }
-  player.x = c.g.position.x; player.z = c.g.position.z; player.y = 0; player.yaw = y;
+  player.x = c.g.position.x; player.z = c.g.position.z; player.y = c.g.position.y = groundY(c.g.position.x, c.g.position.z); player.yaw = y;
   applyCarLights();
-  if (drv.lights) { const fx = Math.sin(y), fz = Math.cos(y); carBeam.position.set(c.g.position.x + fx * 2, 0.8, c.g.position.z + fz * 2); carBeam.target.position.set(c.g.position.x + fx * 24, 0, c.g.position.z + fz * 24); }
+  if (drv.lights) { const fx = Math.sin(y), fz = Math.cos(y); carBeam.position.set(c.g.position.x + fx * 2, 0.8 + player.y, c.g.position.z + fz * 2); carBeam.target.position.set(c.g.position.x + fx * 24, player.y, c.g.position.z + fz * 24); }
   dashUpdate(dt);
   if (drvCock) {   // চালকের আসনের দৃশ্য: গাড়ির ভেতর থেকে সামনে তাকানো
-    camera.position.set(player.x + Math.sin(y) * 0.5, 1.25, player.z + Math.cos(y) * 0.5);
-    camera.lookAt(player.x + Math.sin(y) * 20, 1.15, player.z + Math.cos(y) * 20);
+    camera.position.set(player.x + Math.sin(y) * 0.5, 1.25 + player.y, player.z + Math.cos(y) * 0.5);
+    camera.lookAt(player.x + Math.sin(y) * 20, 1.15 + player.y, player.z + Math.cos(y) * 20);
     return;
   }
-  camera.position.lerp(new THREE.Vector3(player.x - Math.sin(y) * 9, 4.2, player.z - Math.cos(y) * 9), 1 - Math.exp(-dt * 5));
-  camera.lookAt(player.x, 1.2, player.z);
+  camera.position.lerp(new THREE.Vector3(player.x - Math.sin(y) * 9, 4.2 + player.y, player.z - Math.cos(y) * 9), 1 - Math.exp(-dt * 5));
+  camera.lookAt(player.x, 1.2 + player.y, player.z);
 }
 function extra(dt) {
   if (paused) return;
@@ -3341,6 +3738,8 @@ function renderLobby() {
   if (!p) return;
   activeProfile = p;
   const xp = p.xp || 0, lvl = p.level || (Math.floor(xp / 100) + 1);
+  { const av = document.querySelector('#lobby .lb-av'), c = CHARACTERS.find(x => x.id === p.gender);
+    if (av && c && av.dataset.cid !== c.id) { av.dataset.cid = c.id; av.innerHTML = ''; const t = charThumb(c, 48); t.style.width = t.style.height = '100%'; t.style.borderRadius = '50%'; av.append(t); } }
   document.getElementById('lb-name').textContent = p.name || 'Player';
   document.getElementById('lb-lvl').textContent = 'Level ' + lvl;
   document.getElementById('lb-xp').style.width = (xp % 100) + '%';
