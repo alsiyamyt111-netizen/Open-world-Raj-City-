@@ -145,7 +145,7 @@ body.driving #run,body.driving #crouch,body.driving #prone,body.driving #jump,bo
 #bars .bar{flex:1;height:14px;margin:0;border:2px solid #111;background:rgba(0,0,0,.65);border-radius:8px}
 #stf{background:linear-gradient(#7fd8ff,#1e90ff)}
 .cashl{color:#8dff8d;font-size:13px;font-weight:700;text-shadow:0 1px 2px #000}
-#wheel{width:min(226.7px,calc(var(--vh)*62.7));height:min(226.7px,calc(var(--vh)*62.7));margin:0;transform:translate(-50%,-50%);background:none;border:0;border-radius:0}
+#wheel{left:42%;width:min(185px,calc(var(--vh)*51));height:min(185px,calc(var(--vh)*51));margin:0;transform:translate(-50%,-50%);background:none;border:0;border-radius:0}
 #wheel svg{width:100%;height:100%;display:block}
 #wheel .seg{cursor:pointer}#wheel .seg path{fill:#fff;stroke:#aeb4be;stroke-width:3}#wheel .seg.on path{fill:#f0b400;stroke:#fff}#wheel .cnt{fill:#1c1c20}#wheel>svg{filter:drop-shadow(0 3px 10px rgba(0,0,0,.55))}
 #crosshair{position:fixed;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;display:none;z-index:6;pointer-events:none;border:2px solid #fff;border-radius:50%;box-shadow:0 0 3px #000}
@@ -159,7 +159,7 @@ body.driving #run,body.driving #crouch,body.driving #prone,body.driving #jump,bo
 .pbox button{padding:6px 12px;border:0;border-radius:8px;background:#f0b400;color:#222;font-weight:700;font-size:13px}
 .pbox .pclose{display:block;margin:10px auto 0;background:#eee}
 #pausebtn{left:66px;top:66px;right:auto;bottom:auto;width:26px;height:26px;min-width:26px;min-height:26px;font-size:9px;border-width:1.5px}
-#wsel{left:12px;top:66px;right:auto;bottom:auto;width:48px;height:48px;font-size:12px}
+#wsel{left:12px;top:66px;right:auto;bottom:auto;width:24px;height:24px;min-width:24px;min-height:24px;font-size:8px;border-width:1px}
 #shop{left:12px;top:122px;right:auto;bottom:auto;width:48px;height:48px;font-size:12px}
 #eyebtn{left:74px;top:132px;right:auto;bottom:auto;width:40px;height:40px;font-size:12px}
 #aim{right:16px;top:118px;left:auto;bottom:auto;width:52px;height:52px;font-size:12px}
@@ -2296,6 +2296,18 @@ function update(dt) {
       if (state === 'prone') A.prone.timeScale = moving ? 1 : 0;   // দাঁড়িয়ে থাকলে শোয়া ভঙ্গিতে স্থির
       if (char.gun) char.gun.visible = gunT > 0 && stance === 'stand';
       char.mixer.update(dt);
+      // বসার অ্যানিমেশনের root/bone motion-এ নিতম্ব আসনের নিচে নামলে একই ফ্রেমে root উঁচু করি;
+      // hold পর্যায়ের ধীর correction-এর জন্য অপেক্ষা করতে হয় না।
+      if (rest && rest.kind === 'sit' && char.hips && rest.s.sy !== undefined) {
+        char.group.updateMatrixWorld(true);
+        const hipLocalY = char.hips.matrixWorld.elements[13] - char.group.position.y;
+        const seatHipY = rest.s.sy + REST_TUNE.sitHip;
+        const minRootY = seatHipY - hipLocalY - rest.s.lift;
+        if (char.group.position.y < minRootY) {
+          char.group.position.y = minRootY;
+          rest.lift = Math.max(0, minRootY - player.y);
+        }
+      }
     } else {
       // ব্যাকআপ চরিত্রের সরল অ্যানিমেশন
       const targetAmp = moving ? (run ? 0.9 : 0.55) : 0;
@@ -4010,7 +4022,6 @@ function newGameReset() {
   saveProfiles(); renderLobby();
 }
 bindTap(document.getElementById('pausebtn'), () => openPanel(() => ({ title: 'Resume', rows: [
-  { t: 'Back to Game', b: '▶ Back', f: () => closePanel() },
   { t: 'Back to Lobby', b: '🏠 Lobby', f: () => returnToLobby() },
   { t: 'Health bar', b: 'Show / Hide', f: () => { const r = document.querySelectorAll('#bars .brow')[0]; if (r) r.style.display = r.style.display === 'none' ? 'flex' : 'none'; } },
   { t: 'Water bar', b: 'Show / Hide', f: () => { const r = document.querySelectorAll('#bars .brow')[2]; if (r) r.style.display = r.style.display === 'none' ? 'flex' : 'none'; } },
@@ -4120,7 +4131,7 @@ function charAnimTo(st) {
   nx.reset().fadeIn(0.15).play(); nx.timeScale = char.speed[st] || 1; char.current = nx; char.state = st; char.key = st;
 }
 // গাড়িতে ওঠা/নামার অ্যানিমেশন টিউনিং — ভঙ্গি ঠিক না লাগলে শুধু এই সংখ্যাগুলো বদলান
-const CAR_TUNE = { yawIn: 0, yawOut: 0, seatLift: 0.25, slideFrom: 0.35, slideTo: 0.85 };
+const CAR_TUNE = { yawIn: 0, yawOut: 0, seatLift: 0.48, slideFrom: 0.35, slideTo: 0.85 };
 function stepEnter(dt) {
 const e = ent, c = e.c, y = c.g.rotation.y; e.t += dt; const t = e.t, sg = e.sgn;
 const outP = carToWorld(c, sg * (e.door.hw + 0.9), 0.2), seatP = carToWorld(c, -0.4, 0.15);
@@ -4161,7 +4172,7 @@ st = (t > 0.3 && t < 0.85) ? 'walk' : 'idle';
 }
 e.door.pivot.rotation.y = -sg * 1.15 * eio(a);
 player.x = p[0]; player.z = p[1]; player.y = 0; player.yaw = yaw;
-if (char.mixer) { charAnimTo(st); char.mixer.update(dt); e.lift = useAnim && st !== 'walk' ? CAR_TUNE.seatLift : 0; char.group.position.set(p[0], e.lift, p[1]); char.group.rotation.set(0, yaw, 0); }
+if (char.mixer) { charAnimTo(st); char.mixer.update(dt); e.lift = useAnim && (st === 'entercar' || st === 'exitcar') ? CAR_TUNE.seatLift : 0; char.group.position.set(p[0], e.lift, p[1]); char.group.rotation.set(0, yaw, 0); }
 else { char.group.position.set(p[0], 0, p[1]); char.group.rotation.set(0, yaw, 0); }
 if (!done) return;
 c.g.remove(e.door.pivot); ent = null;
