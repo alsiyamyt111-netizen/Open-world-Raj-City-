@@ -314,56 +314,18 @@ body.driving #run,body.driving #crouch,body.driving #prone,body.driving #jump,bo
 .cs-tag { align-self: flex-end; font-size: 11px; color: #7fd8ff; font-style: italic; font-weight: 700; }
 .cs-card.on .cs-tag { color: #ffd400; }
 
-/* ===== লবি: প্রফেশনাল গ্লাস ডিজাইন ===== */
-#lobby .lbx { position: absolute; z-index: 2; display: flex; align-items: center; margin: 0; padding: 0; color: #fff; cursor: pointer; font-family: 'Trebuchet MS', 'Hind Siliguri', sans-serif; -webkit-tap-highlight-color: transparent; box-sizing: border-box; transition: transform .12s, filter .12s; }
-#lobby .lbx:active { transform: scale(.95); filter: brightness(1.25); }
-#lobby .lbx svg { display: block; }
-#lobby .glass { background: linear-gradient(135deg, rgba(22,30,48,.74), rgba(8,10,18,.56)); border: 1px solid rgba(255,255,255,.24); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); box-shadow: 0 4px 14px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.14); }
-
-/* বাম উপরে সেটিংস */
-#lobby .lb-gearbtn { left: max(2%, env(safe-area-inset-left)); top: 3%; width: clamp(38px, 12vh, 46px); height: clamp(38px, 12vh, 46px); border-radius: 50%; justify-content: center; }
-#lobby .lb-gearbtn svg { width: 56%; height: 56%; }
-
-/* বাম মেনু */
-#lobby .lb-menu { position: absolute; z-index: 2; left: max(2%, env(safe-area-inset-left)); top: 22%; display: flex; flex-direction: column; gap: clamp(6px, 2vh, 10px); }
-#lobby .lb-mb { position: relative; width: clamp(128px, 24vw, 176px); height: clamp(36px, 12vh, 50px); padding: 0 12px 0 6px; gap: 10px; border-radius: 12px; font-size: clamp(13px, 4.3vh, 18px); font-weight: 800; letter-spacing: .4px; text-shadow: 0 1px 2px #000; }
-#lobby .lb-mb::before { content: ''; position: absolute; left: 0; top: 18%; bottom: 18%; width: 3px; border-radius: 3px; background: var(--c); box-shadow: 0 0 8px var(--c); }
-#lobby .lb-mb .ic { height: 76%; aspect-ratio: 1; border-radius: 9px; background: linear-gradient(145deg, var(--c), color-mix(in srgb, var(--c) 55%, #000)); display: flex; align-items: center; justify-content: center; color: #101010; flex: none; box-shadow: 0 2px 6px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.4); }
-#lobby .lb-mb .ic svg { width: 62%; height: 62%; }
-
-/* উপরে মাঝে ব্যালেন্স */
-#lobby .lb-bal { left: 50%; top: 3%; transform: translateX(-50%); gap: 8px; height: clamp(32px, 10vh, 40px); padding: 0 16px 0 6px; border-radius: 30px; border-color: rgba(245,196,0,.7); }
-#lobby .lb-bal:active { transform: translateX(-50%); filter: none; }
-#lobby .lb-bal svg { width: clamp(22px, 7vh, 28px); height: clamp(22px, 7vh, 28px); }
-#lobby .lb-bal small { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #bfc8d8; line-height: 1; }
-#lobby .lb-bal b { display: block; font-size: clamp(15px, 5vh, 19px); font-weight: 900; color: #6dff6d; line-height: 1.1; text-shadow: 0 1px 3px #000; margin: 0; }
-
-/* ডান উপরে প্রোফাইল */
-#lobby .lb-pf { right: max(2%, env(safe-area-inset-right)); top: 3%; gap: 10px; padding: 5px 16px 5px 5px; border-radius: 40px; }
-#lobby .lb-pf .lb-av { width: clamp(38px, 12vh, 48px); height: clamp(38px, 12vh, 48px); border-radius: 50%; border: 2px solid #f5c400; box-shadow: 0 0 10px rgba(245,196,0,.55); background: radial-gradient(circle at 35% 30%, #2f4a78, #111a2c); display: flex; align-items: center; justify-content: center; font-size: clamp(18px, 6vh, 24px); flex: none; }
-#lobby .lb-pf .lb-av { overflow: hidden; padding: 0; }
-#lobby .lb-pf .lb-av > div { border-radius: 50% !important; background: transparent !important; }
-#lobby .lb-pf .lb-info { min-width: clamp(84px, 16vw, 120px); }
-#lobby .lb-pf .lb-name { font-size: clamp(13px, 4.2vh, 16px); font-weight: 800; color: #fff; line-height: 1.15; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#lobby .lb-pf .lb-lvl { display: inline-block; margin-top: 2px; font-size: 11px; font-weight: 800; color: #1b1408; background: linear-gradient(#ffe27a, #f5b800); padding: 1px 8px; border-radius: 10px; }
-#lobby .lb-pf .lb-xp { width: 100%; height: 5px; background: rgba(0,0,0,.55); border: 0; border-radius: 4px; overflow: hidden; margin-top: 4px; }
-#lobby .lb-pf .lb-xp i { background: linear-gradient(90deg, #f5c400, #fff1a8); }
-
-/* Invite */
-#lobby .lb-inv { right: max(2%, env(safe-area-inset-right)); top: 25%; height: clamp(32px, 10vh, 40px); padding: 0 14px 0 10px; gap: 8px; border-radius: 20px; font-size: clamp(12px, 3.8vh, 15px); font-weight: 800; }
-#lobby .lb-inv svg { width: 18px; height: 18px; color: #7fd8ff; }
-
-/* নিচে ডানে Mods + Start */
-#lobby .lb-bot { position: absolute; z-index: 2; right: max(2%, env(safe-area-inset-right)); bottom: 5%; display: flex; align-items: flex-end; gap: 10px; }
-#lobby .lb-bot .lbx { position: relative; }
-#lobby .lb-mods { height: clamp(40px, 13vh, 54px); padding: 0 18px; gap: 8px; border-radius: 14px; font-size: clamp(14px, 4.6vh, 19px); font-weight: 800; }
-#lobby .lb-mods svg { width: 1.2em; height: 1.2em; color: #ffd400; }
-#lobby .lb-start { height: clamp(48px, 16vh, 66px); padding: 0 clamp(22px, 5vw, 38px); gap: 10px; border-radius: 16px; border: 2px solid #fff3b8; background: linear-gradient(180deg, #ffe680 0%, #f5b800 55%, #c98a00 100%); color: #2a1a00; font-size: clamp(18px, 6.4vh, 26px); font-weight: 900; font-style: italic; letter-spacing: 1.5px; text-shadow: 0 1px 0 rgba(255,255,255,.55); box-shadow: 0 5px 0 #8a5d00, 0 8px 20px rgba(0,0,0,.5); animation: lbPulse 2s ease-in-out infinite; overflow: hidden; }
-#lobby .lb-start svg { width: 1em; height: 1em; }
-#lobby .lb-start::after { content: ''; position: absolute; top: 0; bottom: 0; width: 36%; left: -50%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.65), transparent); transform: skewX(-20deg); animation: lbShine 2.8s ease-in-out infinite; }
-#lobby .lb-start:active { transform: translateY(3px); box-shadow: 0 2px 0 #8a5d00, 0 4px 12px rgba(0,0,0,.5); filter: brightness(1.08); }
-@keyframes lbPulse { 0%, 100% { box-shadow: 0 5px 0 #8a5d00, 0 8px 20px rgba(0,0,0,.5), 0 0 0 rgba(255,210,80,0); } 50% { box-shadow: 0 5px 0 #8a5d00, 0 8px 20px rgba(0,0,0,.5), 0 0 22px rgba(255,210,80,.75); } }
-@keyframes lbShine { 0% { left: -50%; } 55%, 100% { left: 130%; } }
+/* লবি (landscape): আপনার দাগ অনুযায়ী জায়গা */
+#lobby .p-profile { right: 1%; top: 3%; display: flex; }            /* ডান উপরে প্রোফাইল */
+#lobby .p-settings { left: 1%; top: 3%; font-size: 26px; padding: 0; }   /* বাম উপরে গিয়ার */
+#lobby .p-balance { left: 50%; top: 3%; transform: translateX(-50%); font-size: 15px; color: #fff; background: rgba(230,90,90,.9); padding: 3px 10px; border-radius: 12px; }
+#lobby .p-balance b { color: #6dff6d; margin-left: 6px; }
+#lobby .p-invite { right: 1%; top: 19%; font-size: 15px; color: #fff; }
+#lobby .p-store { left: 1%; top: 22%; font-size: 26px; color: #ff6b6b; }
+#lobby .p-char { left: 1%; top: 37%; font-size: 24px; color: #fff; }
+#lobby .p-vault { left: 1%; top: 52%; font-size: 24px; color: #f5c451; }
+#lobby .p-mission { left: 1%; top: 66%; font-size: 24px; color: #fff; }
+#lobby .p-mods { right: 14%; bottom: 0; font-size: 36px; color: #fff; background: #fff; color: #111; padding: 10px 22px; border-radius: 6px 6px 0 0; }
+#lobby .p-start { right: 0; bottom: 0; font-size: 30px; color: #fff; background: #111; padding: 12px 24px; border-radius: 6px 0 0 0; }
 /* ছোট বর্গাকার ব্যাকপ্যাক: তালিকা ভেতরে স্ক্রল */
 #panel.corner .pbox { width: calc(210px * var(--ps, 1)) !important; max-height: calc(230px * var(--ps, 1)) !important; font-size: calc(11px * var(--ps, 1)); padding: 6px 8px; }
 #panel.corner .pbox h3 { font-size: calc(12px * var(--ps, 1)); margin: 0 0 4px; }
@@ -398,27 +360,25 @@ body.driving #run,body.driving #crouch,body.driving #prone,body.driving #jump,bo
 </div>
 <div id="lobby" class="scr">
   <div id="lb-drag" style="position:absolute;inset:0;z-index:0"></div>
-  <button class="lbx glass lb-gearbtn p-settings" id="lb-settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
-  <div class="lbx glass lb-bal p-balance"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5" fill="#f5c400" stroke="#b88700" stroke-width="1.5"/><circle cx="12" cy="12" r="7.5" fill="none" stroke="#b88700" stroke-width="1"/><text x="12" y="16.3" text-anchor="middle" font-size="11" font-weight="900" fill="#7a5400" font-family="sans-serif">$</text></svg><div><small>Balance</small><b id="lb-cash">$0</b></div></div>
-  <div class="lbx glass lb-pf p-profile" role="button">
-    <div class="lb-av">🎧</div>
-    <div class="lb-info">
-      <div class="lb-name" id="lb-name">Player</div>
-      <div class="lb-lvl" id="lb-lvl">Level 1</div>
-      <div class="lb-xp"><i id="lb-xp" style="width:0%"></i></div>
+  <div class="lm p-profile" role="button">
+    <div class="lb-prof">
+      <div class="lb-av">🎧</div>
+      <div class="lb-info">
+        <div class="lb-name" id="lb-name">Player</div>
+        <div class="lb-lvl" id="lb-lvl">Level 1</div>
+        <div class="lb-xp"><i id="lb-xp" style="width:0%"></i></div>
+      </div>
     </div>
   </div>
-  <button class="lbx glass lb-inv p-invite lb-soon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6.5 7-6.5s7 2.5 7 6.5"/><path d="M19 8v6M16 11h6"/></svg>Invite</button>
-  <div class="lb-menu">
-    <button class="lbx glass lb-mb p-store" id="lb-store" style="--c:#ff6b6b"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span>Store</button>
-    <button class="lbx glass lb-mb p-char" id="lb-char" style="--c:#4fc3f7"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></span>Character</button>
-    <button class="lbx glass lb-mb p-vault lb-soon" style="--c:#f5c451"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.3"/></svg></span>Vault</button>
-    <button class="lbx glass lb-mb p-mission lb-soon" style="--c:#7be07b"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg></span>Mission</button>
-  </div>
-  <div class="lb-bot">
-    <button class="lbx glass lb-mods p-mods lb-soon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8 6.2 21l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6z"/></svg>Mods</button>
-    <button class="lbx lb-start p-start" id="lb-go"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>Start</button>
-  </div>
+  <div class="lm p-balance">Balance <b id="lb-cash">$0</b></div>
+  <button class="lm p-settings" id="lb-settings" aria-label="Settings">⚙</button>
+  <button class="lm p-invite lb-soon">Invite</button>
+  <button class="lm p-store" id="lb-store">Store</button>
+  <button class="lm p-char" id="lb-char">Character</button>
+  <button class="lm p-vault lb-soon">Vault</button>
+  <button class="lm p-mission lb-soon">Mission</button>
+  <button class="lm p-mods lb-soon">Mods</button>
+  <button class="lm p-start" id="lb-go">Start</button>
   <div class="lb-msg" id="lb-msg"></div>
 </div>
 <div id="start" class="scr" style="display:none">
@@ -2769,7 +2729,7 @@ function renderProfile() {
   const av = mk('div', '', 'pp-av');
   av.append(charThumb(pc, 110));
   const chg = mk('button', 'Change Avatar', 'pp-wide');
-  chg.onclick = () => renderCharSelect(d.gender, id => { d.gender = id; p.gender = id; saveProfiles(); renderProfile(); });
+  chg.onclick = () => renderCharSelect(d.gender, id => { d.gender = id; renderProfile(); });
   left.append(av, chg);
 
   // right: fields
@@ -3381,8 +3341,6 @@ function renderLobby() {
   if (!p) return;
   activeProfile = p;
   const xp = p.xp || 0, lvl = p.level || (Math.floor(xp / 100) + 1);
-  { const av = document.querySelector('#lobby .lb-av'), c = CHARACTERS.find(x => x.id === p.gender);
-    if (av && c && av.dataset.cid !== c.id) { av.dataset.cid = c.id; av.innerHTML = ''; const t = charThumb(c, 48); t.style.width = t.style.height = '100%'; t.style.borderRadius = '50%'; av.append(t); } }
   document.getElementById('lb-name').textContent = p.name || 'Player';
   document.getElementById('lb-lvl').textContent = 'Level ' + lvl;
   document.getElementById('lb-xp').style.width = (xp % 100) + '%';
