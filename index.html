@@ -579,7 +579,7 @@ applyFake();
 
 // ---------- কনফিগ ----------
 const MAP = 200, SPACING = 40, ROAD_W = 10, PR = 0.45;
-const WALK = 3.2, RUN = 5.2;
+const WALK = 3.2, RUN = 7.0;   // RUN আগে 5.2 ছিল (বেশি ধীর); আরও দ্রুত/ধীর চাইলে এই সংখ্যা বদলান
 const CHAR_HEIGHT = 1.8;
 const MODEL_YAW = 0;          // চরিত্র উল্টো দিকে হাঁটলে এটি Math.PI করুন
 
@@ -1650,7 +1650,7 @@ async function buildCharacter(gender) {
     if (ONCE[n]) { const d = Math.min(clip.duration, ONCE[n]); act.setLoop(THREE.LoopOnce, 1); act.clampWhenFinished = true; speed[n] = clip.duration / d; dur[n] = d; }
     actions[n] = act;
   }
-  if (actions.walk) speed.walk = 0.75; if (actions.run) speed.run = 0.78;
+  if (actions.walk) speed.walk = 0.75; if (actions.run) speed.run = 1.0;
   if (!actions.idle && !actions.walk && !actions.run) { console.warn('Animation file not found, using backup character'); return makePrimitive(gender); }
   // বন্দুক: ডান হাতের হাড়ে জোড়া
   let gun = null;
@@ -1887,9 +1887,23 @@ let hp = HP_MAX, armor = 100, pDead = false, deadT = 0, hurtT = 99, deaths = 0, 
 const CLIMB_MAX = 2.8;
 const topOf = b => b.h + 0.15;
 const canOver = (b, y) => b.h !== undefined && b.h <= CLIMB_MAX && y >= topOf(b) - 0.2;
+// দ্রুত সংঘর্ষ-খোঁজ: বাক্সগুলো ২০ মিটারের গ্রিডে সাজানো, তাই প্রতিবার সব বাক্স ঘুরে দেখতে হয় না (ফলাফল আগের মতোই)
+const GCS = 20; let bxGrid = null, bxGridN = -1;
+const gKey = (ix, iz) => (ix + 2048) * 4096 + (iz + 2048);
+function bxCells() {
+  if (bxGrid && bxGridN === boxes.length) return bxGrid;
+  const g = new Map();
+  for (const b of boxes) {
+    const x0 = Math.floor((b.minX - 1.5) / GCS), x1 = Math.floor((b.maxX + 1.5) / GCS), z0 = Math.floor((b.minZ - 1.5) / GCS), z1 = Math.floor((b.maxZ + 1.5) / GCS);
+    for (let ix = x0; ix <= x1; ix++) for (let iz = z0; iz <= z1; iz++) { const k = gKey(ix, iz); let a = g.get(k); if (!a) g.set(k, a = []); a.push(b); }
+  }
+  bxGrid = g; bxGridN = boxes.length; return g;
+}
+const bxAt = (x, z) => bxCells().get(gKey(Math.floor(x / GCS), Math.floor(z / GCS)));
 function blocked(x, z, y = -9) {
   if (terrainAt(x, z) < -0.7) return true;
-  for (const b of boxes) {
+  const list = bxAt(x, z); if (!list) return false;
+  for (const b of list) {
     if (x > b.minX - PR && x < b.maxX + PR && z > b.minZ - PR && z < b.maxZ + PR) {
       if (canOver(b, y)) continue;
       return true;
@@ -1899,7 +1913,8 @@ function blocked(x, z, y = -9) {
 }
 function supportY(x, z, y) {
   let g = groundY(x, z);
-  for (const b of boxes) {
+  const list = bxAt(x, z); if (!list) return g;
+  for (const b of list) {
     if (b.h !== undefined && b.h <= CLIMB_MAX && x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ && y >= topOf(b) - 0.2) g = Math.max(g, topOf(b));
   }
   return g;
@@ -1924,7 +1939,7 @@ function update(dt) {
   const moving = mag > 0.1;
 
   const tSpeed = moving ? (run ? RUN : stance === 'crouch' ? WALK * 0.5 : stance === 'prone' ? WALK * 0.25 : WALK) * mag * (combatT > 0 ? 0.7 : 1) : 0;
-  spd += (tSpeed - spd) * (1 - Math.exp(-dt * (tSpeed > spd ? 4 : 9)));
+  spd += (tSpeed - spd) * (1 - Math.exp(-dt * (tSpeed > spd ? 7 : 9)));
   if (moving) {
     const fx = Math.sin(camYaw), fz = Math.cos(camYaw);
     const rx = -Math.cos(camYaw), rz = Math.sin(camYaw);
@@ -2164,8 +2179,15 @@ function bakeMap(K = BK, flat = false) {
 function drawLayer(c, T, big, size) {
   c.fillStyle = SAT.sea; c.fillRect(0, 0, size, size);
   const o = T(MX1, MZ1), s = T(MX0, MZ0);
-  c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high';
-  if (mapImg) c.drawImage(mapImg, o[0], o[1], s[0] - o[0], s[1] - o[1]);
+  c.imageSmoothingEnabled = true; c.imageSmoothingQuality = big ? 'high' : 'low';
+  if (mapImg) {
+    const dw = s[0] - o[0], dh = s[1] - o[1];
+    if (big || !(dw > 0 && dh > 0)) c.drawImage(mapImg, o[0], o[1], dw, dh);
+    else {   // মিনিম্যাপ: পুরো ম্যাপ না এঁকে শুধু দেখা যাওয়া টুকরোটা আঁকি (দ্রুত)
+      const cl = v => Math.max(0, Math.min(1, v)), fx0 = cl(-o[0] / dw), fx1 = cl((size - o[0]) / dw), fy0 = cl(-o[1] / dh), fy1 = cl((size - o[1]) / dh);
+      if (fx1 > fx0 && fy1 > fy0) c.drawImage(mapImg, fx0 * mapImg.width, fy0 * mapImg.height, (fx1 - fx0) * mapImg.width, (fy1 - fy0) * mapImg.height, o[0] + fx0 * dw, o[1] + fy0 * dh, (fx1 - fx0) * dw, (fy1 - fy0) * dh);
+    }
+  }
   if (big && bmZoom >= 3) drawDetail(c, T);
   if (!big) { c.fillStyle = '#ffd400'; c.strokeStyle = '#000'; c.lineWidth = 1; for (const pl of PLACES) { const q = T(pl.x, pl.z); c.beginPath(); c.arc(q[0], q[1], 3, 0, 6.283); c.fill(); c.stroke(); } }
   c.fillStyle = '#ffb84d';
@@ -3506,6 +3528,14 @@ applyLayout();
 
 // ---------- লুপ (৩০ FPS সীমা) ----------
 let last = performance.now(), fpsFrames = 0, fpsTime = 0;
+// ---- অটো পারফরম্যান্স: ফ্রেমরেট কমে গেলে ধাপে ধাপে রেজোলিউশন/ছায়ার খরচ কমে (গেমের ফিচার বদলায় না) ----
+const TARGET_FPS = 60, BASE_DPR = Math.min(devicePixelRatio, 1.5);   // ফোন বেশি গরম হলে TARGET_FPS = 30 করুন
+let frameMin = 1000 / TARGET_FPS - 3, qLevel = 0, qWarm = 2, qTime = 0, qN = 0, frameN = 0;
+function setQuality(l) {
+  qLevel = l; qWarm = 1;
+  renderer.setPixelRatio(l === 0 ? BASE_DPR : l === 1 ? Math.max(1, BASE_DPR * 0.8) : l === 2 ? Math.min(1, BASE_DPR) : Math.min(0.85, BASE_DPR));
+  frameMin = (l >= 3 ? 1000 / 30 : 1000 / TARGET_FPS) - 3;
+}
 
 // ---------- নতুন HUD ফিচার: স্ট্যামিনা, টাকা, দোকান, ব্যাগ, বিরতি, ক্যামেরা, এইম, গাড়ি ----------
 let cash = 300, bank = 0, inv = { med: 1, arm: 1, water: 0 }, stam = 500, paused = false, aimOn = false, drv = null, snapFlag = false, lastCash = -1, toastT = 0;
@@ -3804,9 +3834,10 @@ function extra(dt) {
 function loop(now) {
   requestAnimationFrame(loop);
   const el = now - last;
-  if (el < 33) return;
-  last = now - (el % 33);
-  const dt = Math.min(el / 1000, 0.05);
+  if (el < frameMin) return;
+  last = now; frameN++;
+  const dt = Math.min(el / 1000, 0.066);   // আসল ফ্রেম-সময় ধরে চলে, তাই ল্যাগেও দৌড়ের গতি কমে না
+  renderer.shadowMap.autoUpdate = qLevel < 2 || (frameN & 1) === 0;
 
   if (!paused) animateWorld(now / 1000, dt);
   // আটকে যাওয়া অবস্থা ঠিক করা: মানচিত্র বা এডিট বার বন্ধ থাকলে ফ্ল্যাগও বন্ধ (নইলে দৌড়/লাফ/বসা কাজ করে না)
@@ -3820,8 +3851,15 @@ function loop(now) {
   renderer.render(mapOn ? mapScene : scene, mapOn ? mapCam : camera);
   if (snapFlag) shot();
   if (!mapOpen) renderEye();
-  if (started) { updateRoute(now); drawMini(); if (mapOpen) drawBig(); }
+  if (started) { updateRoute(now); if (!mapOpen && frameN % (qLevel ? 3 : 2) === 0) drawMini(); if (mapOpen) drawBig(); }
 
+  if (started && !paused && !mapOpen && !lbOn && el < 250) {
+    qTime += el; qN++;
+    if (qTime >= 2000) {
+      const f = qN * 1000 / qTime; qTime = 0; qN = 0;
+      if (qWarm > 0) qWarm--; else if (f < 38 && qLevel < 3) setQuality(qLevel + 1);
+    }
+  } else { qTime = 0; qN = 0; }
   fpsFrames++; fpsTime += el;
   if (fpsTime >= 1000) {
     document.getElementById('fps').textContent = 'FPS: ' + fpsFrames;
