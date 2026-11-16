@@ -73,6 +73,10 @@
   body.editing [data-cust].sel { outline: 3px solid #2ecc71; }
   body.editing #bars { pointer-events: auto; touch-action: none; padding: 4px; }
   body.editing #bars * { pointer-events: none; }
+  body.editing #panel { background: rgba(0,0,0,.18); }
+  body.editing #panelbox { position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%); width: min(300px, calc(var(--vw) * 76)); min-height: 150px; box-sizing: border-box; }
+  body.editing #wheel { display: block !important; }
+  body.editing #panelbox * { pointer-events: none; }
   #eye { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); width: calc(var(--vw) * 36); min-width: 140px; max-width: 300px; height: calc(var(--vw) * 21); min-height: 84px; max-height: 180px; border: 2px solid #fff; box-shadow: 0 0 0 2px rgba(0,0,0,.4); display: none; z-index: 6; touch-action: none; }
   #eye::after { content: '3rd eye · drag to rotate'; position: absolute; left: 4px; top: 2px; font-size: 10px; color: #fff; text-shadow: 0 1px 2px #000; pointer-events: none; }
   #run.on { background: rgba(255,214,0,.85); color: #222; border-color: #ffd400; }
@@ -3811,12 +3815,12 @@ function renderEye() {
 }
 
 // ---------- বাটন কাস্টমাইজ (টেনে সরানো, Size, Opacity, সেভ) ----------
-const CUST = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'medbtn', 'kick', 'eyebtn', 'mini', 'eye', 'bars', 'pausebtn', 'shop', 'aim', 'nade', 'reload', 'veh', 'cam'];
-const CNAME = { joy: 'Joystick', run: 'Run', jump: 'Jump', crouch: 'Crouch', prone: 'Prone', atk: 'Attack button', wsel: 'Bag', medbtn: 'Medkit', pausebtn: 'Pause', shop: 'Shop', aim: 'Aim', nade: 'Grenade button', reload: 'Reload', veh: 'Car', cam: 'Camera', kick: 'Kick', eyebtn: '3rd eye button', mini: 'Mini map', eye: '3rd eye window', bars: 'Health bar' };
-const OPAQ = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'medbtn', 'kick', 'eyebtn', 'pausebtn', 'shop', 'aim', 'nade', 'reload', 'veh', 'cam'];
+const CUST = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'medbtn', 'kick', 'eyebtn', 'mini', 'eye', 'bars', 'pausebtn', 'shop', 'aim', 'nade', 'reload', 'veh', 'cam', 'enterb', 'gear', 'wheel', 'hud', 'crosshair', 'dmg', 'cdbtns', 'cdwheel', 'cb-light', 'cb-gear', 'cb-view', 'cb-horn', 'cb-auto', 'panelbox'];
+const CNAME = { joy: 'Joystick', run: 'Run', jump: 'Jump', crouch: 'Crouch', prone: 'Prone', atk: 'Attack button', wsel: 'Backpack', medbtn: 'Medkit', pausebtn: 'Resume button', shop: 'Shop', aim: 'Aim', nade: 'Grenade button', reload: 'Reload', veh: 'Car', cam: 'Camera', enterb: 'Enter / Exit', crosshair: 'Crosshair', dmg: 'Damage indicator', cdwheel: 'Car steering wheel', kick: 'Kick', eyebtn: '3rd eye button', mini: 'Mini map', eye: '3rd eye window', bars: 'Health / Water bars', gear: 'Settings icon', wheel: 'Weapon wheel', hud: 'Info text', cdbtns: 'Car buttons', 'cb-light': 'Car light', 'cb-gear': 'Car gear', 'cb-view': 'Car view', 'cb-horn': 'Car horn', 'cb-auto': 'Car auto', panelbox: 'Menu panel' };
+const OPAQ = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'medbtn', 'kick', 'eyebtn', 'pausebtn', 'shop', 'aim', 'nade', 'reload', 'veh', 'cam', 'gear'];
 let layout = { op: 1, v: 2 }, editMode = false, selId = null, dragP = null, dragOff = [0, 0];
 try { const j = localStorage.getItem('wt_layout'); if (j) { const o = JSON.parse(j); if (o.v === 2) layout = Object.assign({ op: 1, v: 2 }, o); } } catch (e) {}
-CUST.forEach(id => { document.getElementById(id).dataset.cust = id; });
+CUST.forEach(id => { const el = document.getElementById(id); if (el) el.dataset.cust = id; });
 // বাটন/মিনি ম্যাপ স্ক্রিনের বাইরে যেতে পারবে না (আকার অনুযায়ী সীমা)
 function clampL(id) {
   const el = document.getElementById(id), L = layout[id]; if (!L || !el) return;
@@ -3826,7 +3830,7 @@ function clampL(id) {
   L.y = Math.max(my, Math.min(1 - my, L.y));
 }
 function placeEl(id) {
-  const el = document.getElementById(id), L = layout[id]; if (!L) return;
+  const el = document.getElementById(id), L = layout[id]; if (!L || !el) return;
   clampL(id);
   el.style.left = (L.x * innerWidth) + 'px'; el.style.top = (L.y * innerHeight) + 'px';
   el.style.right = 'auto'; el.style.bottom = 'auto';
@@ -3834,7 +3838,7 @@ function placeEl(id) {
 }
 function applyLayout() {
   CUST.forEach(placeEl);
-  for (const id of OPAQ) document.getElementById(id).style.opacity = layout.op || 1;
+  for (const id of OPAQ) { const el = document.getElementById(id); if (el) el.style.opacity = layout.op || 1; }
 }
 function ensureLayout(id) {
   if (layout[id]) return layout[id];
@@ -3843,12 +3847,23 @@ function ensureLayout(id) {
 }
 function selectEl(id) {
   selId = id;
-  CUST.forEach(i => document.getElementById(i).classList.toggle('sel', i === id));
+  CUST.forEach(i => { const el = document.getElementById(i); if (el) el.classList.toggle('sel', i === id); });
   const L = ensureLayout(id);
   document.getElementById('szr').value = L.s || 1;
   document.getElementById('edtxt').textContent = 'Selected: ' + CNAME[id] + ' · drag to move, resize';
 }
 function saveLayout() { if (activeProfile) { activeProfile.layout = layout; saveProfiles(); return; } try { localStorage.setItem('wt_layout', JSON.stringify(layout)); } catch (e) {} }
+let customPreview = false;
+function startHudCustomize() {
+  if (panelEl.style.display === 'flex') closePanel();
+  paused = true; customPreview = true;
+  panelEl.classList.remove('corner', 'resume');
+  panelEl.innerHTML = '<div id="panelbox" class="pbox"><h3>Menu panel preview</h3><div class="prow">Sample menu option</div><div class="prow">Panel size can be changed</div><button class="pclose">Preview</button></div>';
+  panelEl.style.display = 'flex';
+  const pb = document.getElementById('panelbox'); if (pb) pb.dataset.cust = 'panelbox';
+  renderWheel(); wheelEl.style.display = 'block';
+  toggleEdit();
+}
 function toggleEdit() {
   editMode = !editMode;
   const bar = document.getElementById('editbar');
@@ -3858,11 +3873,16 @@ function toggleEdit() {
     jx = 0; jy = 0; fireHeld = false; selId = null; dragP = null;
     document.getElementById('eye').style.display = 'block';
     document.getElementById('opr').value = layout.op || 1;
-    document.getElementById('edtxt').textContent = 'Drag to move · tap to select';
+    document.getElementById('edtxt').textContent = 'Tap an item, then drag to move · use Size to resize';
+    CUST.forEach(id => { const el = document.getElementById(id); if (el) el.dataset.cust = id; });
+    if (customPreview) { const pb = document.getElementById('panelbox'); if (pb) pb.dataset.cust = 'panelbox'; }
+    applyLayout();
   } else {
     document.getElementById('eye').style.display = eyeOn ? 'block' : 'none';
-    CUST.forEach(i => document.getElementById(i).classList.remove('sel'));
+    CUST.forEach(i => { const el = document.getElementById(i); if (el) el.classList.remove('sel'); });
     saveLayout();
+    wheelEl.style.display = 'none';
+    if (customPreview) { panelEl.style.display = 'none'; panelEl.innerHTML = ''; paused = false; customPreview = false; }
   }
 }
 { const g = document.getElementById('gear'); let gT = 0;
@@ -3873,9 +3893,9 @@ document.getElementById('edsave').addEventListener('click', () => { if (editMode
 document.getElementById('edflip').addEventListener('click', () => document.getElementById('editbar').classList.toggle('bottom'));
 document.getElementById('edreset').addEventListener('click', () => {
   layout = { op: 1, v: 2 };
-  CUST.forEach(id => { const st = document.getElementById(id).style; st.left = st.top = st.right = st.bottom = st.transform = st.opacity = ''; });
+  CUST.forEach(id => { const el = document.getElementById(id); if (el) { const st = el.style; st.left = st.top = st.right = st.bottom = st.transform = st.opacity = ''; } });
   document.getElementById('opr').value = 1; document.getElementById('szr').value = 1; selId = null;
-  CUST.forEach(i => document.getElementById(i).classList.remove('sel'));
+  CUST.forEach(i => { const el = document.getElementById(i); if (el) el.classList.remove('sel'); });
   try { localStorage.removeItem('wt_layout'); } catch (e) {}
   if (activeProfile) { delete activeProfile.layout; saveProfiles(); }
 });
@@ -3936,7 +3956,8 @@ function renderPanel() {
   const corner = panelEl.classList.contains('corner');
   const ctl = '<div class="pctl"><button class="pback">◀ Back</button>' + (corner ? '<span><button class="psz" data-d="-1">A−</button> <button class="psz" data-d="1">A+</button></span>' : '') + '</div>';
   panelEl.style.setProperty('--ps', shopScale);
-  panelEl.innerHTML = '<div class="pbox">' + ctl + '<h3>' + dd.title + '</h3><div class="plist">' + dd.rows.map((r, i) => '<div class="prow"><span>' + r.t + '</span>' + (r.b ? '<button data-r="' + i + '">' + r.b + '</button>' : '') + '</div>').join('') + '</div><button class="pclose">✕ Close</button></div>';
+  panelEl.innerHTML = '<div id="panelbox" class="pbox" data-cust="panelbox">' + ctl + '<h3>' + dd.title + '</h3><div class="plist">' + dd.rows.map((r, i) => '<div class="prow"><span>' + r.t + '</span>' + (r.b ? '<button data-r="' + i + '">' + r.b + '</button>' : '') + '</div>').join('') + '</div><button class="pclose">✕ Close</button></div>';
+  if (layout.panelbox) placeEl('panelbox');
   panelEl.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { dd.rows[b.dataset.r].f(); renderPanel(); saveProgress(); });
   panelEl.querySelector('.pclose').onclick = closePanel;
   panelEl.querySelector('.pback').onclick = closePanel;
@@ -4039,6 +4060,7 @@ bindTap(document.getElementById('pausebtn'), () => openPanel(() => ({ title: 'Re
   { t: 'Health bar', b: 'Show / Hide', f: () => { const r = document.querySelectorAll('#bars .brow')[0]; if (r) r.style.display = r.style.display === 'none' ? 'flex' : 'none'; } },
   { t: 'Water bar', b: 'Show / Hide', f: () => { const r = document.querySelectorAll('#bars .brow')[2]; if (r) r.style.display = r.style.display === 'none' ? 'flex' : 'none'; } },
   { t: 'Mobile Banking', b: '🏦 Open', f: () => openPanel(bankPanel, false, true) },
+  { t: 'Button & Bar Customize', b: '⚙ Customize', f: startHudCustomize },
   { t: 'Save Current Game', b: '💾 Save', f: () => { saveProgress(); toast('💾 Game saved'); closePanel(); } }
 ] }), false, true));
 bindTap(document.getElementById('aim'), () => { if (drv) return; aimOn = !aimOn; document.getElementById('aim').classList.toggle('on', aimOn); });
