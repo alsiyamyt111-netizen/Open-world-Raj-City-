@@ -1033,8 +1033,16 @@ function hwy3D() {
   strip3D(HWY, HW_W / 2, HW_W / 2 + 0.7, 0, 0.3, 0xb9b9b4, hwElev);
   strip3D(HWY, -0.45, 0.45, 0, 0.95, 0xc8c8c2, hwElev);                             // মাঝের কংক্রিট ডিভাইডার
   strip3D(HWY, -0.2, 0.2, 0.95, 1.1, 0xf5c518, hwElev);                             // ডিভাইডারের মাথায় হলুদ ফিতা
+  // হাইওয়ের মাঝের ডিভাইডারকে প্রতি সেগমেন্টে collision box করা, যাতে চরিত্র/গাড়ি ভেদ করতে না পারে
+  for (let i = 0; i < HWY.pts.length - 1; i++) {
+    const p = HWY.pts[i], q = HWY.pts[i + 1];
+    const h = Math.max(hwElev(p.s / HWY.len), hwElev(q.s / HWY.len)) + 1.0;
+    boxes.push({ minX: Math.min(p.x, q.x) - 0.55, maxX: Math.max(p.x, q.x) + 0.55, minZ: Math.min(p.z, q.z) - 0.55, maxZ: Math.max(p.z, q.z) + 0.55, h });
+  }
   // স্ট্রিটলাইট (ডিভাইডারের ওপর, দুই দিকে হাত)
   const L = []; for (let i = 6; i < HWY.pts.length - 6; i += 6) { const p = HWY.pts[i], q = HWY.pts[i + 1]; L.push([p.x, hwElev(p.s / HWY.len), p.z, Math.atan2(q.x - p.x, q.z - p.z)]); }
+  // হাইওয়ের ল্যাম্পপোস্টের খুঁটিও collision-এ যোগ করা
+  for (const l of L) boxes.push({ minX: l[0] - 0.34, maxX: l[0] + 0.34, minZ: l[2] - 0.34, maxZ: l[2] + 0.34, h: l[1] + 8.6 });
   const mk = (geo, mat, fn) => { const im = new THREE.InstancedMesh(geo, mat, L.length), M = new THREE.Matrix4(), Q = new THREE.Quaternion(); L.forEach((l, i) => { Q.setFromAxisAngle(UPV, l[3]); const [dx, dy, dz, sc] = fn(l); M.compose(new THREE.Vector3(l[0] + dx, l[1] + dy, l[2] + dz), Q, new THREE.Vector3(1, sc || 1, 1)); im.setMatrixAt(i, M); }); im.frustumCulled = false; im.castShadow = true; scene.add(im); };
   const steel = new THREE.MeshStandardMaterial({ color: 0x555a60, roughness: 0.5, metalness: 0.6 });
   mk(new THREE.CylinderGeometry(0.1, 0.14, 1, 8), steel, () => [0, 4.6, 0, 8]);
@@ -1061,6 +1069,9 @@ function buildVegetation() {
       if (r < 0.7) bushes.push([px, h, pz, 0.6 + rnd() * 0.9, rnd() * 6.28]);
     } else if (r < 0.75) (h > 26 ? pines : trees).push([px, h, pz, 0.8 + rnd() * 1.1, rnd() * 6.28]);
   }
+  // গাছের কাণ্ডকে দৃশ্যমান মডেলের পাশাপাশি চলাচলের শক্ত বাধা হিসেবেও রেজিস্টার করা
+  for (const t of trees) { const r = Math.max(0.28, 0.22 * t[3]); boxes.push({ minX: t[0] - r, maxX: t[0] + r, minZ: t[2] - r, maxZ: t[2] + r, h: t[1] + 2.4 * t[3] }); }
+  for (const t of pines) { const r = Math.max(0.25, 0.19 * t[3]); boxes.push({ minX: t[0] - r, maxX: t[0] + r, minZ: t[2] - r, maxZ: t[2] + r, h: t[1] + 2.0 * t[3] }); }
   const col = new THREE.Color(), M = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler();
   const mk = (geo, mat, list, fn, colorFn) => {
     if (!list.length) return; const im = new THREE.InstancedMesh(geo, mat, list.length);
@@ -1362,6 +1373,8 @@ const cDark = new THREE.Color(0x5f8f45), cLight = new THREE.Color(0xd2ee9f);
 function addTree(x, z, sc = 1) {
   const gy = 0.15, th = 2.4 + Math.random(), R = (2.8 + Math.random() * 1.2) * sc, ch = (2.6 + Math.random() * 0.8) * (0.7 + 0.3 * sc);
   const g = new THREE.Group(); g.position.set(x, gy, z); scene.add(g);
+  // হাতে বসানো/শহরের গাছের কাণ্ডের জন্যও collision যোগ করা
+  boxes.push({ minX: x - 0.52, maxX: x + 0.52, minZ: z - 0.52, maxZ: z + 0.52, h: gy + th });
   const trunk = new THREE.Mesh(trunkGeo, barkMat);
   trunk.scale.y = th; trunk.position.y = th / 2; trunk.castShadow = true; g.add(trunk);
   for (let i = 0; i < 4; i++) {
