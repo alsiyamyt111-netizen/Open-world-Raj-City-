@@ -20,10 +20,35 @@
   #knob { position: absolute; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,.6); left: 35px; top: 35px; }
   #run { position: fixed; right: 30px; bottom: 40px; width: 90px; height: 90px; border-radius: 50%; background: rgba(255,255,255,.25); color: #fff; border: 2px solid #fff; display: none; font-size: 15px; touch-action: none; -webkit-tap-highlight-color: transparent; z-index: 5; }
   #mini { cursor: pointer; z-index: 4; }
-  #bigmap { position: fixed; inset: 0; background: rgba(10,15,25,.93); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 10px; z-index: 20; }
-  #bm { border-radius: 12px; border: 2px solid #fff; touch-action: none; }
-  #bmbar { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; color: #fff; font-size: 14px; max-width: calc(var(--vw) * 95); text-align: center; }
-  #bmbar button { padding: 8px 14px; border: 0; border-radius: 8px; font-size: 14px; }
+  #bigmap { position: fixed; inset: 0; display: none; z-index: 20; background: transparent; font-family: 'Trebuchet MS', 'Hind Siliguri', sans-serif; }
+  #bm { position: absolute; left: 0; top: 0; width: 100%; height: 100%; touch-action: none; }
+  #bigmap button { font-family: inherit; -webkit-tap-highlight-color: transparent; cursor: pointer; }
+  #bmsearch { position: absolute; left: 12px; top: 10px; width: min(440px, calc(var(--vw) * 58)); height: 44px; background: #fff; border-radius: 22px; box-shadow: 0 2px 8px rgba(0,0,0,.45); display: flex; align-items: center; gap: 6px; padding: 0 5px 0 4px; box-sizing: border-box; z-index: 3; }
+  #bmclose { width: 36px; height: 36px; border: 0; border-radius: 50%; background: transparent; display: flex; align-items: center; justify-content: center; padding: 0; color: #202124; flex: none; }
+  #bmsearchtxt { flex: 1; font-size: 17px; color: #5f6368; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+  #bmav { width: 34px; height: 34px; border-radius: 50%; overflow: hidden; flex: none; }
+  #bmchips { position: absolute; left: 12px; top: 62px; display: flex; gap: 8px; max-width: calc(var(--vw) * 70); overflow-x: auto; padding: 2px 2px 6px; z-index: 3; touch-action: pan-x; }
+  #bmchips button { flex: none; height: 32px; padding: 0 14px; border: 0; border-radius: 16px; background: #fff; color: #202124; font-size: 14px; font-weight: 700; box-shadow: 0 1px 5px rgba(0,0,0,.4); }
+  #bmright { position: absolute; right: 12px; top: 10px; display: flex; flex-direction: column; gap: 12px; z-index: 3; }
+  .rb { width: 44px; height: 44px; border-radius: 50%; border: 0; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 0; color: #202124; }
+  .rb.cyan { background: #bfeaf2; }
+  #bmbr { position: absolute; right: 12px; bottom: 68px; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; z-index: 3; }
+  #bmzoom { display: flex; flex-direction: column; background: #fff; border-radius: 22px; box-shadow: 0 2px 6px rgba(0,0,0,.45); overflow: hidden; }
+  #bmzoom button { width: 44px; height: 38px; border: 0; background: transparent; font-size: 24px; color: #202124; font-weight: 700; padding: 0; }
+  #bmzoom button + button { border-top: 1px solid #ddd; }
+  .sq { width: 52px; height: 52px; border-radius: 14px; border: 0; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 0; color: #1a73e8; }
+  .sq.teal { background: #0b7a85; color: #fff; }
+  #bmscale { position: absolute; left: 14px; bottom: 66px; color: #fff; font-size: 12px; font-weight: 700; text-shadow: 0 1px 3px #000; z-index: 3; pointer-events: none; }
+  #bmscale i { display: block; height: 6px; border: 2px solid #fff; border-top: 0; box-shadow: 0 1px 2px #000; margin-bottom: 2px; }
+  #bmsheet { position: absolute; left: 0; right: 0; bottom: 0; height: 56px; background: #fff; border-radius: 20px 20px 0 0; box-shadow: 0 -2px 10px rgba(0,0,0,.35); z-index: 3; box-sizing: border-box; padding: 14px 16px 0; color: #202124; }
+  #bmsheet .grab { position: absolute; left: 50%; top: 6px; width: 44px; height: 4px; border-radius: 2px; background: #c4c7c5; transform: translateX(-50%); }
+  #bmsheet .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 36px; }
+  #bmtxt { font-size: 18px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; color: #202124; }
+  #bmclear { border: 0; border-radius: 16px; padding: 6px 14px; background: #e8f0fe; color: #1a73e8; font-weight: 700; font-size: 14px; }
+  #bmwx { background: #f1f3f4; border-radius: 14px; padding: 6px 10px; font-size: 14px; font-weight: 700; white-space: nowrap; }
+  body.mapping #mini, body.mapping #bars, body.mapping #hud, body.mapping #crosshair, body.mapping #eye, body.mapping #dmg, body.mapping #gear, body.mapping .act, body.mapping.playing .ib, body.mapping #cardash, body.mapping #wheel { display: none !important; }
+  body.mapping #joy { opacity: 0; }
+  #veh.hint { background: rgba(46,204,113,.92); color: #fff; border-color: #fff; }
   .act { position: fixed; display: none; border-radius: 50%; background: rgba(255,255,255,.25); color: #fff; border: 2px solid #fff; font-size: 14px; touch-action: none; -webkit-tap-highlight-color: transparent; z-index: 5; }
   .act.on { background: rgba(255,214,0,.85); color: #222; border-color: #ffd400; }
   #jump { right: 30px; bottom: 145px; width: 80px; height: 80px; }
@@ -507,7 +532,14 @@ body.driving #run,body.driving #crouch,body.driving #prone,body.driving #jump,bo
 <div id="crosshair"></div><div id="flash"></div><div id="toast"></div><div id="panel"></div>
 <button id="gear" class="act">⚙</button>
 <div id="editbar"><div id="edtxt">Drag to move · tap to select</div><div class="row"><label>Size <input id="szr" type="range" min="0.5" max="2" step="0.05" value="1"></label><label>Opacity <input id="opr" type="range" min="0.3" max="1" step="0.05" value="1"></label></div><div class="row"><button id="edflip">⇅ Flip</button><button id="edreset" style="background:#e67e22;color:#fff">Reset</button><button id="edsave" style="background:#2ecc71;color:#fff">✔ Save</button></div></div>
-<div id="bigmap"><canvas id="bm"></canvas><div id="bmbar"><span id="bmtxt">Tap the map to set a destination</span><button id="bmin" style="background:#2ecc71;color:#fff;font-weight:bold">＋</button><button id="bmout" style="background:#2ecc71;color:#fff;font-weight:bold">－</button><button id="bmme" style="background:#1f7ae0;color:#fff">📍 Me</button><button id="bmplaces" style="background:#f1c40f;color:#222">⭐ Places</button><button id="bmclear" style="background:#e67e22;color:#fff">Clear mark</button><button id="bmclose" style="background:#fff">◀ Back</button></div></div>
+<div id="bigmap"><canvas id="bm"></canvas>
+<div id="bmsearch"><button id="bmclose" aria-label="Back"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><span id="bmsearchtxt">Search saved places</span><span id="bmav"></span></div>
+<div id="bmchips"><button id="bmplaces">⭐ Places</button><button data-k="Shop">🛒 Shop</button><button data-k="Home">🏠 Home</button><button data-k="Port">⚓ Port</button><button data-k="Tower">🏢 Tower</button></div>
+<div id="bmright"><button id="bmlayer" class="rb cyan" aria-label="2D / 3D"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 12.5l9 5 9-5"/><path d="M3 16.5l9 5 9-5"/></svg></button><button id="bmcomp" class="rb" aria-label="North"><svg id="bmcsvg" width="26" height="26" viewBox="0 0 24 24"><path d="M12 2l4.5 10h-9z" fill="#e53935"/><path d="M12 22l4.5-10h-9z" fill="#9aa0a6"/></svg></button></div>
+<div id="bmbr"><div id="bmzoom"><button id="bmin">＋</button><button id="bmout">－</button></div><button id="bmme" class="sq" aria-label="My location"><svg width="26" height="26" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#e3ecfd"/><circle cx="12" cy="12" r="5" fill="#1a73e8"/></svg></button><button id="bmdir" class="sq teal" aria-label="Go to destination"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 9-9 9-9-9z" fill="currentColor" stroke="none"/><path d="M9 14v-3h5.5M12.5 8.5L15 11l-2.5 2.5" stroke="#0b7a85"/></svg></button></div>
+<div id="bmscale"><i id="bmscbar"></i><span id="bmsctxt"></span></div>
+<div id="bmsheet"><div class="grab"></div><div class="row"><span id="bmtxt">Tap the map to set a destination</span><button id="bmclear">✕ Clear</button><span id="bmwx">☀ Day</span></div></div>
+</div>
 
 <script type="module">
 import * as THREE from 'three';
@@ -547,7 +579,7 @@ applyFake();
 
 // ---------- কনফিগ ----------
 const MAP = 200, SPACING = 40, ROAD_W = 10, PR = 0.45;
-const WALK = 4.5, RUN = 7;
+const WALK = 3.2, RUN = 5.2;
 const CHAR_HEIGHT = 1.8;
 const MODEL_YAW = 0;          // চরিত্র উল্টো দিকে হাঁটলে এটি Math.PI করুন
 
@@ -1618,6 +1650,7 @@ async function buildCharacter(gender) {
     if (ONCE[n]) { const d = Math.min(clip.duration, ONCE[n]); act.setLoop(THREE.LoopOnce, 1); act.clampWhenFinished = true; speed[n] = clip.duration / d; dur[n] = d; }
     actions[n] = act;
   }
+  if (actions.walk) speed.walk = 0.75; if (actions.run) speed.run = 0.78;
   if (!actions.idle && !actions.walk && !actions.run) { console.warn('Animation file not found, using backup character'); return makePrimitive(gender); }
   // বন্দুক: ডান হাতের হাড়ে জোড়া
   let gun = null;
@@ -1755,6 +1788,7 @@ const endJoy = e => {
 };
 joy.addEventListener('pointerup', endJoy);
 joy.addEventListener('pointercancel', endJoy);
+joy.addEventListener('lostpointercapture', endJoy);
 
 const runBtn = document.getElementById('run');
 let runTouch = false;
@@ -2138,41 +2172,108 @@ function drawMini() {
   c.lineTo(R - Math.sin(player.yaw) * 14, R - Math.cos(player.yaw) * 14); c.stroke();
   c.restore();
 }
-let bmW = 300, bmH = 300, bmZoom = 1, bmCx = 0, bmCz = 0;
-const bmT = (x, z) => [bmW / 2 - (x - bmCx) * bmS, bmH / 2 - (z - bmCz) * bmS];
-function drawBig() {
-  const c = bmx;
-  if (bmZoom <= 1) { bmZoom = 1; bmCx = (MX0 + MX1) / 2; bmCz = (MZ0 + MZ1) / 2; }
-  bmS = bmFit * bmZoom;
-  const T = bmT;
-  c.clearRect(0, 0, bmW, bmH);
-  c.save(); c.beginPath(); c.rect(0, 0, bmW, bmH); c.clip();
-  drawLayer(c, T, true, Math.max(bmW, bmH)); drawRoute(c, T, 4);
-  if (marker) {
-    const [X, Y] = T(marker.x, marker.z);
-    c.fillStyle = '#ff3b3b'; c.strokeStyle = '#fff'; c.lineWidth = 3;
-    c.beginPath(); c.arc(X, Y, 8, 0, 6.283); c.fill(); c.stroke();
-    c.beginPath(); c.arc(X, Y, 14, 0, 6.283); c.stroke();
+// ---------- ৩ডি মানচিত্র: আসল ৩ডি দুনিয়া ওপর থেকে দেখা; ঘোরানো, কাত করা, জুম, ট্যাপে গন্তব্য ----------
+const mapCam = new THREE.PerspectiveCamera(50, 1.6, 1, 9000);
+let bmW = 300, bmH = 300, bmDpr = 1, bmCx = 0, bmCz = 0, bmBear = 0, bmTilt = 0.95, bmDist = 380, bmFogN = 110, bmFogF = 460;
+const BM_MIN = 40, BM_MAX = 2800;
+const clampBm = () => { bmCx = Math.max(MX0, Math.min(MX1, bmCx)); bmCz = Math.max(MZ0, Math.min(MZ1, bmCz)); bmDist = Math.max(BM_MIN, Math.min(BM_MAX, bmDist)); bmTilt = Math.max(0.02, Math.min(1.2, bmTilt)); };
+function mapCamUpdate() {
+  if (bmFollow) { bmCx = player.x; bmCz = player.z; }
+  clampBm();
+  const ty = Math.max(0, terrainAt(bmCx, bmCz)), fx = Math.sin(bmBear), fz = Math.cos(bmBear), st = Math.sin(bmTilt), ct = Math.cos(bmTilt);
+  mapCam.position.set(bmCx - fx * st * bmDist, ty + ct * bmDist + 1, bmCz - fz * st * bmDist);
+  mapCam.up.set(0, 1, 0); mapCam.lookAt(bmCx, ty, bmCz);
+  mapCam.aspect = bmW / bmH; mapCam.updateProjectionMatrix(); mapCam.updateMatrixWorld();
+}
+const _pv = new THREE.Vector3();
+function bmProj(x, y, z) {
+  _pv.set(x, y, z).applyMatrix4(mapCam.matrixWorldInverse);
+  if (_pv.z > -1) return null;
+  _pv.applyMatrix4(mapCam.projectionMatrix);
+  return [(_pv.x * 0.5 + 0.5) * bmW, (-_pv.y * 0.5 + 0.5) * bmH];
+}
+const bmUpp = () => 2 * bmDist * Math.tan(mapCam.fov * Math.PI / 360) / bmH;   // প্রতি পিক্সেলে কত মিটার (কেন্দ্রে)
+function bmPick(X, Y) {   // পর্দার বিন্দু থেকে রে ছুড়ে ভূমি/দালানের ওপর পড়া জায়গা বের করা
+  const rc = new THREE.Raycaster(); rc.setFromCamera(new THREE.Vector2(X / bmW * 2 - 1, -(Y / bmH) * 2 + 1), mapCam);
+  const o = rc.ray.origin, d = rc.ray.direction, far = bmDist * 5 + 600;
+  const hit = t => {
+    const x = o.x + d.x * t, y = o.y + d.y * t, z = o.z + d.z * t;
+    if (y <= Math.max(terrainAt(x, z), -1)) return true;
+    for (const b of boxes) if (b.h !== undefined && x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ && y <= b.h + 0.15) return true;
+    return false;
+  };
+  let t = 0, prev = 0;
+  while (t < far) {
+    if (hit(t)) { let lo = prev, hi = t; for (let k = 0; k < 12; k++) { const m = (lo + hi) / 2; if (hit(m)) hi = m; else lo = m; } return { x: o.x + d.x * hi, z: o.z + d.z * hi }; }
+    prev = t; t += Math.max(1.2, t * 0.006);
   }
-  drawPlaces(c, T);
-  const [X, Y] = T(player.x, player.z);
-  c.fillStyle = '#fff'; c.strokeStyle = '#1f7ae0'; c.lineWidth = 3;
-  c.beginPath(); c.arc(X, Y, 6, 0, 6.283); c.fill(); c.stroke();
-  c.strokeStyle = '#ffd400'; c.beginPath(); c.moveTo(X, Y);
-  c.lineTo(X - Math.sin(player.yaw) * 18, Y - Math.cos(player.yaw) * 18); c.stroke();
-  c.restore();
+  return null;
 }
-let bmFit = 0.3;
+let bmLastWx = '', bmFollow = true;
+function drawBig() {
+  const c = bmx; c.setTransform(bmDpr, 0, 0, bmDpr, 0, 0); c.clearRect(0, 0, bmW, bmH);
+  c.lineJoin = 'round'; c.lineCap = 'round'; c.textAlign = 'center';
+  const lab = (t, q, sz, col) => { c.font = '800 ' + sz + 'px sans-serif'; c.lineWidth = 4; c.strokeStyle = 'rgba(0,0,0,.75)'; c.fillStyle = col || '#fff'; c.strokeText(t, q[0], q[1]); c.fillText(t, q[0], q[1]); };
+  if (bmDist > 320) {   // বেশি দূর থেকে দেখলে শহর/বন্দরের নাম
+    for (const C of CITIES) { const q = bmProj(C.cx, 20, C.cz); if (q) { lab(C.bn, q, 22, '#fff3b0'); lab(C.name, [q[0], q[1] + 16], 12); } }
+    const q = bmProj(PORT.cx, 10, PORT.cz); if (q) lab('বন্দর · Port', q, 16, '#bdf3ff');
+    const m = HWY.pts[Math.floor(HWY.pts.length / 2)], h = bmProj(m.x, hwElev(m.s / HWY.len) + 12, m.z); if (h) lab('⛰ Hill Highway', h, 13, '#ffe08a');
+  }
+  if (route.length > 1) {   // পথের রেখা (সাদা কিনারাসহ নীল)
+    const pts = route.map(r => bmProj(r.x, groundY(r.x, r.z) + 0.6, r.z));
+    for (const [col, w] of [['#ffffff', 9], ['#1a73e8', 5.5]]) {
+      c.strokeStyle = col; c.lineWidth = w; c.beginPath(); let on = false;
+      for (const q of pts) { if (!q) { on = false; continue; } if (!on) { c.moveTo(q[0], q[1]); on = true; } else c.lineTo(q[0], q[1]); }
+      c.stroke();
+    }
+  }
+  drawPlaces();
+  if (marker) {   // লাল পিন
+    const q = bmProj(marker.x, groundY(marker.x, marker.z), marker.z);
+    if (q) {
+      const X = q[0], Y = q[1];
+      c.fillStyle = 'rgba(0,0,0,.3)'; c.beginPath(); c.ellipse(X, Y, 9, 4, 0, 0, 6.283); c.fill();
+      c.fillStyle = '#ea4335'; c.strokeStyle = '#fff'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(X, Y); c.bezierCurveTo(X - 18, Y - 18, X - 14, Y - 40, X, Y - 40); c.bezierCurveTo(X + 14, Y - 40, X + 18, Y - 18, X, Y); c.fill(); c.stroke();
+      c.fillStyle = '#fff'; c.beginPath(); c.arc(X, Y - 27, 5, 0, 6.283); c.fill();
+    }
+  }
+  {   // আপনি: নীল বিন্দু + দিক
+    const gy = player.y + 0.5, q = bmProj(player.x, gy, player.z), f = bmProj(player.x + Math.sin(player.yaw) * 6, gy, player.z + Math.cos(player.yaw) * 6);
+    if (q) {
+      const X = q[0], Y = q[1], pulse = 14 + 5 * Math.sin(performance.now() / 350);
+      c.fillStyle = 'rgba(26,115,232,.22)'; c.beginPath(); c.arc(X, Y, pulse, 0, 6.283); c.fill();
+      if (f) { const a = Math.atan2(f[1] - Y, f[0] - X); c.save(); c.translate(X, Y); c.rotate(a); c.fillStyle = 'rgba(26,115,232,.85)'; c.beginPath(); c.moveTo(24, 0); c.lineTo(8, -9); c.lineTo(8, 9); c.closePath(); c.fill(); c.restore(); }
+      c.fillStyle = '#1a73e8'; c.strokeStyle = '#fff'; c.lineWidth = 3.5; c.beginPath(); c.arc(X, Y, 8, 0, 6.283); c.fill(); c.stroke();
+    }
+  }
+  // কম্পাস, স্কেল, দিন/রাত
+  document.getElementById('bmcsvg').style.transform = 'rotate(' + (bmBear * 57.2958).toFixed(1) + 'deg)';
+  const u = bmUpp(), nice = [5, 10, 20, 50, 100, 200, 500, 1000, 2000].find(n => n / u >= 55) || 2000;
+  document.getElementById('bmscbar').style.width = (nice / u).toFixed(0) + 'px';
+  document.getElementById('bmsctxt').textContent = nice >= 1000 ? nice / 1000 + ' km' : nice + ' m';
+  const wx = nightK > 0.5 ? '🌙 Night' : '☀ Day'; if (wx !== bmLastWx) { bmLastWx = wx; document.getElementById('bmwx').textContent = wx; }
+}
 function openMap() {
-  if (!started) return;
-  mapOpen = true; jx = 0; jy = 0; fireHeld = false; dragId = null;
-  const aspect = (MZ1 - MZ0) / (MX1 - MX0);
-  let w = Math.min(innerWidth - 16, 1100), h = w * aspect;
-  if (h > innerHeight - 100) { h = innerHeight - 100; w = h / aspect; }
-  bmW = Math.floor(w); bmH = Math.floor(h); bm.width = bmW; bm.height = bmH; bmFit = bmW / (MX1 - MX0); bmZoom = 1; bmSide = bmW; bmCx = (MX0 + MX1) / 2; bmCz = (MZ0 + MZ1) / 2; plShow(false);
-  bigWrap.style.display = 'flex';
+  if (!started || mapOpen) return;
+  navPush();
+  mapOpen = true; bmFollow = true;
+  bmW = innerWidth; bmH = innerHeight; bmDpr = Math.min(devicePixelRatio || 1, 2); bm.width = Math.round(bmW * bmDpr); bm.height = Math.round(bmH * bmDpr);
+  bmCx = player.x; bmCz = player.z; bmBear = 0; bmTilt = 0.95; bmDist = 380;
+  bmFogN = scene.fog ? scene.fog.near : 110; bmFogF = scene.fog ? scene.fog.far : 460;
+  if (scene.fog) { scene.fog.near = 1e6; scene.fog.far = 2e6; }
+  ribMesh.visible = false; document.body.classList.add('mapping'); plShow(false);
+  const av = document.getElementById('bmav'); av.innerHTML = '';
+  const ch = activeProfile && CHARACTERS.find(x => x.id === activeProfile.gender); if (ch) { const t = charThumb(ch, 34); t.style.width = t.style.height = '100%'; t.style.borderRadius = '50%'; av.append(t); }
+  bigWrap.style.display = 'block';
+  toast('1 finger: move · 2 fingers: zoom / rotate / tilt');
 }
-function closeMap() { plShow(false); mapOpen = false; bigWrap.style.display = 'none'; }
+function closeMap() {
+  if (!mapOpen) return;
+  plShow(false); mapOpen = false; bigWrap.style.display = 'none'; document.body.classList.remove('mapping');
+  if (scene.fog) { scene.fog.near = bmFogN; scene.fog.far = bmFogF; }
+  ribMesh.visible = true; bmx.clearRect(0, 0, bm.width, bm.height);
+}
+function closeMapUI() { if (!mapOpen) return; closeMap(); navPop(); }
 function snapOut(pt) {
   if (false) return;
   for (const b of boxes) {
@@ -2195,34 +2296,55 @@ function setMarker(x, z) {
   marker = pt; lastRoute = 0; updateRoute(performance.now());
   document.getElementById('bmtxt').textContent = 'Destination: ' + name + ' · ' + Math.round(routeLen) + ' m';
 }
-const bmPtr = new Map(); let bmDrag = false, bmPin0 = 0, bmZ0 = 1;
-const clampBm = () => { bmCx = Math.max(MX0, Math.min(MX1, bmCx)); bmCz = Math.max(MZ0, Math.min(MZ1, bmCz)); };
-function setBmZoom(z) { bmZoom = Math.max(1, Math.min(12, z)); if (bmZoom <= 1) { bmCx = (MX0 + MX1) / 2; bmCz = (MZ0 + MZ1) / 2; } clampBm(); }
+const bmPtr = new Map(); let bmDrag = false, bmG = null;
+const bmRect = () => bm.getBoundingClientRect();
 bm.addEventListener('pointerdown', e => {
-  bm.setPointerCapture(e.pointerId); bmPtr.set(e.pointerId, { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY });
+  bm.setPointerCapture(e.pointerId); const r = bmRect();
+  bmPtr.set(e.pointerId, { x: e.clientX - r.left, y: e.clientY - r.top, sx: e.clientX, sy: e.clientY });
   if (bmPtr.size === 1) bmDrag = false;
-  if (bmPtr.size === 2) { const [a, b] = [...bmPtr.values()]; bmPin0 = Math.hypot(a.x - b.x, a.y - b.y) || 1; bmZ0 = bmZoom; }
+  if (bmPtr.size === 2) { const [a, b] = [...bmPtr.values()]; bmG = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, a: Math.atan2(b.y - a.y, b.x - a.x), my: (a.y + b.y) / 2, dist: bmDist, bear: bmBear, tilt: bmTilt }; bmDrag = true; }
 });
 bm.addEventListener('pointermove', e => {
   const p = bmPtr.get(e.pointerId); if (!p) return;
-  const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
-  if (bmPtr.size === 2) { const [a, b] = [...bmPtr.values()]; setBmZoom(bmZ0 * Math.hypot(a.x - b.x, a.y - b.y) / bmPin0); bmDrag = true; }
-  else if (bmDrag || Math.hypot(e.clientX - p.sx, e.clientY - p.sy) > 8) { bmDrag = true; const f = bmW / bm.getBoundingClientRect().width; bmCx += dx * f / bmS; bmCz += dy * f / bmS; clampBm(); }
+  const r = bmRect(), nx = e.clientX - r.left, ny = e.clientY - r.top, dx = nx - p.x, dy = ny - p.y; p.x = nx; p.y = ny;
+  if (bmPtr.size === 2 && bmG) {
+    const [a, b] = [...bmPtr.values()], d = Math.hypot(a.x - b.x, a.y - b.y) || 1, ang = Math.atan2(b.y - a.y, b.x - a.x), my = (a.y + b.y) / 2;
+    bmDist = bmG.dist * bmG.d / d; bmBear = bmG.bear + wrap(ang - bmG.a); bmTilt = bmG.tilt + (bmG.my - my) * 0.006; clampBm();
+  } else if (bmPtr.size === 1 && (bmDrag || Math.hypot(e.clientX - p.sx, e.clientY - p.sy) > 8)) {
+    bmDrag = true; bmFollow = false;
+    const u = bmUpp(), fx = Math.sin(bmBear), fz = Math.cos(bmBear), k = u / Math.max(0.35, Math.cos(bmTilt));
+    bmCx += Math.cos(bmBear) * dx * u + fx * dy * k; bmCz += -Math.sin(bmBear) * dx * u + fz * dy * k; clampBm();
+  }
 });
-const bmEnd = e => { bmPtr.delete(e.pointerId); };
+const bmEnd = e => { bmPtr.delete(e.pointerId); if (bmPtr.size < 2) bmG = null; };
 bm.addEventListener('pointercancel', bmEnd);
 bm.addEventListener('pointerup', e => {
   const wasTap = bmPtr.size === 1 && !bmDrag; bmEnd(e); if (!wasTap) return;
-  const r = bm.getBoundingClientRect(), f = bmW / r.width;
-  const X = (e.clientX - r.left) * f, Y = (e.clientY - r.top) * f;
-  const wx = (bmW / 2 - X) / bmS + bmCx, wz = (bmH / 2 - Y) / bmS + bmCz;
-  if (terrainAt(wx, wz) < -0.7) { document.getElementById('bmtxt').textContent = 'That is sea — pick land'; return; }
-  setMarker(wx, wz);
+  const r = bmRect(), hit = bmPick(e.clientX - r.left, e.clientY - r.top);
+  if (!hit) { document.getElementById('bmtxt').textContent = 'Tap on the land'; return; }
+  if (terrainAt(hit.x, hit.z) < -0.7) { document.getElementById('bmtxt').textContent = 'That is sea — pick land'; return; }
+  setMarker(hit.x, hit.z);
 });
-bm.addEventListener('wheel', e => { e.preventDefault(); setBmZoom(bmZoom * (e.deltaY < 0 ? 1.25 : 0.8)); }, { passive: false });
-document.getElementById('bmin').addEventListener('click', () => setBmZoom(bmZoom * 1.7));
-document.getElementById('bmout').addEventListener('click', () => setBmZoom(bmZoom / 1.7));
-document.getElementById('bmme').addEventListener('click', () => { if (bmZoom < 3) bmZoom = 4; bmCx = player.x; bmCz = player.z; clampBm(); });
+bm.addEventListener('wheel', e => { e.preventDefault(); if (e.altKey) bmBear += e.deltaY * 0.003; else if (e.shiftKey) bmTilt += e.deltaY * 0.002; else bmDist *= e.deltaY < 0 ? 0.85 : 1.18; clampBm(); }, { passive: false });
+const $b = id => document.getElementById(id);
+$b('bmin').addEventListener('click', () => { bmDist /= 1.6; clampBm(); });
+$b('bmout').addEventListener('click', () => { bmDist *= 1.6; clampBm(); });
+$b('bmme').addEventListener('click', () => { bmFollow = true; bmCx = player.x; bmCz = player.z; bmDist = Math.min(bmDist, 140); clampBm(); });
+$b('bmcomp').addEventListener('click', () => { bmBear = 0; });
+$b('bmlayer').addEventListener('click', () => { const flat = bmTilt > 0.3; bmTilt = flat ? 0.02 : 0.95; toast(flat ? '2D top view' : '3D view'); });
+$b('bmdir').addEventListener('click', () => { if (!marker) { toast('Tap the map to set a destination first'); return; } bmFollow = false; bmCx = marker.x; bmCz = marker.z; bmDist = Math.min(Math.max(bmDist, 160), 400); clampBm(); });
+$b('bmsearchtxt').addEventListener('click', () => plShow(true));
+$b('bmav').addEventListener('click', () => plShow(true));
+function nearestNamed(nm) {
+  let best = null, bd = 1e18;
+  for (const k of boxes) { if (k.name !== nm) continue; const cx = (k.minX + k.maxX) / 2, cz = (k.minZ + k.maxZ) / 2, d = (cx - player.x) ** 2 + (cz - player.z) ** 2; if (d < bd) { bd = d; best = [cx, cz]; } }
+  return best;
+}
+document.querySelectorAll('#bmchips [data-k]').forEach(b => b.addEventListener('click', () => {
+  const k = b.dataset.k, pt = k === 'Port' ? [PORT.cx, PORT.cz] : nearestNamed(k === 'Tower' ? 'Office Tower' : k);
+  if (!pt) { toast('Nothing found'); return; }
+  setMarker(pt[0], pt[1]); bmFollow = false; bmCx = marker.x; bmCz = marker.z; bmDist = Math.min(bmDist, 260); clampBm();
+}));
 
 function drawDetail(c, T) {   // বেশি জুমে পরিষ্কার ভেক্টর রাস্তা, ব্লক ও দালান
   const W = bmW, H = bmH, vis = (q, m) => q[0] > -m && q[0] < W + m && q[1] > -m && q[1] < H + m;
@@ -2285,22 +2407,23 @@ plp.querySelector('#plsave').onclick = () => {
   document.getElementById('bmtxt').textContent = 'Saved: ' + plIcon(n) + ' ' + n;
 };
 document.getElementById('bmplaces').addEventListener('click', () => plShow(plp.style.display === 'none'));
-function drawPlaces(c, T) {
-  c.textAlign = 'center'; c.lineJoin = 'round';
+function drawPlaces() {
+  const c = bmx; c.textAlign = 'center'; c.lineJoin = 'round';
   for (const p of PLACES) {
-    const [X, Y] = T(p.x, p.z); if (X < -20 || Y < -20 || X > bmW + 20 || Y > bmH + 20) continue;
+    const q = bmProj(p.x, groundY(p.x, p.z) + 1, p.z); if (!q) continue;
+    const [X, Y] = q; if (X < -20 || Y < -20 || X > bmW + 20 || Y > bmH + 20) continue;
     c.fillStyle = '#fff'; c.strokeStyle = '#f1c40f'; c.lineWidth = 3; c.beginPath(); c.arc(X, Y, 11, 0, 6.283); c.fill(); c.stroke();
     c.font = '14px sans-serif'; c.fillStyle = '#000'; c.fillText(plIcon(p.n), X, Y + 5);
     c.font = 'bold 12px sans-serif'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.8)'; c.fillStyle = '#ffe27a'; c.strokeText(p.n, X, Y + 25); c.fillText(p.n, X, Y + 25);
   }
 }
 document.getElementById('mini').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); openMap(); });
-document.getElementById('bmclose').addEventListener('click', closeMap);
+document.getElementById('bmclose').addEventListener('click', closeMapUI);
 document.getElementById('bmclear').addEventListener('click', () => {
   marker = null; route = []; routeLen = 0; lastRoute = 0; updateRoute(performance.now());
   document.getElementById('bmtxt').textContent = 'Tap the map to set a destination';
 });
-addEventListener('keydown', e => { if (e.target && e.target.tagName === 'INPUT') return; if (e.code === 'KeyM') mapOpen ? closeMap() : openMap(); });
+addEventListener('keydown', e => { if (e.target && e.target.tagName === 'INPUT') return; if (e.code === 'KeyM') mapOpen ? closeMapUI() : openMap(); });
 
 // রাস্তার গ্রিড ধরে পথ: দুই শহর + হাইওয়ে + বন্দর-সড়ক (ডাইক্সট্রা)
 let RGN = null, RGE = null;
@@ -2941,6 +3064,11 @@ function drinkWater() {
   if (stam >= 500) { toast('Not needed now'); return; }
   inv.water--; stam = Math.min(500, stam + 150);
 }
+function eatFood() {
+  if (!((inv.food || 0) > 0)) { toast('No food'); return; }
+  if (stam >= 500) { toast('Not needed now'); return; }
+  inv.food--; stam = Math.min(500, stam + 250);
+}
 function hudPref(k) { return !(activeProfile && activeProfile.hud && activeProfile.hud[k] === false); }
 function setHud(k, v) { if (!activeProfile) return; activeProfile.hud = Object.assign({}, activeProfile.hud || {}, { [k]: v }); saveProfiles(); applyHud(); }
 function applyHud() {
@@ -3351,6 +3479,7 @@ function navPop() { if (navDepth > 0) { navDepth--; navIgnore++; history.back();
 addEventListener('popstate', () => {
   if (navIgnore > 0) { navIgnore--; return; }
   if (navDepth > 0) navDepth--;
+  if (mapOpen) { closeMap(); return; }
   if (panelEl.style.display === 'flex') { closePanelRaw(); return; }
   if (started) { returnToLobbyRaw(); return; }
   if (document.getElementById('start').style.display === 'flex') { showScr('lobby'); renderLobby(); }
@@ -3395,7 +3524,7 @@ function returnToLobbyRaw() {
 }
 const buy = (cap, key, k, n) => () => { const q = wst[key]; if (k in q) q[k] = Math.min(cap, q[k] + n); lastHud = ''; };
 const SHOP = [
-  { n: '🩹 Medkit (+45 HP)', p: 150, f: () => inv.med++ }, { n: '💧 Water (+150 EP)', p: 40, f: () => inv.water = (inv.water || 0) + 1 }, { n: '🛡 Armor kit (+50)', p: 200, f: () => inv.arm++ },
+  { n: '🩹 Medkit (+45 HP)', p: 150, f: () => inv.med++ }, { n: '💧 Water (+150 EP)', p: 40, f: () => inv.water = (inv.water || 0) + 1 }, { n: '🍔 Food (+250 EP)', p: 70, f: () => inv.food = (inv.food || 0) + 1 }, { n: '🛡 Armor kit (+50)', p: 200, f: () => inv.arm++ },
   { n: 'Rifle ammo +30', p: 100, f: buy(240, 'rifle', 'res', 30) }, { n: 'Pistol ammo +12', p: 60, f: buy(240, 'pistol', 'res', 12) },
   { n: 'Sniper ammo +5', p: 120, f: buy(60, 'sniper', 'res', 5) }, { n: 'Grenade +1', p: 120, f: buy(9, 'grenade', 'n', 1) },
   { n: 'Mine +1', p: 150, f: buy(9, 'mine', 'n', 1) }, { n: 'Bomb +1', p: 250, f: buy(9, 'bomb', 'n', 1) }
@@ -3412,7 +3541,7 @@ function bankPanel() {
 bindTap(document.getElementById('shop'), () => shopOpen(() => ({ title: '🎒 Backpack · 💵 ' + cash, rows: [...SHOP.map(it => ({ t: it.n + ' — 💵' + it.p, b: 'Buy', f: () => { if (cash < it.p) { toast('Not enough money'); return; } cash -= it.p; it.f(); } })), { t: '🏦 Deposit/withdraw (bank: 💵' + bank + ')', b: 'Open', f: () => openPanel(bankPanel, true) }] })));
 bindTap(document.getElementById('medbtn'), useMed);
 bindTap(document.getElementById('wsel'), () => openPanel(() => ({ title: '🎒 Bag · 💵 ' + cash, rows: [
-  { t: '🩹 Medkit × ' + inv.med, b: 'Use', f: useMed }, { t: '💧 Water × ' + (inv.water || 0), b: 'Drink', f: drinkWater },
+  { t: '🩹 Medkit × ' + inv.med, b: 'Use', f: useMed }, { t: '💧 Water × ' + (inv.water || 0), b: 'Drink', f: drinkWater }, { t: '🍔 Food × ' + (inv.food || 0), b: 'Eat', f: eatFood },
   { t: '🛡 Armor kit × ' + inv.arm, b: 'Wear', f: () => { if (inv.arm > 0 && armor < 100) { inv.arm--; armor = Math.min(100, armor + 50); } else toast('Not needed now'); } },
   { t: '🔫 Rifle ' + cntOf(WEAPONS[0]) + ' · Pistol ' + cntOf(WEAPONS[1]) + ' · Sniper ' + cntOf(WEAPONS[2]) },
   { t: '💣 Grenade ' + wst.grenade.n + ' · Mine ' + wst.mine.n + ' · Bomb ' + wst.bomb.n },
@@ -3502,24 +3631,71 @@ function dashUpdate(dt) {
     setArm(armR, cuffR, 232, 340, 130 + R * Math.sin(aR), 130 - R * Math.cos(aR));
   } else cdW.style.transform = 'rotate(' + wheelAng.toFixed(1) + 'deg)';
 }
-function toggleVeh() {
-  if (pDead) return;
-  if (drv) {
-    const c = drv.c, y = c.g.rotation.y; c.g.visible = true; c.lights = drv.lights; dashHide(); drv = null; parkedCars.push(c);
-    let x = c.g.position.x + Math.cos(y) * 2.8, z = c.g.position.z - Math.sin(y) * 2.8;
-    if (blocked(x, z)) { x = c.g.position.x - Math.cos(y) * 2.8; z = c.g.position.z + Math.sin(y) * 2.8; }
-    player.x = x; player.z = z; player.y = 0; player.yaw = y; camYaw = y; char.group.visible = true;
-    document.getElementById('veh').classList.remove('on'); return;
+let ent = null;
+const eio = t => t * t * (3 - 2 * t), cl01 = t => Math.max(0, Math.min(1, t));
+function carToWorld(c, lx, lz) { const y = c.g.rotation.y, C = Math.cos(y), S = Math.sin(y); return [c.g.position.x + lx * C + lz * S, c.g.position.z - lx * S + lz * C]; }
+function carHalfW(c) { const g = c.g.children[0].geometry; if (!g.boundingBox) g.computeBoundingBox(); return g.boundingBox.max.x; }
+function makeDoor(c, sgn) {   // গাড়ির পাশে একটা দরজার পাল্লা (সামনে কব্জা, পেছনটা বাইরে খোলে)
+  const hw = carHalfW(c), pivot = new THREE.Group();
+  pivot.position.set(sgn * (hw - 0.02), 0, 0.65);
+  const m = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.55, 1.1), c.g.children[0].material); m.position.set(0, 0.8, -0.55); m.castShadow = true;
+  pivot.add(m); c.g.add(pivot); return { pivot, hw, sgn };
+}
+function charAnimTo(st) {
+  if (!char || !char.mixer) return; const A = char.actions, nx = A[st]; if (!nx || char.state === st) return;
+  if (char.current && char.current !== nx) char.current.fadeOut(0.15);
+  nx.reset().fadeIn(0.15).play(); nx.timeScale = char.speed[st] || 1; char.current = nx; char.state = st; char.key = st;
+}
+function stepEnter(dt) {
+  const e = ent, c = e.c, y = c.g.rotation.y; e.t += dt; const t = e.t, sg = e.sgn;
+  const outP = carToWorld(c, sg * (e.door.hw + 0.9), 0.2), seatP = carToWorld(c, -0.4, 0.15);
+  const faceIn = Math.atan2(-sg * Math.cos(y), sg * Math.sin(y)), faceOut = faceIn + Math.PI;
+  let p, yaw, a, done = false;
+  if (e.mode === 'in') {
+    if (t < 0.55) { const k = eio(t / 0.55); p = [e.from[0] + (outP[0] - e.from[0]) * k, e.from[1] + (outP[1] - e.from[1]) * k]; }
+    else { const k = eio(cl01((t - 0.55) / 0.5)); p = [outP[0] + (seatP[0] - outP[0]) * k, outP[1] + (seatP[1] - outP[1]) * k]; }
+    yaw = faceIn; a = t < 1.05 ? cl01((t - 0.25) / 0.4) : 1 - cl01((t - 1.05) / 0.35);
+    if (t >= 1.05) char.group.visible = false;
+    done = t >= 1.4;
+  } else {
+    const k = eio(cl01((t - 0.3) / 0.55)); p = [seatP[0] + (outP[0] - seatP[0]) * k, seatP[1] + (outP[1] - seatP[1]) * k];
+    yaw = faceOut; a = t < 0.85 ? cl01(t / 0.4) : 1 - cl01((t - 0.85) / 0.35);
+    done = t >= 1.2;
   }
-  let best = null, bd = 49;
+  e.door.pivot.rotation.y = -sg * 1.15 * eio(a);
+  player.x = p[0]; player.z = p[1]; player.y = 0; player.yaw = yaw;
+  if (char.mixer) { const moving = e.mode === 'in' ? t < 1.05 : (t > 0.3 && t < 0.85); charAnimTo(moving ? 'walk' : 'idle'); char.mixer.update(dt); char.group.position.set(p[0], 0, p[1]); char.group.rotation.set(0, yaw, 0); }
+  else { char.group.position.set(p[0], 0, p[1]); char.group.rotation.set(0, yaw, 0); }
+  if (!done) return;
+  c.g.remove(e.door.pivot); ent = null;
+  if (e.mode === 'in') {
+    drv = { c, sp: 0, gear: 'D', brk: false, beepT: 0, lights: c.lights !== undefined ? c.lights : nightK > 0.5 };
+    char.group.visible = false; document.getElementById('veh').classList.add('on');
+    dashShow(); applyCarLights();
+    toast('🚗 ' + (c.name || 'Car') + ' · WASD drive · Space brake · E exit');
+  } else {
+    player.yaw = y; camYaw = y; char.key = null; char.group.visible = true;
+    document.getElementById('veh').classList.remove('on');
+  }
+}
+function toggleVeh() {
+  if (pDead || ent) return;
+  if (drv) {
+    if (Math.abs(drv.sp) > 3) { toast('Stop the car first'); return; }
+    const c = drv.c; setCock(false); c.lights = drv.lights; dashHide(); drv = null; parkedCars.push(c); c.g.visible = true;
+    let sgn = -1; { const o = carToWorld(c, sgn * (carHalfW(c) + 0.9), 0.2); if (blocked(o[0], o[1])) sgn = 1; }
+    const seat = carToWorld(c, -0.4, 0.15); player.x = seat[0]; player.z = seat[1]; player.y = 0;
+    char.group.visible = true; charAnimTo('idle');
+    ent = { c, mode: 'out', t: 0, sgn, door: makeDoor(c, sgn) };
+    return;
+  }
+  let best = null, bd = 81;
   for (const c of cars.concat(parkedCars)) { const d = (c.g.position.x - player.x) ** 2 + (c.g.position.z - player.z) ** 2; if (d < bd) { bd = d; best = c; } }
   if (!best) { toast('No car nearby'); return; }
   const i = cars.indexOf(best); if (i >= 0) cars.splice(i, 1); else parkedCars.splice(parkedCars.indexOf(best), 1);
   stance = 'stand'; setRun(false); aimOn = false; document.getElementById('aim').classList.remove('on'); wheelEl.style.display = 'none';
-  drv = { c: best, sp: 0, gear: 'D', brk: false, beepT: 0, lights: best.lights !== undefined ? best.lights : nightK > 0.5 };
-  char.group.visible = false; document.getElementById('veh').classList.add('on');
-  dashShow(); applyCarLights();
-  toast('🚗 ' + (best.name || 'Car') + ' · WASD drive · Space brake · E exit');
+  const y = best.g.rotation.y, lx = (player.x - best.g.position.x) * Math.cos(y) - (player.z - best.g.position.z) * Math.sin(y), sgn = lx < 0 ? -1 : 1;
+  ent = { c: best, mode: 'in', t: 0, sgn, door: makeDoor(best, sgn), from: [player.x, player.z] };
 }
 bindTap(document.getElementById('veh'), toggleVeh);
 function driveStep(dt) {
@@ -3553,13 +3729,14 @@ function driveStep(dt) {
 function extra(dt) {
   if (paused) return;
   const mv = Math.hypot(jx, jy) > 0.1 || runTouch;
-  if (runTouch && mv && !drv) stam = Math.max(0, stam - 80 * dt); else stam = Math.min(500, stam + 50 * dt);
+  if (runTouch && mv && !drv) stam = Math.max(0, stam - (500 / 300) * dt); else stam = Math.min(500, stam + 0.6 * dt);
   if (stam <= 0 && runTouch) setRun(false);
   document.getElementById('stf').style.width = (stam / 500 * 100) + '%';
   if (cash !== lastCash) { lastCash = cash; document.getElementById('cashv').textContent = cash; }
   const tf = aimOn ? (WEAPONS[wIdx].id === 'sniper' ? 22 : 42) : 60;
   if (Math.abs(camera.fov - tf) > 0.3) { camera.fov += (tf - camera.fov) * Math.min(1, dt * 10); camera.updateProjectionMatrix(); }
   document.getElementById('crosshair').style.display = aimOn ? 'block' : 'none';
+  if (!drv && !ent) { let nd = 1e9; for (const c of cars) nd = Math.min(nd, (c.g.position.x - player.x) ** 2 + (c.g.position.z - player.z) ** 2); for (const c of parkedCars) nd = Math.min(nd, (c.g.position.x - player.x) ** 2 + (c.g.position.z - player.z) ** 2); $id('veh').classList.toggle('hint', nd < 81); }
 }
 
 function loop(now) {
@@ -3573,12 +3750,13 @@ function loop(now) {
   // আটকে যাওয়া অবস্থা ঠিক করা: মানচিত্র বা এডিট বার বন্ধ থাকলে ফ্ল্যাগও বন্ধ (নইলে দৌড়/লাফ/বসা কাজ করে না)
   if (mapOpen && bigWrap.style.display !== 'flex') mapOpen = false;
   if (editMode && document.getElementById('editbar').style.display !== 'flex') { editMode = false; document.body.classList.remove('editing'); }
-  if (started && !mapOpen && !editMode && !paused) { if (drv) driveStep(dt); else update(dt); }
+  if (started && !editMode && !paused) { if (ent) stepEnter(dt); else if (drv) driveStep(dt); else update(dt); }
   if (started) extra(dt);
   if (lbOn) updateLobby(dt, now / 1000); else updateDayNight(dt, !paused);
-  renderer.render(scene, camera);
+  if (mapOpen) { hemi.color.set(0xffffff); hemi.groundColor.set(0x8a9a78); hemi.intensity = Math.max(hemi.intensity, 1.05); stars.visible = false; moon.visible = false; mapCamUpdate(); }
+  renderer.render(scene, mapOpen ? mapCam : camera);
   if (snapFlag) shot();
-  renderEye();
+  if (!mapOpen) renderEye();
   if (started) { updateRoute(now); drawMini(); if (mapOpen) drawBig(); }
 
   fpsFrames++; fpsTime += el;
@@ -3627,6 +3805,7 @@ async function startGame(p) {
 }
 
 addEventListener('resize', () => {
+  if (mapOpen) { bmW = innerWidth; bmH = innerHeight; bm.width = Math.round(bmW * bmDpr); bm.height = Math.round(bmH * bmDpr); }
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
