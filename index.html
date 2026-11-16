@@ -823,7 +823,7 @@ function addCompound(cx, cz, gs, w, d, shop, hasGarage, enterable) {
     const P = rc(0, bfz + 0.6);
     if (ty !== 'home') { const q = rc(0, bfz + 0.09); doorSigns.push({ t: ty, p: [q[0], 0.15 + 4.0, q[1]], ry: Math.atan2(S, C) }); }
     doors.push({ x: P[0], z: P[1], ox: S, oz: C, type: ty, out: rc(0, 17.5) });
-    doorMarks.push([P[0], 3.1, P[1]]);
+    doorMarks.push([P[0], 2.85, P[1]]);
   }
   // ফুলের বাগান
   const beds = [[3.0, 8.8, 11.4, 11.2], [10.2, -10.5, 11.8, 8.5], [-11.8, -10.5, -10.2, hasGarage ? 4.0 : 8.5]];
@@ -855,6 +855,16 @@ function finalizeCompounds() {
   mkI(new THREE.SphereGeometry(1, 8, 6), new THREE.MeshStandardMaterial({ roughness: 0.6 }), compCaps, false);
   const pm = new THREE.MeshStandardMaterial({ roughness: 0.7 }); windify(pm, 0.04);
   mkI(new THREE.SphereGeometry(1, 7, 5), pm, compPlants, false);
+  mkI(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ roughness: 0.12, metalness: 0.5, emissive: 0x3a2a14, transparent: true, opacity: 0.6 }), modGlass, false);
+  mkI(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial(), modGlow, false);
+  const hipG = new THREE.ConeGeometry(1, 1, 4); hipG.rotateY(Math.PI / 4);
+  mkI(hipG, new THREE.MeshStandardMaterial({ roughness: 0.75 }), modCones, true);
+  const msk = {}; modSigns.forEach(s => (msk[s.k] = msk[s.k] || []).push(s));
+  for (const k in msk) {
+    const Ls = msk[k], im = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: modTex(k) }), Ls.length), m = new THREE.Matrix4(), q = new THREE.Quaternion();
+    Ls.forEach((s, i) => { q.setFromAxisAngle(UPV, s.ry); m.compose(new THREE.Vector3(s.p[0], s.p[1], s.p[2]), q, new THREE.Vector3(s.s[0], s.s[1], 1)); im.setMatrixAt(i, m); });
+    im.frustumCulled = false; scene.add(im);
+  }
   if (doorMarks.length) {   // দরজার ওপরে সোনালি তীর (সবগুলো একসাথে ওঠানামা করে)
     const cg = new THREE.ConeGeometry(0.28, 0.6, 4); cg.rotateX(Math.PI);
     const im = new THREE.InstancedMesh(cg, new THREE.MeshBasicMaterial({ color: 0xffd400 }), doorMarks.length), m = new THREE.Matrix4();
@@ -1093,6 +1103,98 @@ function buildPort() {
   }
 }
 
+// ---------- আধুনিক ভবন মডেল: ব্যাংক / দোকান / ফার্মেসি / বাড়ি (রেফারেন্স ছবির মতো) ----------
+const modGlass = [], modGlow = [], modCones = [], modSigns = [], modTexCache = {}, modMats = {};
+const MOD_BODY = { bank: '#efede8', home: '#f5f2ec', med: '#f3f5f5', food: '#26282e', cloth: '#26282e', car: '#26282e' };
+const MOD_SIDE = { bank: ['BANK', 'Safe', 'Secure', 'Together'], med: ['Medicine', 'Health Care', 'Wellness', 'Always Care'], food: ['Food', 'Drinks', 'Snacks', 'More...'], cloth: ['Fashion', 'Style', 'Outfits', 'More...'], car: ['Cars', 'Showroom', 'Offers', 'More...'] };
+function modMat(ty) { return modMats[ty] || (modMats[ty] = new THREE.MeshStandardMaterial({ color: MOD_BODY[ty], roughness: 0.7 })); }
+function modTex(key) {
+  if (modTexCache[key]) return modTexCache[key];
+  const ty = key.split('_')[0], side = key.endsWith('_side'), W = side ? 256 : 512, H = side ? 512 : 256;
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  x.textBaseline = 'middle';
+  const bg = col => { x.fillStyle = col; x.fillRect(0, 0, W, H); };
+  const border = col => { x.strokeStyle = col; x.lineWidth = 8; x.strokeRect(4, 4, W - 8, H - 8); };
+  const lines = (arr, y0, step, size) => { x.fillStyle = '#fff'; x.textAlign = 'left'; x.font = 'bold ' + size + 'px sans-serif'; arr.forEach((t, i) => x.fillText(t, 30, y0 + i * step)); };
+  if (side) {
+    const L = MOD_SIDE[ty];
+    if (ty === 'bank') { bg('#0d3b94'); border('#cfd9f0'); x.fillStyle = '#fff'; x.textAlign = 'left'; x.font = 'bold 58px sans-serif'; x.fillText(L[0], 30, 80); x.fillRect(30, 124, 150, 5); lines(L.slice(1), 200, 80, 42); }
+    else if (ty === 'med') { bg('#0b2a6b'); border('#4fe0ff'); lines(L, 90, 110, 32); }
+    else { bg('#16171c'); border('#3a3c44'); lines(L, 90, 110, 40); }
+  } else if (ty === 'bank') {
+    bg('#0d3b94'); border('#cfd9f0'); x.fillStyle = '#fff';
+    x.beginPath(); x.moveTo(256, 20); x.lineTo(186, 64); x.lineTo(326, 64); x.closePath(); x.fill();
+    x.fillRect(182, 68, 148, 8); for (let i = 0; i < 5; i++) x.fillRect(190 + i * 30, 82, 14, 44);
+    x.fillRect(178, 130, 156, 9); x.fillRect(170, 142, 172, 8);
+    x.textAlign = 'center'; x.font = 'bold 78px sans-serif'; x.fillText('BANK', 256, 205);
+  } else if (ty === 'med') {
+    const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#12a8b4'); g.addColorStop(1, '#087c88'); x.fillStyle = g; x.fillRect(0, 0, W, H); border('#e6fbff');
+    x.fillStyle = '#fff'; x.fillRect(30, 106, 112, 44); x.fillRect(64, 70, 44, 116);
+    x.textAlign = 'left'; x.font = 'bold 54px sans-serif'; x.fillText('PHARMACY', 170, 128);
+  } else {
+    bg('#15161b'); x.fillStyle = '#e02424'; x.fillRect(0, 0, W, 8); x.fillRect(0, H - 16, W, 16);
+    x.strokeStyle = '#ffc61a'; x.lineWidth = 12; x.lineCap = 'round'; x.lineJoin = 'round';
+    x.beginPath(); x.moveTo(34, 66); x.lineTo(70, 66); x.lineTo(96, 150); x.lineTo(190, 150); x.lineTo(212, 90); x.lineTo(80, 90); x.stroke();
+    x.fillStyle = '#ffc61a'; x.beginPath(); x.arc(112, 186, 13, 0, 7); x.fill(); x.beginPath(); x.arc(176, 186, 13, 0, 7); x.fill();
+    x.fillStyle = '#fff'; x.textAlign = 'left'; x.font = 'bold 88px sans-serif'; x.fillText('SHOP', 236, 124);
+  }
+  const T = new THREE.CanvasTexture(c); T.colorSpace = THREE.SRGBColorSpace; T.anisotropy = 4;
+  return (modTexCache[key] = T);
+}
+function dressBuilding(ty, cx, cz, gs, w, d, h) {
+  const C = [1, 0, -1, 0][gs], S = [0, 1, 0, -1][gs], ry = Math.atan2(S, C), f = -2.5 + d / 2, mz = -2.5;
+  const rc = (lx, lz) => [cx + lx * C + lz * S, cz - lx * S + lz * C];
+  const put = (list, lx, y, lz, sx, sy, sz, c, r) => { const q = rc(lx, lz); list.push({ p: [q[0], y, q[1]], s: [sx, sy, sz], c, ry: ry + (r || 0) }); };
+  const B = (...a) => put(compBoxes, ...a), GL = (...a) => put(modGlass, ...a), GW = (...a) => put(modGlow, ...a);
+  const SGN = (k, lx, y, lz, sw, sh) => { const q = rc(lx, lz); modSigns.push({ k, p: [q[0], y, q[1]], ry, s: [sw, sh] }); };
+  const SOL = (a0, b0, a1, b1, hh) => { const a = rc(a0, b0), b = rc(a1, b1); boxes.push({ minX: Math.min(a[0], b[0]), maxX: Math.max(a[0], b[0]), minZ: Math.min(a[1], b[1]), maxZ: Math.max(a[1], b[1]), h: hh }); };
+  const palm = (lx, lz, sc) => { B(lx, 3 * sc, lz, 0.32 * sc, 6 * sc, 0.32 * sc, '#8b6b47'); for (let k = 0; k < 4; k++) put(compBoxes, lx, 6.1 * sc, lz, 4.2 * sc, 0.1, 0.7 * sc, k % 2 ? '#2f8f46' : '#3fae5a', k * Math.PI / 4); };
+  if (ty === 'home') {
+    if (Math.random() < 0.35) { B(0, h + 0.1, mz, w + 0.7, 0.2, d + 0.7, '#f2efe8'); put(modCones, 0, h + 1.5, mz, (w + 0.9) / 1.4142, 2.8, (d + 0.9) / 1.4142, '#b53a2b'); }
+    else B(0, h + 0.17, mz, w + 1, 0.34, d + 1, '#2f343b');
+    B(-w * 0.27, h / 2, f + 0.07, w * 0.26, h, 0.14, '#9c6a40');
+    GL(w * 0.12, 5.6, f + 0.05, w * 0.46, 2.2, 0.08, '#2c4a63'); GL(w * 0.3, 1.7, f + 0.05, w * 0.3, 1.9, 0.08, '#2c4a63');
+    B(w * 0.12, 3.5, f + 0.9, w * 0.5, 0.22, 1.8, '#f3f1ec');
+    GL(w * 0.12, 4.15, f + 1.78, w * 0.5, 0.95, 0.05, '#9bd0e6'); GL(w * 0.12 - w * 0.25, 4.15, f + 0.9, 0.05, 0.95, 1.8, '#9bd0e6'); GL(w * 0.12 + w * 0.25, 4.15, f + 0.9, 0.05, 0.95, 1.8, '#9bd0e6');
+    B(w * 0.12, 4.65, f + 1.78, w * 0.5, 0.05, 0.07, '#cfd3d8');
+    for (let i = -1; i <= 1; i++) GW(w * 0.12 + i * w * 0.15, 3.36, f + 0.9, 0.18, 0.04, 0.18, '#ffe3a3');
+    palm(-w / 2 - 2.2, -1, 1); palm(w / 2 + 2.6, -3.5, 0.85);
+    return;
+  }
+  // ---- দোকান / ব্যাংক / ফার্মেসি: ছাদ, কাচের সামনের অংশ, বড় সাইনবোর্ড, পাশের প্যানেল ----
+  B(0, h + 0.15, mz, w + 0.5, 0.3, d + 0.5, '#33363c');
+  const gx0 = 1.1, gx1 = w / 2 - 0.5, gw = gx1 - gx0, cols = ['#e74c3c', '#3498db', '#f1c40f', '#2ecc71', '#9b59b6'];
+  for (const sg of [-1, 1]) {
+    const mx = sg * (gx0 + gx1) / 2;
+    GL(mx, 1.75, f + 0.03, gw, 2.7, 0.08, '#2c4a63'); GW(mx, 1.75, f + 0.01, gw - 0.1, 2.5, 0.02, '#ffd9a0');
+    for (let r = 0; r < 3; r++) GW(mx, 0.9 + r * 0.8, f + 0.025, gw - 0.3, 0.14, 0.03, cols[(r + (sg > 0 ? 2 : 0)) % 5]);
+    B(mx, 0.2, f + 0.05, gw + 0.2, 0.4, 0.14, '#3a3d44');
+    for (let i = 1; i < 4; i++) B(sg * (gx0 + gw * i / 4), 1.75, f + 0.06, 0.07, 2.7, 0.1, '#e8e8e8');
+  }
+  B(0, 3.2, f + 0.06, w - 0.6, 0.2, 0.12, '#e8e8e8');
+  if (ty === 'bank') {
+    B(0, 3.6, f + 1.6, w + 0.6, 0.2, 3.2, '#f4f4f1'); GW(0, 3.47, f + 1.6, w - 0.4, 0.04, 2.8, '#ffe2a8');
+    for (const sg of [-1, 1]) B(sg * (w / 2 - 0.2), 1.8, f + 2.9, 0.3, 3.6, 0.3, '#f4f4f1');
+  } else if (ty === 'med') {
+    B(0, 3.6, f + 1.2, w * 0.8, 0.16, 2.4, '#f4f4f1'); GW(0, 3.49, f + 1.2, w * 0.8 - 0.2, 0.04, 2.2, '#8ef0ff');
+    B(0, 5.0, f + 0.06, w, 0.5, 0.12, '#0f9aa7'); B(-w / 2 + 0.9, h / 2, f + 0.07, 1.5, h, 0.14, '#6b4a32');
+  } else {
+    for (let i = 0; i < Math.floor(w * 0.8 / 0.5); i++) {
+      const lx = (i - (Math.floor(w * 0.8 / 0.5) - 1) / 2) * 0.5, c = i % 2 ? '#f7f3ee' : '#d62828';
+      B(lx, 3.6, f + 1.0, 0.5, 0.1, 2.0, c); B(lx, 3.4, f + 2.0, 0.5, 0.35, 0.06, c);
+    }
+    B(0, 5.0, f + 0.06, w, 0.4, 0.12, '#d62828'); GW(0, 5.0, f + 0.13, w, 0.05, 0.02, '#ff6a5a');
+  }
+  const sw = Math.min(6.2, w * 0.62), sy = Math.max(7.0, h - 2.5), mk = ty === 'bank' ? 'bank_main' : ty === 'med' ? 'med_main' : 'shop_main';
+  B(0, sy, f + 0.08, sw + 0.3, sw / 2 + 0.3, 0.16, ty === 'bank' ? '#d9e2f5' : ty === 'med' ? '#e6fbff' : '#d62828');
+  SGN(mk, 0, sy, f + 0.17, sw, sw / 2);
+  const px = w / 2 + 1.7, pz = f + 0.8;
+  B(px, 2.7, pz, 2.7, 5.4, 0.4, ty === 'bank' ? '#0d3b94' : ty === 'med' ? '#0b2a6b' : '#16171c');
+  SGN(ty + '_side', px, 2.7, pz + 0.21, 2.5, 5.0);
+  SOL(px - 1.35, pz - 0.2, px + 1.35, pz + 0.2, 5.4);
+  palm(-w / 2 - 2.2, -1, 1);
+}
+
 function buildWorld() {
   buildTerrain();
   CITIES.forEach(C => {
@@ -1129,34 +1231,30 @@ function buildWorld() {
       }
 
       // বিল্ডিং + পাঁচিলঘেরা চত্বর (বাগান, গ্যারেজ, গেট)
-      const w = 9 + Math.random() * 6, d = 9 + Math.random() * 4, h = 8 + Math.random() * 22;
+      const w = 9 + Math.random() * 6, d = 9 + Math.random() * 4; let h = 8 + Math.random() * 22;
+      const ty = SPC[ci] || (ci % 5 === 1 || ci % 5 === 3 ? 'food' : h <= 22 ? 'home' : null); ci++;
+      if (ty) h = ty === 'home' ? 7 + Math.random() * 1.2 : ty === 'bank' ? 10.5 : 9.5;
       const gs = Math.floor(Math.random() * 4), C = [1, 0, -1, 0][gs], S = [0, 1, 0, -1][gs], odd = gs % 2 === 1;
       const bx = cx - 2.5 * S, bz = cz - 2.5 * C, ww = odd ? d : w, dd = odd ? w : d;
       const base = pick(palette);
-      const wallTex = facadeTex(base).clone();
-      wallTex.repeat.set(Math.max(1, Math.round(w / 8)), Math.max(1, Math.round(h / 8)));
-      const emisT = facadeEmis().clone(); emisT.repeat.copy(wallTex.repeat); emisT.needsUpdate = true;
-      const wall = new THREE.MeshStandardMaterial({ map: wallTex, roughness: 0.85, emissive: 0xffffff, emissiveMap: emisT, emissiveIntensity: 0 });
-      wallMats.push(wall);
-      const mesh = new THREE.Mesh(new THREE.BoxGeometry(ww, h, dd), [wall, wall, roofMat, wall, wall, wall]);
+      let bodyMats;
+      if (ty) bodyMats = modMat(ty);
+      else {
+        const wallTex = facadeTex(base).clone();
+        wallTex.repeat.set(Math.max(1, Math.round(w / 8)), Math.max(1, Math.round(h / 8)));
+        const emisT = facadeEmis().clone(); emisT.repeat.copy(wallTex.repeat); emisT.needsUpdate = true;
+        const wall = new THREE.MeshStandardMaterial({ map: wallTex, roughness: 0.85, emissive: 0xffffff, emissiveMap: emisT, emissiveIntensity: 0 });
+        wallMats.push(wall);
+        bodyMats = [wall, wall, roofMat, wall, wall, wall];
+      }
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(ww, h, dd), bodyMats);
       mesh.position.set(bx, h / 2, bz);
       mesh.castShadow = true; mesh.receiveShadow = true;
       scene.add(mesh);
-      const ty = SPC[ci] || (ci % 5 === 1 || ci % 5 === 3 ? 'food' : h <= 22 ? 'home' : null); ci++;
       const shop = !!ty && ty !== 'home';
       boxes.push({ minX: bx - ww / 2, maxX: bx + ww / 2, minZ: bz - dd / 2, maxZ: bz + dd / 2, h, name: { food: 'Food Mart', cloth: 'Fashion Mall', car: 'Auto Showroom', med: 'Pharmacy', bank: 'Bank' }[ty] || (h > 22 ? 'Office Tower' : 'Home') });
 
-      // দোকানের ছাউনি (বিল্ডিংয়ের সামনের দিকে)
-      if (shop) {
-        const lz = -2.5 + d / 2 + 0.8;
-        const aw = new THREE.Mesh(
-          new THREE.BoxGeometry(odd ? 1.6 : w * 0.8, 0.25, odd ? w * 0.8 : 1.6),
-          new THREE.MeshStandardMaterial({ color: pick(awningColors), roughness: 0.7 })
-        );
-        aw.position.set(cx + lz * S, 3.2, cz + lz * C);
-        aw.castShadow = true;
-        scene.add(aw);
-      }
+      if (ty) dressBuilding(ty, cx, cz, gs, w, d, h);
       addCompound(cx, cz, gs, w, d, shop, Math.random() < 0.55, ty);
 
       addTree(cx - 14, cz - 14, 0.7);
