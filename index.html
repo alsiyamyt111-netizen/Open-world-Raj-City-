@@ -430,6 +430,43 @@ body.editing #panelbox { pointer-events: auto !important; }
 #panel:not(.corner):not(.resume) .pbox button, #panel:not(.corner):not(.resume) .pbox h3 { font-size: calc(13px * var(--ps, 1)); }
 #panel.resume .pbox { width: calc(min(340px, calc(var(--vw) * 78)) * var(--ps, 1)); font-size: calc(12px * var(--ps, 1)); }
 #panel.resume .pbox button { font-size: calc(12px * var(--ps, 1)); }
+/* ---- মোবাইল ফোন ---- */
+#phonebtn { left: 12px; top: 190px; right: auto; bottom: auto; width: 48px; height: 48px; font-size: 12px; }
+body.driving #phonebtn { display: none !important; }
+#phone { position: fixed; left: 78%; top: 50%; width: 190px; height: 330px; transform: translate(-50%, -50%); display: none; flex-direction: column; z-index: 22; background: #0b0c10; border: 3px solid #3a3d46; border-radius: 26px; padding: 7px 7px 10px; box-sizing: border-box; box-shadow: 0 6px 18px rgba(0,0,0,.6); color: #fff; font-family: 'Trebuchet MS', sans-serif; user-select: none; }
+#phone.on { display: flex; }
+body.mapping #phone { display: none !important; }
+body.editing #phone { display: flex !important; }
+body.editing #phone * { pointer-events: none; }
+#phhead { display: flex; align-items: center; justify-content: space-between; height: 22px; padding: 0 8px; font-size: 11px; font-weight: 700; touch-action: none; cursor: move; flex: none; }
+#phclose { padding: 2px 6px; font-size: 13px; cursor: pointer; }
+.phnotch { width: 34px; height: 6px; border-radius: 4px; background: #23262d; }
+#phbody { flex: 1; min-height: 0; overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; background: linear-gradient(#17202e, #0d1117); border-radius: 16px; padding: 8px; font-size: 12px; display: flex; flex-direction: column; gap: 6px; }
+#phbody button { font-family: inherit; }
+.phgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+.phapp { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 14px; color: #fff; padding: 10px 4px; font-size: 11px; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.phapp i { font-style: normal; font-size: 24px; }
+.phb { border: 0; border-radius: 10px; padding: 7px 8px; font-size: 12px; font-weight: 700; background: #f0b400; color: #222; }
+.phb:disabled { opacity: .4; }
+.phback { align-self: flex-start; background: rgba(255,255,255,.15); color: #fff; padding: 4px 9px; font-size: 11px; }
+.phgo { background: #2ecc71; color: #fff; }
+.phend { background: #e74c3c; color: #fff; }
+.phh { font-weight: 800; font-size: 13px; text-align: center; }
+.phrow { display: flex; align-items: center; gap: 7px; padding: 6px 7px; border-radius: 10px; background: rgba(255,255,255,.08); border: 1px solid transparent; cursor: pointer; }
+.phrow.sel { border-color: #ffd400; background: rgba(255,212,0,.18); }
+.phav { font-size: 18px; flex: none; }
+.phnm { flex: 1; font-weight: 700; }
+.phnum { color: #9fb6d0; font-size: 11px; }
+.phcalling { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 10px; }
+.phcalling .big { font-size: 42px; }
+.phbub { max-width: 82%; padding: 5px 9px; border-radius: 12px; font-size: 12px; background: rgba(255,255,255,.14); align-self: flex-start; }
+.phbub.me { align-self: flex-end; background: #1f7ae0; }
+.phqr { display: flex; flex-wrap: wrap; gap: 5px; margin-top: auto; }
+.phqr .phb { padding: 5px 8px; font-size: 11px; background: #33415c; color: #fff; }
+.phbal { background: rgba(255,255,255,.08); border-radius: 10px; padding: 7px; text-align: center; font-size: 12px; }
+.phbal b { display: block; color: #6dff6d; font-size: 15px; }
+.phbtns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
+.phbtns .phb { padding: 6px 2px; font-size: 11px; }
 body.editing #cdrow, body.editing #cdbar { display: none !important; }
 #cdbtns button { position: fixed; }
 #cb-light { right: 156px; bottom: 80px; } #cb-gear { right: 90px; bottom: 80px; } #cb-view { right: 24px; bottom: 80px; }
@@ -499,6 +536,7 @@ body.editing #cdrow, body.editing #cdbar { display: none !important; }
 <button id="pausebtn" class="act ib" data-i="pause"></button>
 <button id="wsel" class="act ib" data-i="bag"></button>
 <button id="medbtn" class="act ib" data-i="cross"></button>
+<button id="phonebtn" class="act ib" data-i="phone"></button>
 <button id="shop" class="act ib" data-i="bag"></button>
 <button id="eyebtn" class="act ib" data-i="eye"></button>
 <button id="aim" class="act ib" data-i="aim"></button>
@@ -514,6 +552,7 @@ body.editing #cdrow, body.editing #cdbar { display: none !important; }
 <button id="cam" class="act ib" data-i="cam" data-l="Camera"></button>
 <button id="enterb" class="act ib" data-i="door" data-l="Enter"></button>
 <div id="fade"></div>
+<div id="phone"><div id="phhead"><span id="phtime">12:00</span><span class="phnotch"></span><span id="phclose">✕</span></div><div id="phbody"></div></div>
 <div id="wheel"></div>
 <div id="eye"></div>
 <div id="cardash"><div id="cdbar"></div>
@@ -1790,13 +1829,17 @@ const ANIMS = {
   // বসা / ঘুমানো (models/ ফোল্ডারে এই নামের .fbx ফাইল)
   standtosit: 'standtosit', sittostand: 'sittostand', lyingdown: 'lyingdown', sleepingidle: 'sleepingidle',
 // গাড়িতে ওঠা / নামা (models/entercar.fbx, models/exitcar.fbx)
-entercar: 'entercar', exitcar: 'exitcar'
+entercar: 'entercar', exitcar: 'exitcar',
+// মোবাইল ফোন (models/ ফোল্ডারে এই নামের .fbx ফাইল): কলে কথা বলা / কলে হাঁটা / মেসেজ টাইপ করা
+phonetalk: 'TalkingCellPhone', phonepace: 'TalkingPhonePacing', phonetext: 'textingwhilestanding', phonerun: 'StandingTorchRun'
 };
 // NPC-দের অ্যানিমেশন (মার খাওয়া, মরা, ওঠা) — পরিস্থিতি অনুযায়ী নিজে চলে
 const NPC_ANIMS = { hit: 'Hitreaction', death: 'death', getup: 'Getup' };
 const PRELOAD = ['boy', 'girl', ...Object.values(ANIMS), ...Object.values(NPC_ANIMS)];
 // বন্দুক হাতে কীভাবে বসবে (মিটার/রেডিয়ান) — ভুল দিকে থাকলে এই সংখ্যাগুলো বদলান
 const GUN_POS = [0, 0.1, 0.05], GUN_ROT = [0, 0, Math.PI / 2];
+// ফোন বাঁ হাতে কীভাবে বসবে — ভুল দিকে/জায়গায় থাকলে এই সংখ্যাগুলো বদলান
+const PHONE_POS = [0, 0.08, 0.03], PHONE_ROT = [0, 0, 0];
 let preDone = 0;
 const preloadAll = () => Promise.all(PRELOAD.map(n => loadAsset(n).then(() => { preDone++; })));
 
@@ -1891,9 +1934,24 @@ async function buildCharacter(gender) {
     gun.rotation.set(...GUN_ROT);
     gun.visible = false; hand.add(gun);
   }
+  // মোবাইল ফোন: বাঁ হাতের হাড়ে জোড়া (ফোন ব্যবহারের সময় দেখা যায়)
+  let phoneM = null;
+  let lhand = model.getObjectByName('mixamorigLeftHand');
+  if (!lhand) model.traverse(o => { if (!lhand && /LeftHand$/.test(o.name)) lhand = o; });
+  if (lhand) {
+    const k = 1 / s;
+    phoneM = new THREE.Group();
+    const pb = new THREE.Mesh(new THREE.BoxGeometry(0.075 * k, 0.15 * k, 0.014 * k), new THREE.MeshStandardMaterial({ color: 0x15171c, metalness: 0.5, roughness: 0.35 }));
+    const ps = new THREE.Mesh(new THREE.BoxGeometry(0.066 * k, 0.136 * k, 0.003 * k), new THREE.MeshBasicMaterial({ color: 0x4aa3ff }));
+    ps.position.z = 0.0075 * k;
+    phoneM.add(pb, ps);
+    phoneM.position.set(PHONE_POS[0] * k, PHONE_POS[1] * k, PHONE_POS[2] * k);
+    phoneM.rotation.set(...PHONE_ROT);
+    phoneM.visible = false; lhand.add(phoneM);
+  }
   console.log('Loaded animations:', Object.keys(actions).join(', '));
   for (const k of Object.keys(ANIMS)) if (!actions[k]) console.warn('Animation failed to load:', k);
-  return { group, mixer, actions, speed, dur, gun, hips: hipsObj, current: null, state: null, key: null };
+  return { group, mixer, actions, speed, dur, gun, phone: phoneM, hips: hipsObj, current: null, state: null, key: null };
 }
 
 // মডেল না পেলে সাধারণ চরিত্র (ব্যাকআপ)
@@ -2314,6 +2372,10 @@ function update(dt) {
       else if (jumping && A.jump) state = 'jump';
       else if (stance === 'prone' && A.prone) state = 'prone';
       else if (stance === 'crouch' && (A.crouchidle || A.crouchwalk)) state = (moving && A.crouchwalk) || !A.crouchidle ? 'crouchwalk' : 'crouchidle';
+      else if (phoneSt && stance === 'stand' && !atk && combatT <= 0) {   // ফোন ব্যবহার: কলে কথা / কলে হাঁটা / মেসেজ টাইপ
+        if (phoneSt === 'call') state = moving ? (run ? (A.phonerun ? 'phonerun' : 'run') : (A.phonepace ? 'phonepace' : 'walk')) : (A.phonetalk ? 'phonetalk' : 'idle');
+        else state = moving ? (run ? 'run' : 'walk') : (A.phonetext ? 'phonetext' : 'idle');
+      }
       else if (atk && A[atk.type]) state = atk.type;
       else if (gunT > 0 && A.fire) state = 'fire'
       else if (moving) state = run ? 'run' : 'walk';
@@ -2330,6 +2392,7 @@ function update(dt) {
       }
       if (state === 'prone') A.prone.timeScale = moving ? 1 : 0;   // দাঁড়িয়ে থাকলে শোয়া ভঙ্গিতে স্থির
       if (char.gun) char.gun.visible = gunT > 0 && stance === 'stand';
+      if (char.phone) char.phone.visible = !!phoneSt && stance === 'stand';
       char.mixer.update(dt);
       // বসার অ্যানিমেশনের root/bone motion-এ নিতম্ব আসনের নিচে নামলে একই ফ্রেমে root উঁচু করি;
       // hold পর্যায়ের ধীর correction-এর জন্য অপেক্ষা করতে হয় না।
@@ -3077,6 +3140,7 @@ const ICONS = {
   shield: '<path d="M24 5l16 6v12c0 10-7 17-16 20C15 40 8 33 8 23V11z" fill="#3aa0ff"/>',
   bolt: '<path d="M27 3L10 27h11l-3 18 20-26H27z" fill="#3de03d"/>',
   door: '<path d="M12 6h20v36H12z" ' + STK + '/><circle cx="26" cy="25" r="2.5" fill="currentColor"/><path d="M36 15l8 9-8 9" ' + STK + '/>',
+  phone: '<rect x="14" y="4" width="20" height="40" rx="5" ' + STK + '/><circle cx="24" cy="37" r="2"/>',
   bullet: '<g transform="rotate(-45 24 24)"><rect x="16" y="18" width="16" height="28" rx="2" fill="#e8a317"/><path d="M16 18Q24 -2 32 18z" fill="#f4f4f4"/></g>'
 };
 document.querySelectorAll('[data-i]').forEach(el => { el.innerHTML = svgW(ICONS[el.dataset.i]) + (el.dataset.l ? '<span>' + el.dataset.l + '</span>' : ''); });
@@ -3834,9 +3898,9 @@ function renderEye() {
 }
 
 // ---------- বাটন কাস্টমাইজ (টেনে সরানো, Size, Opacity, সেভ) ----------
-const CUST = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'medbtn', 'kick', 'eyebtn', 'mini', 'eye', 'bars', 'pausebtn', 'shop', 'aim', 'nade', 'reload', 'veh', 'cam', 'enterb', 'gear', 'wheel', 'hud', 'crosshair', 'cb-light', 'cb-gear', 'cb-view', 'cb-horn', 'cb-auto', 'panelbox'];
-const CNAME = { joy: 'Joystick', run: 'Run', jump: 'Jump', crouch: 'Crouch', prone: 'Prone', atk: 'Attack button', wsel: 'Backpack', medbtn: 'Medkit', pausebtn: 'Resume button', shop: 'Shop', aim: 'Aim', nade: 'Grenade button', reload: 'Reload', veh: 'Car', cam: 'Camera', enterb: 'Enter / Exit', crosshair: 'Crosshair', dmg: 'Damage indicator', cdwheel: 'Car steering wheel', kick: 'Kick', eyebtn: '3rd eye button', mini: 'Mini map', eye: '3rd eye window', bars: 'Health / Water bars', gear: 'Settings icon', wheel: 'Weapon wheel', hud: 'Info text', cdbtns: 'Car buttons', 'cb-light': 'Car light', 'cb-gear': 'Car gear', 'cb-view': 'Car view', 'cb-horn': 'Car horn', 'cb-auto': 'Car auto', panelbox: 'Menu panel' };
-const OPAQ = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'medbtn', 'kick', 'eyebtn', 'pausebtn', 'shop', 'aim', 'nade', 'reload', 'veh', 'cam', 'gear'];
+const CUST = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'medbtn', 'kick', 'eyebtn', 'mini', 'eye', 'bars', 'pausebtn', 'shop', 'aim', 'nade', 'reload', 'veh', 'cam', 'enterb', 'gear', 'wheel', 'hud', 'crosshair', 'phonebtn', 'phone', 'cb-light', 'cb-gear', 'cb-view', 'cb-horn', 'cb-auto', 'panelbox'];
+const CNAME = { joy: 'Joystick', run: 'Run', jump: 'Jump', crouch: 'Crouch', prone: 'Prone', atk: 'Attack button', wsel: 'Backpack', medbtn: 'Medkit', pausebtn: 'Resume button', shop: 'Shop', aim: 'Aim', nade: 'Grenade button', reload: 'Reload', veh: 'Car', cam: 'Camera', enterb: 'Enter / Exit', crosshair: 'Crosshair', dmg: 'Damage indicator', phonebtn: 'Phone button', phone: 'Phone screen', cdwheel: 'Car steering wheel', kick: 'Kick', eyebtn: '3rd eye button', mini: 'Mini map', eye: '3rd eye window', bars: 'Health / Water bars', gear: 'Settings icon', wheel: 'Weapon wheel', hud: 'Info text', cdbtns: 'Car buttons', 'cb-light': 'Car light', 'cb-gear': 'Car gear', 'cb-view': 'Car view', 'cb-horn': 'Car horn', 'cb-auto': 'Car auto', panelbox: 'Menu panel' };
+const OPAQ = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'medbtn', 'kick', 'eyebtn', 'pausebtn', 'shop', 'aim', 'nade', 'reload', 'veh', 'cam', 'gear', 'phonebtn'];
 let layout = { op: 1, v: 2 }, editMode = false, selId = null, dragP = null, dragOff = [0, 0];
 try { const j = localStorage.getItem('wt_layout'); if (j) { const o = JSON.parse(j); if (o.v === 2) layout = Object.assign({ op: 1, v: 2 }, o); } } catch (e) {}
 CUST.forEach(id => { const el = document.getElementById(id); if (el) el.dataset.cust = id; });
@@ -4042,7 +4106,7 @@ function returnToLobbyRaw() {
   if (!started) return;
   if (inside) leaveNow();
   saveProgress();
-  closePanelRaw(); closeMap();
+  closePanelRaw(); closeMap(); closePhone();
   if (drv) { drv.c.g.visible = true; }
   dashHide();
   started = false; drv = null; aimOn = false;
@@ -4337,6 +4401,7 @@ function driveStep(dt) {
 }
 function extra(dt) {
   if (paused) return;
+  if (phOpen) { if (drv || pDead || rest) closePhone(); else phoneTick(dt); }
   const mv = Math.hypot(jx, jy) > 0.1 || runTouch;
   if (runTouch && mv && !drv) stam = Math.max(0, stam - (500 / 300) * dt); else stam = Math.min(500, stam + 0.6 * dt);
   if (stam <= 0 && runTouch) setRun(false);
@@ -4641,6 +4706,104 @@ function doorStep(now) {
   setAct(k);
 }
 
+// ---------- মোবাইল ফোন (কল · মেসেজ · ব্যাংকিং) ----------
+let phoneSt = null;              // null | 'text' (ফোন দেখছে/টাইপ করছে) | 'call' (কলে কথা বলছে)
+const phoneEl = document.getElementById('phone'), phBody = document.getElementById('phbody');
+let phOpen = false, phScreen = 'home', phCall = null, phChat = null, phTimer = 0, phLog = {}, phSel = null;
+const phFmt = n => '$' + Math.round(n).toLocaleString('en-US');
+function phContacts() {
+  const me = activeProfile && activeProfile.gender;
+  const list = [{ id: 'police', name: 'Police', num: '999', av: '🚓', sv: true }, { id: 'amb', name: 'Ambulance', num: '199', av: '🚑', sv: true }];
+  CHARACTERS.forEach(c => { if (c.id !== me) list.push({ id: c.id, name: MENU_NAMES[c.id] || c.name, num: '', av: c.icon, sv: false }); });
+  return list;
+}
+function phClock() { const h = ((dayP * 24 + 6) % 24); const hh = Math.floor(h), mm = Math.floor((h - hh) * 60); document.getElementById('phtime').textContent = String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0'); }
+function phSet(h) { phBody.innerHTML = h; }
+function phOn(sel, fn) { phBody.querySelectorAll(sel).forEach(b => b.onclick = e => { e.stopPropagation(); fn(b); }); }
+function phBack() { phOn('.phback', () => { if (phCall) endCall(); phScreen = 'home'; phChat = null; renderPhone(); }); }
+function contactList(mode) {
+  return phContacts().map(c => `<div class="phrow${phSel === c.id ? ' sel' : ''}" data-c="${c.id}"><span class="phav">${c.av}</span><span class="phnm">${c.name}</span><span class="phnum">${c.num}</span></div>`).join('');
+}
+function renderPhone() {
+  if (!phOpen) return;
+  phClock();
+  if (phScreen === 'home') {
+    phSet(`<div class="phh">📱 Phone</div><div class="phgrid"><button class="phapp" data-a="call"><i>📞</i>Call</button><button class="phapp" data-a="msg"><i>💬</i>Message</button><button class="phapp" data-a="bank"><i>🏦</i>Bank</button></div>`);
+    phOn('[data-a]', b => { phScreen = b.dataset.a; phSel = null; renderPhone(); });
+  } else if (phScreen === 'call') {
+    phSet(`<button class="phb phback">◀ Back</button><div class="phh">Call</div>${contactList()}<button class="phb phgo" id="phdial" ${phSel ? '' : 'disabled'}>📞 Call</button>`);
+    phBack(); phOn('.phrow', b => { phSel = b.dataset.c; renderPhone(); });
+    const d = document.getElementById('phdial'); d.onclick = e => { e.stopPropagation(); if (phSel) startCall(phSel); };
+  } else if (phScreen === 'calling') {
+    const c = phContacts().find(x => x.id === phCall.id), on = phCall.t > 2;
+    phSet(`<div class="phcalling"><div class="big">${c.av}</div><div class="phh">${c.name}</div><div class="phnum">${c.num}</div><div id="phst">${on ? 'Connected' : 'Calling…'}</div><button class="phb phend" id="phend">📵 End</button></div>`);
+    document.getElementById('phend').onclick = e => { e.stopPropagation(); endCall(); phScreen = 'call'; renderPhone(); };
+  } else if (phScreen === 'msg') {
+    phSet(`<button class="phb phback">◀ Back</button><div class="phh">Message</div>${contactList()}<button class="phb phgo" id="phopen" ${phSel ? '' : 'disabled'}>💬 Open</button>`);
+    phBack(); phOn('.phrow', b => { phSel = b.dataset.c; renderPhone(); });
+    document.getElementById('phopen').onclick = e => { e.stopPropagation(); if (phSel) { phChat = phSel; phScreen = 'chat'; renderPhone(); } };
+  } else if (phScreen === 'chat') {
+    const c = phContacts().find(x => x.id === phChat), log = phLog[phChat] || [];
+    const qr = c.sv ? ['Help!', 'Emergency', 'Thanks'] : ['Hi!', 'Where are you?', 'Meet me', 'Bye'];
+    phSet(`<button class="phb phback" id="phbk2">◀ Back</button><div class="phh">${c.av} ${c.name}</div>${log.map(m => `<div class="phbub${m.me ? ' me' : ''}">${m.t}</div>`).join('')}<div class="phqr">${qr.map(q => `<button class="phb" data-q="${q}">${q}</button>`).join('')}</div>`);
+    document.getElementById('phbk2').onclick = e => { e.stopPropagation(); phScreen = 'msg'; phChat = null; renderPhone(); };
+    phOn('[data-q]', b => sendMsg(phChat, b.dataset.q));
+    phBody.scrollTop = phBody.scrollHeight;
+  } else if (phScreen === 'bank') {
+    phSet(`<button class="phb phback">◀ Back</button><div class="phh">🏦 Mobile Banking</div><div class="phbal">Cash<b>${phFmt(cash)}</b></div><div class="phbal">Bank<b>${phFmt(bank)}</b></div><div class="phh" style="font-size:11px">Deposit</div><div class="phbtns">${[100, 500, 1000].map(v => `<button class="phb" data-d="${v}">${v}</button>`).join('')}</div><div class="phh" style="font-size:11px">Withdraw</div><div class="phbtns">${[100, 500, 1000].map(v => `<button class="phb" data-w="${v}">${v}</button>`).join('')}</div><div class="phbtns" style="grid-template-columns:1fr 1fr"><button class="phb" data-d="all">Deposit All</button><button class="phb" data-w="all">Withdraw All</button></div>`);
+    phBack();
+    phOn('[data-d]', b => { const v = b.dataset.d === 'all' ? cash : Math.min(cash, +b.dataset.d); if (v <= 0) return toast('Not enough cash'); cash -= v; bank += v; saveProgress(); toast('Deposited ' + phFmt(v)); renderPhone(); });
+    phOn('[data-w]', b => { const v = b.dataset.w === 'all' ? bank : Math.min(bank, +b.dataset.w); if (v <= 0) return toast('Not enough in bank'); bank -= v; cash += v; saveProgress(); toast('Withdrew ' + phFmt(v)); renderPhone(); });
+  }
+}
+function startCall(id) {
+  phCall = { id, t: 0, done: false }; phScreen = 'calling'; phoneSt = 'call'; renderPhone();
+}
+function endCall() { phCall = null; phoneSt = phOpen ? 'text' : null; }
+function sendMsg(id, t) {
+  (phLog[id] = phLog[id] || []).push({ me: true, t });
+  const c = phContacts().find(x => x.id === id);
+  const rep = c.sv ? (id === 'amb' ? 'Ambulance is on the way.' : 'Police have been notified.') : ['Hey!', 'Okay, coming!', 'I am busy now', 'Sure 👍', 'See you soon'][Math.floor(Math.random() * 5)];
+  setTimeout(() => { (phLog[id] = phLog[id] || []).push({ me: false, t: rep }); if (phOpen && phScreen === 'chat' && phChat === id) renderPhone(); }, 1200);
+  renderPhone();
+}
+function openPhone() {
+  if (drv || pDead || rest) return;
+  phOpen = true; phScreen = 'home'; phoneEl.classList.add('on'); phoneSt = 'text';
+  if (layout.phone) placeEl('phone');
+  renderPhone();
+}
+function closePhone() {
+  phOpen = false; phCall = null; phoneSt = null; phoneEl.classList.remove('on');
+}
+bindTap(document.getElementById('phonebtn'), () => { if (phOpen) closePhone(); else openPhone(); });
+document.getElementById('phclose').addEventListener('click', e => { e.stopPropagation(); closePhone(); });
+// হেডার ধরে টেনে ফোন সরানো (Customize-এর লেআউটের সাথে একই সেভ)
+{
+  const hd = document.getElementById('phhead'); let dp = null;
+  hd.addEventListener('pointerdown', e => {
+    if (editMode || e.target.id === 'phclose') return;
+    e.stopPropagation(); dp = e.pointerId; hd.setPointerCapture(dp); ensureLayout('phone');
+  });
+  hd.addEventListener('pointermove', e => {
+    if (e.pointerId !== dp) return;
+    const L = layout.phone; L.x = e.clientX / innerWidth; L.y = (e.clientY + phoneEl.offsetHeight * (L.s || 1) / 2 - 14) / innerHeight; placeEl('phone');
+  });
+  const up = e => { if (e.pointerId === dp) { dp = null; saveLayout(); } };
+  hd.addEventListener('pointerup', up); hd.addEventListener('pointercancel', up);
+}
+function phoneTick(dt) {
+  if (!phOpen) return;
+  phTimer -= dt; if (phTimer <= 0) { phTimer = 5; phClock(); }
+  if (phCall) {
+    const was = phCall.t; phCall.t += dt;
+    if (was <= 2 && phCall.t > 2) {
+      renderPhone();
+      if (phCall.id === 'amb') { hp = Math.min(HP_MAX, hp + 50); toast('🚑 Paramedics healed you (+50 HP)'); }
+      else if (phCall.id === 'police') toast('🚓 Police are on the way');
+    }
+  }
+}
 function loop(now) {
   requestAnimationFrame(loop);
   const el = now - last;
