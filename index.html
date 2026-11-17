@@ -2336,7 +2336,7 @@ function update(dt) {
   if (rest) { combatT = 0; atk = null; gunT = 0; restStep(dt, wake); }
   updateCombat(dt);
   updateVitals(dt);
-  if (combatT > 0) {
+  if (combatT > 0 && !phOpen) {
     const tg = aimNPC(35, 25);
     const fy = tg ? Math.atan2(tg.g.position.x - player.x, tg.g.position.z - player.z) : camYaw;
     player.yaw += wrap(fy - player.yaw) * (1 - Math.exp(-dt * 14));
@@ -2372,7 +2372,7 @@ function update(dt) {
       else if (jumping && A.jump) state = 'jump';
       else if (stance === 'prone' && A.prone) state = 'prone';
       else if (stance === 'crouch' && (A.crouchidle || A.crouchwalk)) state = (moving && A.crouchwalk) || !A.crouchidle ? 'crouchwalk' : 'crouchidle';
-      else if (phoneSt && stance === 'stand' && !atk && combatT <= 0) {   // ফোন ব্যবহার: কলে কথা / কলে হাঁটা / মেসেজ টাইপ
+      else if (phoneSt && stance === 'stand' && !atk) {   // ফোন ব্যবহার: কলে কথা / কলে হাঁটা / মেসেজ টাইপ — যুদ্ধের সময়ও বাটন টিপলেই চলবে
         if (phoneSt === 'call') state = moving ? (run ? (A.phonerun ? 'phonerun' : 'run') : (A.phonepace ? 'phonepace' : 'walk')) : (A.phonetalk ? 'phonetalk' : 'idle');
         else state = moving ? (run ? 'run' : 'walk') : (A.phonetext ? 'phonetext' : 'idle');
       }
@@ -2391,7 +2391,7 @@ function update(dt) {
         char.current = next; char.state = state; char.key = key;
       }
       if (state === 'prone') A.prone.timeScale = moving ? 1 : 0;   // দাঁড়িয়ে থাকলে শোয়া ভঙ্গিতে স্থির
-      if (char.gun) char.gun.visible = gunT > 0 && stance === 'stand';
+      if (char.gun) char.gun.visible = gunT > 0 && stance === 'stand' && !phoneSt;
       if (char.phone) char.phone.visible = !!phoneSt && stance === 'stand';
       char.mixer.update(dt);
       // বসার অ্যানিমেশনের root/bone motion-এ নিতম্ব আসনের নিচে নামলে একই ফ্রেমে root উঁচু করি;
@@ -3061,7 +3061,7 @@ function useWeapon(first) {
   else if (w.id === 'bomb') { if (first) throwBomb(); }
   else fireHeld = true;
 }
-function attackDown() { if (pDead) return; atkHeld = true; useWeapon(true); }
+function attackDown() { if (pDead || phOpen) return; atkHeld = true; useWeapon(true); }
 function attackUp() { atkHeld = false; fireHeld = false; }
 function doKnife() {
   if (atkCD > 0 && atkLast === 'knife') return;
@@ -3243,6 +3243,21 @@ function aimNPC(maxDeg, maxDist) {
   }
   return best;
 }
+// ক্রসহেয়ার/ক্যামেরা যে দিকে তাক করা, ঠিক সেই দিক বরাবর একটু কাছাকাছি কোনো শত্রু থাকলে
+// সামান্য তার দিকে টেনে নেয় (শুধু টাচ-স্ক্রিনে টার্গেট করা সহজ করতে); মাথা না শরীর লাগবে
+// তা এখনো আসল ৩D কোণ থেকেই ঠিক হয়, তাই এইম যেখানে রাখবেন সেখানেই লাগার কথা।
+function aimAssist(o, dir, maxDeg, maxDist) {
+  if (maxDeg <= 0) return null;
+  let best = null, bd = 1e9;
+  for (const n of npcs) {
+    if (n.dead) continue;
+    const c = n.g.position, cx = c.x - o.x, cy = c.y + 1.1 - o.y, cz = c.z - o.z, dist = Math.hypot(cx, cy, cz);
+    if (dist > maxDist || dist < 0.01) continue;
+    const ang = Math.acos(Math.max(-1, Math.min(1, (cx * dir.x + cy * dir.y + cz * dir.z) / dist))) * 180 / Math.PI;
+    if (ang < maxDeg && ang < bd) { bd = ang; best = new THREE.Vector3(cx, cy, cz).normalize(); }
+  }
+  return best;
+}
 function rayBox(o, d, x0, x1, y0, y1, z0, z1) {
   let tmin = 0, tmax = 1e9;
   for (const [p, v, lo, hi] of [[o.x, d.x, x0, x1], [o.y, d.y, y0, y1], [o.z, d.z, z0, z1]]) {
@@ -3287,12 +3302,14 @@ function shoot() {
   if (!s || !w.mag) return;
   if (s.mag <= 0) { startReload(); fireHeld = false; return; }
   s.mag--; fireCD = w.cd; startCombat(); gunT = 2.5; atk = null; recoil = 0.14; muzzleT = 0.05;
-  const tg = aimNPC(10, 60);
   const o = new THREE.Vector3(player.x + Math.sin(player.yaw) * 0.5, player.y + 1.35 - cr * 0.4 - pr * 1.0, player.z + Math.cos(player.yaw) * 0.5);
-  let d;
-  if (tg) d = new THREE.Vector3(tg.g.position.x, tg.g.position.y + 1.2, tg.g.position.z).sub(o).normalize();
-  else { const pt = Math.max(-0.2, Math.min(0.6, camPitch * 0.5)); d = new THREE.Vector3(Math.sin(camYaw) * Math.cos(pt), Math.sin(pt), Math.cos(camYaw) * Math.cos(pt)); }
-  const r = castRay(o, d, 80), end = o.clone().addScaledVector(d, Math.min(r.t, 80));
+  // এইম সবসময় ক্যামেরা/ক্রসহেয়ার যেদিকে তাক করা সেই দিক বরাবর — মাথায় তাক করলে মাথায়, গায়ে তাক করলে গায়ে লাগবে
+  const pt = Math.max(PITCH_MIN, Math.min(PITCH_MAX, camPitch));
+  let d = new THREE.Vector3(Math.sin(camYaw) * Math.cos(pt), Math.sin(pt), Math.cos(camYaw) * Math.cos(pt));
+  const assist = aimAssist(o, d, aimOn ? 0 : 6, aimOn ? 0 : 55);   // জুম/এইম করলে অ্যাসিস্ট বন্ধ — ১০০% নিজের টার্গেট করা
+  if (assist) d = assist;
+  const maxRange = aimOn ? 220 : 80;   // জুম করলে নরমাল বন্দুক দিয়েও ২০০ মিটার পর্যন্ত স্পষ্ট দেখা ও মারা যাবে
+  const r = castRay(o, d, maxRange), end = o.clone().addScaledVector(d, Math.min(r.t, maxRange));
   spawnTracer(o, end);
   muzzle.position.copy(o); sfx('gun');
   if (r.hit) {
@@ -3320,8 +3337,8 @@ function updateCombat(dt) {
   combatT = Math.max(0, combatT - dt); gunT = Math.max(0, gunT - dt); atkCD = Math.max(0, atkCD - dt);
   fireCD = Math.max(0, fireCD - dt); muzzleT = Math.max(0, muzzleT - dt); recoil *= Math.exp(-dt * 18);
   if (reloadT > 0) { reloadT -= dt; if (reloadT <= 0) finishReload(); }
-  if (fireHeld && fireCD <= 0 && reloadT <= 0) shoot();
-  if (atkHeld && WEAPONS[wIdx].melee) useWeapon(false);
+  if (fireHeld && fireCD <= 0 && reloadT <= 0 && !phOpen) shoot();
+  if (atkHeld && WEAPONS[wIdx].melee && !phOpen) useWeapon(false);
   updateGrenades(dt);
   if (atk) {
     atk.t += dt;
@@ -4410,6 +4427,11 @@ function extra(dt) {
   const tf = aimOn ? (WEAPONS[wIdx].id === 'sniper' ? 22 : 42) : 60;
   if (Math.abs(camera.fov - tf) > 0.3) { camera.fov += (tf - camera.fov) * Math.min(1, dt * 10); camera.updateProjectionMatrix(); }
   document.getElementById('crosshair').style.display = aimOn ? 'block' : 'none';
+  if (scene.fog) {   // জুম/এইম করলে কুয়াশা দূরে সরে যায়, যাতে ২০০ মিটার পর্যন্ত পরিষ্কার দেখা যায়
+    const fn = aimOn ? 260 : 110, ff = aimOn ? 640 : 460;
+    scene.fog.near += (fn - scene.fog.near) * Math.min(1, dt * 6);
+    scene.fog.far += (ff - scene.fog.far) * Math.min(1, dt * 6);
+  }
   if (!drv && !ent) { let nd = 1e9; for (const c of cars) nd = Math.min(nd, (c.g.position.x - player.x) ** 2 + (c.g.position.z - player.z) ** 2); for (const c of parkedCars) nd = Math.min(nd, (c.g.position.x - player.x) ** 2 + (c.g.position.z - player.z) ** 2); $id('veh').classList.toggle('hint', nd < 81); }
 }
 
@@ -4769,6 +4791,7 @@ function sendMsg(id, t) {
 }
 function openPhone() {
   if (drv || pDead || rest) return;
+  fireHeld = false; atkHeld = false;   // ফোন খোলার সাথে সাথে গুলি/ঘুসি থেমে যাবে, যুদ্ধের মধ্যেও
   phOpen = true; phScreen = 'home'; phoneEl.classList.add('on'); phoneSt = 'text';
   if (layout.phone) placeEl('phone');
   renderPhone();
