@@ -4778,10 +4778,34 @@ function getRoom(type) {
     const grass = new THREE.Mesh(new THREE.PlaneGeometry(260, 260), new THREE.MeshBasicMaterial({ color: 0x5c9c4a })); grass.rotation.x = -Math.PI / 2; grass.position.set(0, -0.15, HD + 60); L.add(grass);
     k.b(2.6, 0.04, 24, 0, -0.1, HD + 12, '#b9b3a6'); k.b(70, 2.1, 0.3, 0, 0.95, HD + 24, '#d8cbb0');
     for (const [tx, tz, s] of [[-9, 9, 1.3], [10, 10.5, 1.5], [-14, 13, 1.1], [15, 14, 1.2], [-6, 19, 1.4], [8, 20, 1.1]]) { k.c(0.25 * s, 3.2 * s, tx, 1.5 * s, tz, '#7a5230'); k.s(1.9 * s, 1.6 * s, 1.9 * s, tx, 3.6 * s, tz, '#3fa34d'); k.s(1.4 * s, 1.2 * s, 1.4 * s, tx + 0.5, 4.5 * s, tz - 0.2, '#57b84f'); }
-    const sky = cvs(1024, 256, (x, w, h) => { const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#8fb6e0'); g.addColorStop(0.55, '#cfe4f4'); g.addColorStop(1, '#e8f1f6'); x.fillStyle = g; x.fillRect(0, 0, w, h);
-      for (let i = 0; i < 70; i++) { const bw2 = 18 + Math.random() * 34, bh = 30 + Math.random() * 100, bx = Math.random() * w; x.fillStyle = 'hsl(210,' + (10 + Math.random() * 12) + '%,' + (62 + Math.random() * 14) + '%)'; x.fillRect(bx, h - 36 - bh, bw2, bh + 40); x.fillStyle = 'rgba(255,255,255,.35)'; for (let a = 0; a < bh; a += 12) for (let b = 4; b < bw2 - 4; b += 9) if (Math.random() < 0.35) x.fillRect(bx + b, h - 30 - bh + a, 3, 5); }
-      x.fillStyle = '#6aa05a'; x.fillRect(0, h - 36, w, 36); });
-    sky.wrapS = THREE.RepeatWrapping; const cyl = new THREE.Mesh(new THREE.CylinderGeometry(120, 120, 60, 40, 1, true), new THREE.MeshBasicMaterial({ map: sky, side: THREE.BackSide, fog: false })); cyl.position.set(0, 24, 0); L.add(cyl);
+    // দূরের শহর: বড় (৪০৯৬×৫১২) ছবিতে তিন স্তরের স্কাইলাইন — দূরেরগুলো হালকা/কুয়াশাঢাকা, কাছেরগুলো গাঢ় ও জানালাসহ
+    const sky = cvs(4096, 512, (x, w, h) => {
+      const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#7fa9db'); g.addColorStop(0.5, '#bcd8f0'); g.addColorStop(0.8, '#e3eef6'); g.addColorStop(1, '#e8f1f6'); x.fillStyle = g; x.fillRect(0, 0, w, h);
+      const gy = h - 60;
+      const layers = [{ n: 90, hmin: 90, hmax: 220, l: 74, s: 10, lit: 0.12 }, { n: 80, hmin: 110, hmax: 300, l: 64, s: 12, lit: 0.2 }, { n: 70, hmin: 80, hmax: 260, l: 52, s: 14, lit: 0.3 }];
+      for (const Ly of layers) for (let i = 0; i < Ly.n; i++) {
+        const bw2 = 50 + Math.random() * 80, bh = Ly.hmin + Math.random() * (Ly.hmax - Ly.hmin), bx = Math.random() * w, by = gy - bh;
+        const bg = x.createLinearGradient(0, by, 0, gy + 20); bg.addColorStop(0, `hsl(212,${Ly.s}%,${Ly.l + 6}%)`); bg.addColorStop(1, `hsl(212,${Ly.s}%,${Ly.l - 4}%)`);
+        x.fillStyle = bg; x.fillRect(bx, by, bw2, bh + 24);
+        x.fillStyle = `hsl(212,${Ly.s}%,${Ly.l - 8}%)`; x.fillRect(bx, by, bw2, 5);                                   // ছাদের কিনারা
+        if (Math.random() < 0.4) x.fillRect(bx + bw2 * 0.3, by - 12, bw2 * 0.25, 12);                               // ছাদের ঘর/ট্যাংক
+        for (let a = 14; a < bh - 6; a += 16) for (let b = 8; b < bw2 - 12; b += 14) {
+          x.fillStyle = Math.random() < Ly.lit ? 'rgba(255,224,150,.85)' : `hsla(205,40%,${Ly.l + 22}%,.65)`; x.fillRect(bx + b, by + a, 8, 10);
+        }
+      }
+      x.fillStyle = '#6aa05a'; x.fillRect(0, gy + 20, w, h - gy - 20);
+      for (let i = 0; i < 220; i++) { const tx = Math.random() * w, th = 14 + Math.random() * 22; x.fillStyle = `hsl(${105 + Math.random() * 25},${35 + Math.random() * 20}%,${28 + Math.random() * 14}%)`; x.beginPath(); x.arc(tx, gy + 22 - th * 0.3, th * 0.75, 0, 7); x.fill(); }   // গাছের সারি
+    });
+    sky.wrapS = THREE.RepeatWrapping; const cyl = new THREE.Mesh(new THREE.CylinderGeometry(120, 120, 60, 48, 1, true), new THREE.MeshBasicMaterial({ map: sky, side: THREE.BackSide, fog: false })); cyl.position.set(0, 24, 0); L.add(cyl);
+    // মাঝের দূরত্বে আসল ৩D বাড়ির সারি (জানালার প্যাটার্নসহ): ছবির পেছনের স্কাইলাইনের সামনে গভীরতা আনে
+    { const wt = cvs(64, 64, (x, w, h) => { x.fillStyle = '#ffffff'; x.fillRect(0, 0, w, h); x.fillStyle = '#8fb3d1'; x.fillRect(10, 12, 18, 26); x.fillRect(36, 12, 18, 26); x.fillStyle = '#e6edf3'; x.fillRect(0, h - 5, w, 5); });
+      const tints = ['#d9d2c3', '#c9d3dc', '#e2c9b0', '#cfd8c4', '#bfc6d6', '#e6dccb'], bgeo = new THREE.BoxGeometry(1, 1, 1);
+      for (let i = 0; i < 34; i++) {
+        const a = (i / 34) * Math.PI * 2 + Math.random() * 0.15, r = 62 + Math.random() * 38, w2 = 10 + Math.random() * 12, d2 = 10 + Math.random() * 10, h2 = 12 + Math.random() * 34;
+        const t2 = wt.clone(); t2.needsUpdate = true; t2.repeat.set(Math.max(1, Math.round(w2 / 4)), Math.max(1, Math.round(h2 / 3.4)));
+        const bm = new THREE.Mesh(bgeo, new THREE.MeshBasicMaterial({ color: tints[i % tints.length], map: t2, fog: false }));
+        bm.scale.set(w2, h2, d2); bm.position.set(Math.sin(a) * r, h2 / 2 - 0.15, Math.cos(a) * r); bm.rotation.y = a; L.add(bm);
+      } }
     // ---- নিচতলা: বসার ঘর ----
     rug(-4.2, -2.6, 4.6, 3.2, '#8c3b3b'); tvset(-4.2, -5.4);
     F(-4.2, -3.2, 0, 1.3, 0.7, q => { q.b(1.3, 0.05, 0.7, 0, 0.42, 0, '#8a6a48'); q.b(1.2, 0.03, 0.6, 0, 0.18, 0, '#6b4a2f'); for (const a of [-1, 1]) for (const b of [-1, 1]) q.b(0.05, 0.4, 0.05, a * 0.58, 0.2, b * 0.3, '#5a3c26'); });
@@ -5167,7 +5191,15 @@ const CAR_MODEL_FILES = {
 };
 const carModels = {};          // কী -> প্রস্তুত মডেল (আকার ও অবস্থান ঠিক করা)
 let carModelsApplied = false;
+// মডেল খাড়া/কাত দেখালে: null = স্বয়ংক্রিয় ঠিক করা; কাত ঠিক না হলে এখানে -Math.PI/2, Math.PI/2 বা 0 বসিয়ে দেখুন (X অক্ষে ঘোরানো)
+const CAR_FIX_X = null;
 function normalizeCarModel(obj, targetLen) {
+  // Blender-এর Z-up মডেল Y-up গেমে এলে গাড়ি নাক-আকাশে খাড়া হয়ে যায়: সবচেয়ে লম্বা দিক ওপর-নিচে থাকলে ৯০° শুইয়ে দেওয়া হয়
+  obj.updateMatrixWorld(true);
+  { const rs = new THREE.Box3().setFromObject(obj).getSize(new THREE.Vector3());
+    console.log('car raw size', rs.x.toFixed(2), rs.y.toFixed(2), rs.z.toFixed(2));
+    if (CAR_FIX_X !== null) obj.rotation.x += CAR_FIX_X;
+    else if (rs.y > rs.x * 1.15 && rs.y > rs.z * 1.15) obj.rotation.x += -Math.PI / 2; }
   const wrap = new THREE.Group(); wrap.add(obj);
   wrap.rotation.y = CAR_YAW;
   obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
