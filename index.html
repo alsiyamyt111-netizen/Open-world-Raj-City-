@@ -1833,7 +1833,9 @@ entercar: 'entercar', exitcar: 'exitcar',
 // মোবাইল ফোন (models/ ফোল্ডারে এই নামের .fbx ফাইল): কলে কথা বলা / কলে হাঁটা / মেসেজ টাইপ করা
 phonetalk: 'TalkingCellPhone', phonepace: 'TalkingPhonePacing', phonetext: 'textingwhilestanding',
 // লবি: চরিত্র লোড হওয়ার সময় পেছন থেকে দৌড়ে এসে সামনে থামে (শুধু লবিতে চলে)
-lobbyrun: 'StandingTorchRun'
+lobbyrun: 'StandingTorchRun',
+// সিঁড়িতে ওঠা / নামা (models/WalkingUpTheStairs.fbx; নামার জন্য ঐচ্ছিক models/WalkingDownTheStairs.fbx)
+stairup: 'WalkingUpTheStairs', stairdown: 'WalkingDownTheStairs'
 };
 // NPC-দের অ্যানিমেশন (মার খাওয়া, মরা, ওঠা) — পরিস্থিতি অনুযায়ী নিজে চলে
 const NPC_ANIMS = { hit: 'Hitreaction', death: 'death', getup: 'Getup' };
@@ -2333,7 +2335,7 @@ function supportY(x, z, y) {
   if (inside) {
     const R = inside.room, S = R.stair; if (!S) return 0;
     const lx = x - R.ox, lz = z - R.oz;
-    if (lx >= S.x0 && lx <= S.x1 && lz >= S.z1 && lz <= S.z0) { const i = Math.max(0, Math.min(S.n - 1, Math.floor((S.z0 - lz) / S.trd))); return (i + 1) * S.ris; }
+    if (lx >= S.x0 && lx <= S.x1 && lz >= S.z1 && lz <= S.z0) return Math.min(R.FY, (S.z0 - lz) / S.trd * S.ris + S.ris * 0.75);
     return y > R.FY - 0.8 ? R.FY : 0;
   }
   let g = groundY(x, z);
@@ -2436,7 +2438,11 @@ function update(dt) {
     if (char.mixer) {
       // Mixamo অ্যানিমেশন বাছাই (অগ্রাধিকার ওপর থেকে নিচে)
       const A = char.actions;
-      let state;
+      let state, onStair = 0;
+      { const Rm = inside && inside.room, S = Rm && Rm.stair;   // সিঁড়ির ওপর হাঁটছে কিনা + ওঠা না নামা
+        if (S && moving && !jumping && !rest) { const lx = player.x - Rm.ox, lz = player.z - Rm.oz;
+          if (lx >= S.x0 && lx <= S.x1 && lz >= S.z1 && lz <= S.z0) { const dy = player.y - (window.__spy === undefined ? player.y : window.__spy); if (Math.abs(dy) > 0.004) window.__sdir = dy > 0 ? 1 : -1; onStair = window.__sdir || 1; } }
+        window.__spy = player.y; }
       if (rest) state = rest.anim;
       else if (jumping && vaulting && A.walljump) state = 'walljump';
       else if (jumping && A.jump) state = 'jump';
@@ -2446,6 +2452,7 @@ function update(dt) {
         if (phoneSt === 'call') state = moving ? (run ? 'run' : (A.phonepace ? 'phonepace' : 'walk')) : (A.phonetalk ? 'phonetalk' : 'idle');
         else state = moving ? (run ? 'run' : 'walk') : (A.phonetext ? 'phonetext' : 'idle');
       }
+      else if (onStair && !atk && gunT <= 0) state = onStair > 0 ? (A.stairup ? 'stairup' : (run ? 'run' : 'walk')) : (A.stairdown ? 'stairdown' : 'walk');
       else if (atk && A[atk.type]) state = atk.type;
       else if (gunT > 0 && A.fire) state = 'fire'
       else if (moving) state = run ? 'run' : 'walk';
@@ -2522,7 +2529,9 @@ function update(dt) {
   if (moving && !jumping && stepIdx !== lastStep) { lastStep = stepIdx; playStep(run); }
 
   // ক্যামেরা: yaw = ৩৬০° ঘোরা, pitch = আকাশ/নিচ দেখা (সোয়াইপ)
-  const D = inside ? Math.min(camDist, inside.room.stair && player.y > 0.2 && player.y < 3.3 && player.x - inside.room.ox > inside.room.stair.x0 - 0.5 ? 1.4 : 3.2) : camDist, H = camFront ? 1.7 : Math.max(1.3, Math.min(2.2, 0.9 + D * 0.22)), cp = Math.cos(camPitch), sp = Math.sin(camPitch), eyeOff = cr * 0.55 + pr * 1.1, fr = camFront ? 1 : -1;
+  if (!window.__icd) window.__icd = 3.2;
+  { const R0 = inside && inside.room, tg = R0 && R0.stair && player.y > 0.2 && player.y < 3.3 && player.x - R0.ox > R0.stair.x0 - 0.5 ? 1.4 : 3.2; window.__icd += (tg - window.__icd) * (1 - Math.exp(-dt * 5)); }
+  const D = inside ? Math.min(camDist, window.__icd) : camDist, H = camFront ? 1.7 : Math.max(1.3, Math.min(2.2, 0.9 + D * 0.22)), cp = Math.cos(camPitch), sp = Math.sin(camPitch), eyeOff = cr * 0.55 + pr * 1.1, fr = camFront ? 1 : -1;
   const down = Math.max(0, -sp);
   const want = new THREE.Vector3(
     player.x + fr * Math.sin(camYaw) * D * cp,
@@ -4590,7 +4599,7 @@ function getRoom(type) {
     s: (rx, ry, rz, x, y, z, c, o) => { const m = new THREE.Mesh(US, M(c, o)); m.scale.set(rx, ry, rz); m.position.set(x, y, z); P.add(m); return m; }
   });
   const L = new THREE.Group(); L.position.set(OX, 0, OZ); g.add(L); const k = kit(L);
-  const solid = (x, z, w, d) => { R.cols.push({ minX: OX + x - w / 2, maxX: OX + x + w / 2, minZ: OZ + z - d / 2, maxZ: OZ + z + d / 2 }); R.plan.push([x - w / 2, z - d / 2, w, d]); };
+  const solid = (x, z, w, d) => { R.cols.push({ minX: OX + x - w / 2, maxX: OX + x + w / 2, minZ: OZ + z - d / 2, maxZ: OZ + z + d / 2, f: type === 'home' ? 0 : undefined }); R.plan.push([x - w / 2, z - d / 2, w, d]); };
   const F = (x, z, ry, cw, cd, fn) => {   // আসবাবের গ্রুপ: (x,z) এ ry কোণে; cw×cd সংঘর্ষ-বাক্স (ঘুরলে নিজে অদলবদল)
     const P = new THREE.Group(); P.position.set(x, 0, z); P.rotation.y = ry; L.add(P);
     if (cw) { const sw = Math.abs(Math.sin(ry)) > 0.7; solid(x, z, sw ? cd : cw, sw ? cw : cd); }
