@@ -1986,6 +1986,14 @@ async function buildCharacter(gender) {
     actions[n] = act;
   }
   if (actions.walk) speed.walk = 0.75; if (actions.run) speed.run = 1.0;
+  // বসে ফোন: দাঁড়িয়ে টেক্সট/কল অ্যানিমেশনের শুধু হাত-কব্জির অংশ নিয়ে বসার ভঙ্গির ওপর বসানো হয় (নতুন ফাইল লাগে না)
+  for (const [src, dst] of [['phonetext', 'sitphone'], ['phonetalk', 'sitcall']]) {
+    if (!actions[src]) continue;
+    const c2 = actions[src].getClip().clone(); c2.name = dst;
+    c2.tracks = c2.tracks.filter(t => /(Left|Right)(Shoulder|Arm|ForeArm|Hand)/.test(t.name));
+    if (!c2.tracks.length) continue;
+    const a2 = mixer.clipAction(c2, model); a2.setLoop(THREE.LoopRepeat, Infinity); a2.setEffectiveWeight(50); actions[dst] = a2;
+  }
   if (!actions.idle && !actions.walk && !actions.run) { console.warn('Animation file not found, using backup character'); return makePrimitive(gender); }
   // বন্দুক: ডান হাতের হাড়ে জোড়া
   let gun = null;
@@ -2458,6 +2466,8 @@ function update(dt) {
       else if (moving) state = run ? 'run' : 'walk';
       else state = A.idle ? 'idle' : 'walk';
       if (!A[state]) state = A.idle ? 'idle' : Object.keys(A)[0];
+      { const sitOn = rest && rest.kind === 'sit' && rest.phase === 'hold' && phoneSt, wantN = sitOn ? (phoneSt === 'call' ? 'sitcall' : 'sitphone') : null;
+        for (const nm of ['sitphone', 'sitcall']) { const a = A[nm]; if (!a) continue; if (nm === wantN) { if (!a.isRunning()) a.reset().play(); a.setEffectiveWeight(50); } else if (a.isRunning()) a.stop(); } }
       const key = rest ? state + (rest.rev ? '_r' : '') : (state === 'punch' || state === 'kick') ? atk : state;   // নতুন Punch = নতুন করে Start
       if (key !== char.key) {
         const next = A[state];
@@ -2562,13 +2572,14 @@ function update(dt) {
   }
   if (inside) {   // ঘরের ভেতরে ক্যামেরা দেয়ালের বাইরে যেতে পারে না
     const R = inside.room, p = camera.position;
-    p.x = Math.max(R.ox - R.hw + 0.35, Math.min(R.ox + R.hw - 0.35, p.x));
-    p.z = Math.max(R.oz - R.hd + 0.35, Math.min(R.oz + R.hd - 0.35, p.z));
+    const B0 = R.bal, onBal = !!B0 && player.y >= R.FY - 0.3 && player.z - R.oz > R.hd + 0.1;
+    if (onBal) { p.x = Math.max(R.ox + B0.x0 + 0.3, Math.min(R.ox + B0.x1 - 0.3, p.x)); p.z = Math.max(R.oz + R.hd + 0.5, Math.min(R.oz + B0.z1 - 0.3, p.z)); }
+    else { p.x = Math.max(R.ox - R.hw + 0.35, Math.min(R.ox + R.hw - 0.35, p.x)); p.z = Math.max(R.oz - R.hd + 0.35, Math.min(R.oz + R.hd - 0.35, p.z)); }
     let lo = 0.5, hi = R.wh - 0.3;
     if (R.FY) {
       const S = R.stair, B = R.bal, lx = p.x - R.ox, lz = p.z - R.oz, inHole = lx > S.x0 - 0.2 && lx < S.x1 + 0.2 && lz > S.hz0 && lz < S.hz1;
       if (player.y >= R.FY - 0.3) {
-        lo = R.FY + 0.5; hi = R.top2 - 0.3; if (inHole) lo = 0.5;
+        lo = R.FY + 0.5; hi = onBal ? R.FY + 6 : R.top2 - 0.3; if (inHole) lo = 0.5;
         if (lx > B.x0 && lx < B.x1) p.z = Math.max(R.oz - R.hd + 0.35, Math.min(R.oz + B.z1 - 0.35, camera.position.z));
       } else if (inHole || player.y >= 2.0) hi = R.top2 - 0.3;
     }
@@ -4522,7 +4533,7 @@ function driveStep(dt) {
 }
 function extra(dt) {
   if (paused) return;
-  if (phOpen) { if (pDead || rest) closePhone(); else phoneTick(dt); }
+  if (phOpen) { if (pDead || (rest && rest.kind !== 'sit')) closePhone(); else phoneTick(dt); }
   const mv = Math.hypot(jx, jy) > 0.1 || runTouch;
   if (runTouch && mv && !drv) stam = Math.max(0, stam - (500 / 300) * dt); else stam = Math.min(500, stam + 0.6 * dt);
   if (stam <= 0 && runTouch) setRun(false);
@@ -4705,7 +4716,7 @@ function getRoom(type) {
     const FY = 3.5, WH2 = 3.1, SX0 = 5.5, SX1 = 7.5, SZ0 = 4.6, SZ1 = -1.0, SN = 20, RIS = FY / SN, TRD = (SZ0 - SZ1) / SN, HZ1 = 2.7;
     R.FY = FY; R.wh2 = WH2; R.top2 = FY + WH2;
     R.stair = { x0: SX0, x1: SX1, z0: SZ0, z1: SZ1, n: SN, ris: RIS, trd: TRD, hz0: SZ1, hz1: HZ1 };
-    R.bal = { g0: -2.2, g1: 2.2, x0: -5, x1: 5, z1: HD + 2.6 };
+    R.bal = { g0: -2.2, g1: 2.2, x0: -6.8, x1: 6.8, z1: HD + 4.8 };
     R.bed = [-4.6, -3.3]; R.bedUp = true;
     const colU = (x, z, w, d, f) => { R.cols.push({ minX: OX + x - w / 2, maxX: OX + x + w / 2, minZ: OZ + z - d / 2, maxZ: OZ + z + d / 2, f }); };
     const planU = (x, z, w, d) => R.plan.push([x - w / 2, z - d / 2, w, d, 1]);
@@ -4747,16 +4758,21 @@ function getRoom(type) {
     for (const sx of [B.x0 + 0.1, B.x1 - 0.1]) k.b(0.25, FY - 0.3, 0.25, sx, (FY - 0.3) / 2, B.z1 - 0.15, '#f2efe8');   // নিচের থাম
     k.b(bw, 0.07, 0.07, bcx, FY + 1.0, B.z1 - 0.05, rail); k.b(0.07, 0.07, bd, B.x0 + 0.05, FY + 1.0, bcz, rail); k.b(0.07, 0.07, bd, B.x1 - 0.05, FY + 1.0, bcz, rail);
     k.b(bw, 0.9, 0.03, bcx, FY + 0.5, B.z1 - 0.05, glass); k.b(0.03, 0.9, bd, B.x0 + 0.05, FY + 0.5, bcz, glass); k.b(0.03, 0.9, bd, B.x1 - 0.05, FY + 0.5, bcz, glass);
-    for (let i = 0; i <= 10; i++) k.b(0.04, 0.95, 0.04, B.x0 + 0.05 + (bw - 0.1) * i / 10, FY + 0.48, B.z1 - 0.05, rail);
-    for (let i = 1; i <= 4; i++) { k.b(0.04, 0.95, 0.04, B.x0 + 0.05, FY + 0.48, HD + bd * i / 5, rail); k.b(0.04, 0.95, 0.04, B.x1 - 0.05, FY + 0.48, HD + bd * i / 5, rail); }
+    const NB = Math.round(bw / 0.5); for (let i = 0; i <= NB; i++) k.b(0.04, 0.95, 0.04, B.x0 + 0.05 + (bw - 0.1) * i / NB, FY + 0.48, B.z1 - 0.05, rail);
+    const NS = Math.round(bd / 0.5); for (let i = 1; i < NS; i++) { k.b(0.04, 0.95, 0.04, B.x0 + 0.05, FY + 0.48, HD + bd * i / NS, rail); k.b(0.04, 0.95, 0.04, B.x1 - 0.05, FY + 0.48, HD + bd * i / NS, rail); }
     // বারান্দার দরজার ফ্রেম ও সরানো কাচ
     k.b(0.1, WH2 - 0.5, 0.24, gl, FY + (WH2 - 0.5) / 2, HD + 0.1, '#f5f5f5'); k.b(0.1, WH2 - 0.5, 0.24, gr, FY + (WH2 - 0.5) / 2, HD + 0.1, '#f5f5f5');
     k.b(1.2, 2.5, 0.04, gr - 0.7, FY + 1.25, HD + 0.02, glass); k.b(1.2, 0.04, 0.06, gr - 0.7, FY + 2.5, HD + 0.02, '#f5f5f5');
     // বারান্দার আসবাব + টব
+    const bc0 = R.cols.length, bp0 = R.plan.length;
     F(-3.4, HD + 1.4, 0, 0.5, 0.5, q => { q.c(0.38, 0.05, 0, 0.45, 0, '#6b4a2f'); q.c(0.05, 0.43, 0, 0.22, 0, '#333'); });
     chair(-4.1, HD + 1.4, Math.PI / 2, '#a47b52'); chair(-2.7, HD + 1.4, -Math.PI / 2, '#a47b52');
     plant(3.9, HD + 1.9, 1.5); plant(-4.5, HD + 2.05, 1.2); plant(4.3, HD + 0.6, 1.1);
     F(3.3, HD + 1.2, 0, 1.4, 0.7, q => { q.b(1.4, 0.3, 0.7, 0, 0.2, 0, '#6b4a2f'); q.b(1.3, 0.12, 0.6, 0, 0.42, 0, '#e8dcc6'); });
+    F(4.2, HD + 3.2, 0, 0.5, 0.5, q => { q.c(0.38, 0.05, 0, 0.45, 0, '#6b4a2f'); q.c(0.05, 0.43, 0, 0.22, 0, '#333'); });
+    chair(3.5, HD + 3.2, Math.PI / 2, '#a47b52'); chair(4.9, HD + 3.2, -Math.PI / 2, '#a47b52'); chair(-3.4, HD + 3.4, Math.PI, '#a47b52');
+    plant(6.1, HD + 0.9, 1.4); plant(-6.1, HD + 0.9, 1.4); plant(6.1, HD + 4.0, 1.3); plant(-6.1, HD + 4.0, 1.3); plant(0, HD + 4.2, 1.1);
+    for (let i = bc0; i < R.cols.length; i++) R.cols[i].f = 1; for (let i = bp0; i < R.plan.length; i++) if (R.plan[i]) R.plan[i][4] = 1;
     // বারান্দার বাইরের দৃশ্য: ঘাসের উঠান, পাঁচিল, গাছ, দূরের শহর
     const grass = new THREE.Mesh(new THREE.PlaneGeometry(260, 260), new THREE.MeshBasicMaterial({ color: 0x5c9c4a })); grass.rotation.x = -Math.PI / 2; grass.position.set(0, -0.15, HD + 60); L.add(grass);
     k.b(2.6, 0.04, 24, 0, -0.1, HD + 12, '#b9b3a6'); k.b(70, 2.1, 0.3, 0, 0.95, HD + 24, '#d8cbb0');
@@ -4994,7 +5010,7 @@ function sendMsg(id, t) {
   renderPhone();
 }
 function openPhone() {
-  if (pDead || rest) return;   // গাড়ি চালানোর সময়ও ফোন/কল চলবে
+  if (pDead || (rest && rest.kind !== 'sit')) return;   // গাড়ি চালানোর সময়ও ফোন/কল চলবে
   fireHeld = false; atkHeld = false;   // ফোন খোলার সাথে সাথে গুলি/ঘুসি থেমে যাবে, যুদ্ধের মধ্যেও
   phOpen = true; phScreen = 'home'; phoneEl.classList.add('on'); phoneSt = 'text';
   if (layout.phone) placeEl('phone');
