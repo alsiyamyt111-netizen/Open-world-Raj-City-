@@ -84,12 +84,11 @@
 - 
 ## স্ক্রিনশট
 
-![লবি](branding/lobby.jpg)
-![খোলা শহর](branding/city.jpg)
-![ম্যাপ](branding/map.jpg)
-![ফোন ও জরুরি সেবা](branding/phone.jpg)
-![বাটন সাজানো](branding/layout.jpg)
-![অফলাইন প্যাক](branding/offline-pack.jpg)
+![লবি](branding/Lobyphoto.jpg)
+![খোলা শহর](branding/Homephoto.jpg)
+![বাড়ির ভেতর](branding/Roomphoto.jpg)
+![ফোন ও জরুরি সেবা](branding/Phonecall.jpg)
+![বাটন সাজানো](branding/Incarphoto.jpg)
 
 ## প্ল্যাটফর্ম সাপোর্ট
 | প্ল্যাটফর্ম | কীভাবে খেলবেন | অবস্থা |
