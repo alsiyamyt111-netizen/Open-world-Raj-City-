@@ -5052,11 +5052,15 @@ let pendingResponder = null;
 const RESP_SPEED = 13;
 function spawnResponder(kind) {
   if (inside) { pendingResponder = kind; return; }   // ভেতরে থাকলে বাইরে গেলে আসবে
-  const tpl = cars[0];
-  if (!tpl) return;
-  const g = tpl.g.clone(), body = g.children[0];
-  body.material = body.material.clone();
-  body.material.color.set(kind === 'amb' ? 0xffffff : 0x1d3f8f);
+  let g = makeResponderMesh(kind);
+  if (!g) {   // মডেল না থাকলে পুরোনো গাড়ি
+    const tpl = cars[0];
+    if (!tpl) return;
+    g = tpl.g.clone();
+    const body = g.children[0];
+    body.material = body.material.clone();
+    body.material.color.set(kind === 'amb' ? 0xffffff : 0x1d3f8f);
+  }
   let sx = player.x + 60, sz = player.z;
   for (let k = 0; k < 24; k++) {
     const a = Math.random() * Math.PI * 2, d = 60 + Math.random() * 20;
@@ -5154,6 +5158,70 @@ camera.position.set(player.x, 3, player.z - 6);
 camera.lookAt(player.x, 1.6, player.z);
 requestAnimationFrame(loop);
 
+// ===== গাড়ির GLB মডেল (models/ ফোল্ডার) =====
+// ফাইল না থাকলে পুরোনো বক্স গাড়িই চলবে। গাড়ির সামনের দিক উল্টো দেখালে CAR_YAW = Math.PI করুন।
+const CAR_YAW = 0;
+const CAR_MODEL_FILES = {
+  normal1: 'NormalCar1', normal2: 'NormalCar2', sports: 'SportsCar', sports2: 'SportsCar2',
+  suv: 'SUV', taxi: 'Taxi', cop: 'Cop'
+};
+const carModels = {};          // কী -> প্রস্তুত মডেল (আকার ও অবস্থান ঠিক করা)
+let carModelsApplied = false;
+function normalizeCarModel(obj, targetLen) {
+  const wrap = new THREE.Group(); wrap.add(obj);
+  wrap.rotation.y = CAR_YAW;
+  obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  wrap.updateMatrixWorld(true);
+  let box = new THREE.Box3().setFromObject(wrap);
+  const sz = box.getSize(new THREE.Vector3());
+  const L = Math.max(sz.x, sz.z) || 1;
+  wrap.scale.setScalar(targetLen / L);
+  wrap.updateMatrixWorld(true);
+  box = new THREE.Box3().setFromObject(wrap);
+  const c = box.getCenter(new THREE.Vector3());
+  wrap.position.set(-c.x, -box.min.y, -c.z);   // মাটিতে বসানো ও কেন্দ্রে আনা
+  return wrap;
+}
+async function loadCarModels() {
+  if (Object.keys(carModels).length) return;
+  const pb = new THREE.Box3().setFromObject(cars[0] ? cars[0].g : new THREE.Group());
+  const ps = pb.getSize(new THREE.Vector3());
+  const targetLen = Math.max(ps.x, ps.z) || 4.4;   // পুরোনো গাড়ির দৈর্ঘ্য অনুযায়ী মাপ
+  for (const [k, nm] of Object.entries(CAR_MODEL_FILES)) {
+    try {
+      const g = await gltfLoader.loadAsync(`models/${encodeURIComponent(nm)}.glb`);
+      carModels[k] = normalizeCarModel(g.scene, targetLen);
+    } catch (e) { /* ফাইল নেই: পুরোনো গাড়ি */ }
+  }
+}
+// ট্রাফিকের পুরোনো বক্স গাড়ির জায়গায় GLB মডেল বসানো (পুরোনো অংশ লুকানো, মুছে ফেলা হয় না)
+function applyCarModels() {
+  if (carModelsApplied) return;
+  carModelsApplied = true;
+  const pool = ['normal1', 'normal2', 'sports', 'sports2', 'suv', 'taxi'].filter(k => carModels[k]);
+  if (!pool.length) return;
+  for (const c of cars) {
+    const k = pool[Math.floor(Math.random() * pool.length)];
+    for (const ch of c.g.children) ch.visible = false;
+    c.g.add(carModels[k].clone());
+  }
+}
+// জরুরি সেবার গাড়ির মডেল: পুলিশ = Cop, অ্যাম্বুলেন্স = সাদা রঙের NormalCar1
+function makeResponderMesh(kind) {
+  if (kind === 'police' && carModels.cop) return carModels.cop.clone();
+  if (kind === 'amb' && carModels.normal1) {
+    const m = carModels.normal1.clone();
+    m.traverse(o => {
+      if (!o.isMesh) return;
+      o.material = o.material.clone();
+      const c = o.material.color;
+      if (c && (c.r + c.g + c.b) > 0.6) c.set(0xffffff);   // উজ্জ্বল অংশ সাদা, কাচ/টায়ার অপরিবর্তিত
+    });
+    return m;
+  }
+  return null;
+}
+
 async function startGame(p) {
   exitLobby();
   activeProfile = p; applyHud();
@@ -5161,6 +5229,7 @@ async function startGame(p) {
   document.getElementById('msg').textContent = 'Loading...';
   if (!ac) initAudio();
   if (ac.state === 'suspended') ac.resume();
+  await loadCarModels(); applyCarModels();
 
   try { char = await buildCharacter(p.gender); applyOutfit(char, p); }
   catch (e) { document.getElementById('msg').textContent = 'Error occurred, please try again'; document.querySelectorAll('#start button').forEach(b => b.disabled = false); return; }
