@@ -1348,8 +1348,9 @@ function buildWorld() {
       }
 
       // বিল্ডিং + পাঁচিলঘেরা চত্বর (বাগান, গ্যারেজ, গেট)
-      const w = 9 + Math.random() * 6, d = 9 + Math.random() * 4; let h = 8 + Math.random() * 22;
+      let w = 9 + Math.random() * 6, d = 9 + Math.random() * 4; let h = 8 + Math.random() * 22;
       const ty = SPC[ci] || (ci % 5 === 1 || ci % 5 === 3 ? 'food' : h <= 22 ? 'home' : null); ci++;
+      if (ty === 'home') { w = 12.5 + Math.random() * 3; d = 10.5 + Math.random() * 2; }
       if (ty) h = ty === 'home' ? 7 + Math.random() * 1.2 : ty === 'bank' ? 10.5 : 9.5;
       const gs = Math.floor(Math.random() * 4), C = [1, 0, -1, 0][gs], S = [0, 1, 0, -1][gs], odd = gs % 2 === 1;
       const bx = cx - 2.5 * S, bz = cz - 2.5 * C, ww = odd ? d : w, dd = odd ? w : d;
@@ -2184,7 +2185,7 @@ function nearSeat() {
   if (!inside || !char || !char.mixer || jumping || rest) return null;
   const R = inside.room, A = char.actions;
   let best = null, bd = 1e9;
-  const test = (list, kind, rad) => { for (const sp of list) { const d = Math.hypot(R.ox + sp.x - player.x, R.oz + sp.z - player.z); if (d < rad && d < bd) { bd = d; best = { kind, s: sp, R }; } } };
+  const test = (list, kind, rad) => { for (const sp of list) { if (R.FY && !!sp.fy !== player.y > 1.75) continue; const d = Math.hypot(R.ox + sp.x - player.x, R.oz + sp.z - player.z); if (d < rad && d < bd) { bd = d; best = { kind, s: sp, R }; } } };
   if (A.standtosit && A.sittostand) test(R.seats, 'sit', 1.25);
   if (A.lyingdown && A.sleepingidle) test(R.beds, 'sleep', 1.9);
   return best;
@@ -2224,7 +2225,7 @@ function restStep(dt, wake) {
       r.sp = cd / Math.min(cd, sit ? REST_TUNE.sitCap : REST_TUNE.sleepCap); r.dur = cd / r.sp;
       r.anim = nm; r.rev = !sit; r.phase = 'out'; r.t = 0;
       let ex = r.s.exits[0];
-      for (const c of r.s.exits) if (!blocked(r.R.ox + c.x, r.R.oz + c.z, 0)) { ex = c; break; }   // যেদিকে ফাঁকা সেদিক দিয়ে নামবে
+      for (const c of r.s.exits) if (!blocked(r.R.ox + c.x, r.R.oz + c.z, r.s.fy || 0)) { ex = c; break; }   // যেদিকে ফাঁকা সেদিক দিয়ে নামবে
       r.ox = r.R.ox + ex.x; r.oz = r.R.oz + ex.z;
     }
   } else {
@@ -2317,7 +2318,7 @@ function bxCells() {
 }
 const bxAt = (x, z) => bxCells().get(gKey(Math.floor(x / GCS), Math.floor(z / GCS)));
 function blocked(x, z, y = -9) {
-  if (inside) return inBlocked(x, z);
+  if (inside) return inBlocked(x, z, y);
   if (terrainAt(x, z) < -0.7) return true;
   const list = bxAt(x, z); if (!list) return false;
   for (const b of list) {
@@ -2329,7 +2330,12 @@ function blocked(x, z, y = -9) {
   return false;
 }
 function supportY(x, z, y) {
-  if (inside) return 0;
+  if (inside) {
+    const R = inside.room, S = R.stair; if (!S) return 0;
+    const lx = x - R.ox, lz = z - R.oz;
+    if (lx >= S.x0 && lx <= S.x1 && lz >= S.z1 && lz <= S.z0) { const i = Math.max(0, Math.min(S.n - 1, Math.floor((S.z0 - lz) / S.trd))); return (i + 1) * S.ris; }
+    return y > R.FY - 0.8 ? R.FY : 0;
+  }
   let g = groundY(x, z);
   const list = bxAt(x, z); if (!list) return g;
   for (const b of list) {
@@ -2516,7 +2522,7 @@ function update(dt) {
   if (moving && !jumping && stepIdx !== lastStep) { lastStep = stepIdx; playStep(run); }
 
   // ক্যামেরা: yaw = ৩৬০° ঘোরা, pitch = আকাশ/নিচ দেখা (সোয়াইপ)
-  const D = inside ? Math.min(camDist, 3.2) : camDist, H = camFront ? 1.7 : Math.max(1.3, Math.min(2.2, 0.9 + D * 0.22)), cp = Math.cos(camPitch), sp = Math.sin(camPitch), eyeOff = cr * 0.55 + pr * 1.1, fr = camFront ? 1 : -1;
+  const D = inside ? Math.min(camDist, inside.room.stair && player.y > 0.2 && player.y < 3.3 && player.x - inside.room.ox > inside.room.stair.x0 - 0.5 ? 1.4 : 3.2) : camDist, H = camFront ? 1.7 : Math.max(1.3, Math.min(2.2, 0.9 + D * 0.22)), cp = Math.cos(camPitch), sp = Math.sin(camPitch), eyeOff = cr * 0.55 + pr * 1.1, fr = camFront ? 1 : -1;
   const down = Math.max(0, -sp);
   const want = new THREE.Vector3(
     player.x + fr * Math.sin(camYaw) * D * cp,
@@ -2549,7 +2555,15 @@ function update(dt) {
     const R = inside.room, p = camera.position;
     p.x = Math.max(R.ox - R.hw + 0.35, Math.min(R.ox + R.hw - 0.35, p.x));
     p.z = Math.max(R.oz - R.hd + 0.35, Math.min(R.oz + R.hd - 0.35, p.z));
-    p.y = Math.max(0.5, Math.min(R.wh - 0.3, p.y));
+    let lo = 0.5, hi = R.wh - 0.3;
+    if (R.FY) {
+      const S = R.stair, B = R.bal, lx = p.x - R.ox, lz = p.z - R.oz, inHole = lx > S.x0 - 0.2 && lx < S.x1 + 0.2 && lz > S.hz0 && lz < S.hz1;
+      if (player.y >= R.FY - 0.3) {
+        lo = R.FY + 0.5; hi = R.top2 - 0.3; if (inHole) lo = 0.5;
+        if (lx > B.x0 && lx < B.x1) p.z = Math.max(R.oz - R.hd + 0.35, Math.min(R.oz + B.z1 - 0.35, camera.position.z));
+      } else if (inHole || player.y >= 2.0) hi = R.top2 - 0.3;
+    }
+    p.y = Math.max(lo, Math.min(hi, p.y));
   }
   camera.fov += ((moving && run ? 66 : 60) - camera.fov) * (1 - Math.exp(-dt * 2.5));
   camera.updateProjectionMatrix();
@@ -4546,7 +4560,7 @@ function tradeAct(t) {
     return { title: '🚗 Auto Showroom · 💵 ' + cash, rows: tp.slice(0, 5).map((c, i) => ({ t: '🚗 ' + c.name + ' — 💵' + (1200 + i * 600), b: 'Buy', f: () => buyCar(c, 1200 + i * 600) })) };
   });
 }
-const RMS = { home: [4.5, 3.5, 3, 'wood', '#e6dccb'], food: [5, 4, 3.2, 'tile', '#f4ecd6'], cloth: [7, 5, 3.4, 'tile', '#f1eaf0'], car: [7, 5, 4, 'dark', '#dfe3e8'], med: [5, 4, 3.2, 'tile2', '#eef5f3'], bank: [6, 4.5, 3.6, 'marble', '#e9e1d0'] };
+const RMS = { home: [7.5, 6, 3.2, 'wood', '#e6dccb'], food: [5, 4, 3.2, 'tile', '#f4ecd6'], cloth: [7, 5, 3.4, 'tile', '#f1eaf0'], car: [7, 5, 4, 'dark', '#dfe3e8'], med: [5, 4, 3.2, 'tile2', '#eef5f3'], bank: [6, 4.5, 3.6, 'marble', '#e9e1d0'] };
 const RIDX = { home: 0, food: 1, cloth: 2, car: 3, med: 4, bank: 5 };
 const UB = new THREE.BoxGeometry(1, 1, 1), UC = new THREE.CylinderGeometry(1, 1, 1, 16), US = new THREE.SphereGeometry(1, 14, 10);
 const cvs = (w, h, f) => { const c = document.createElement('canvas'); c.width = w; c.height = h; f(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t; };
@@ -4589,7 +4603,7 @@ function getRoom(type) {
   k.b(2 * HW + 0.4, WH, 0.2, 0, WH / 2, -HD - 0.1, wm); k.b(2 * HW + 0.4, WH, 0.2, 0, WH / 2, HD + 0.1, wm);
   k.b(0.2, WH, 2 * HD, -HW - 0.1, WH / 2, 0, wm); k.b(0.2, WH, 2 * HD, HW + 0.1, WH / 2, 0, wm);
   k.b(2 * HW, 0.12, 0.04, 0, 0.06, -HD + 0.02, bb); k.b(2 * HW, 0.12, 0.04, 0, 0.06, HD - 0.02, bb); k.b(0.04, 0.12, 2 * HD, -HW + 0.02, 0.06, 0, bb); k.b(0.04, 0.12, 2 * HD, HW - 0.02, 0.06, 0, bb);
-  k.b(2 * HW + 0.4, 0.1, 2 * HD + 0.4, 0, WH + 0.05, 0, new THREE.MeshBasicMaterial({ color: 0xe9e4da }));
+  if (type !== 'home') k.b(2 * HW + 0.4, 0.1, 2 * HD + 0.4, 0, WH + 0.05, 0, new THREE.MeshBasicMaterial({ color: 0xe9e4da }));
   const lm = new THREE.MeshBasicMaterial({ color: 0xffffff });
   for (let i = -1; i <= 1; i += 2) for (let j = -1; j <= 1; j += 2) k.b(1.3, 0.04, 0.45, i * HW * 0.5, WH - 0.03, j * HD * 0.45, lm);
   const dc = { home: '#6a4226', food: '#d63c2f', cloth: '#8e44ad', car: '#2c3e50', med: '#1e9e5a', bank: '#1b4f8a' }[type];
@@ -4678,13 +4692,107 @@ function getRoom(type) {
   const picture = (x, y, z, w, h, c) => { k.b(w + 0.1, h + 0.1, 0.04, x, y, z, '#4a3524'); k.b(w, h, 0.05, x, y, z, glowM(c, 0.25)); };
   // ---- ধরন অনুযায়ী সাজানো ----
   if (type === 'home') {
-    R.bed = [2.3, -0.9];
-    rug(-2.4, -1.8, 3.4, 2.4, '#8c3b3b'); tvset(-2.4, -3.2); F(-2.4, -2.0, 0, 1.0, 0.6, q => { q.b(1, 0.05, 0.6, 0, 0.42, 0, '#8a6a48'); q.b(0.9, 0.03, 0.5, 0, 0.18, 0, '#6b4a2f'); for (const a of [-1, 1]) for (const b of [-1, 1]) q.b(0.05, 0.4, 0.05, a * 0.45, 0.2, b * 0.25, '#5a3c26'); });
-    sofa(-2.4, -0.7, Math.PI, '#4b6a88'); lampF(-4.0, -3.1);
-    bed(3.2, -2.2, 0, '#d65d5d'); nstand(1.85, -3.15); F(4.15, 0.3, 0, 0.6, 1.4, q => { q.b(0.6, 2.1, 1.4, 0, 1.05, 0, '#7a5a3a'); q.b(0.02, 1.9, 0.02, 0, 1.05, -0.7 + 0.7, '#3a2a1c').position.set(-0.3, 1.05, 0); q.b(0.04, 0.2, 0.04, -0.32, 1.05, -0.1, '#c9b27c'); q.b(0.04, 0.2, 0.04, -0.32, 1.05, 0.1, '#c9b27c'); });
-    rtable(1.3, 1.4, '#8a6a48'); chair(1.3, 0.55, 0, '#a47b52'); chair(1.3, 2.25, Math.PI, '#a47b52'); chair(0.4, 1.4, Math.PI / 2, '#a47b52'); chair(2.2, 1.4, -Math.PI / 2, '#a47b52');
-    kitchen(-4.2, 1.7, Math.PI / 2, 2.6); fridge(-4.15, -0.5, Math.PI / 2); plant(4.0, 2.7, 1.2);
-    win(0.3, -HD + 0.03, 0, 1.2); picture(-0.9, 2.0, -HD + 0.04, 0.6, 0.45, '#d9a441'); picture(4.38, 1.8, 1.6, 0.04, 0.5, '#4aa3a0');
+    // ===== প্রশস্ত দোতলা বাড়ি: নিচতলা (বসার ঘর, রান্নাঘর, খাবার জায়গা) + সিঁড়ি + দোতলা (শোবার ঘর, পড়ার ঘর) + বারান্দা =====
+    const FY = 3.5, WH2 = 3.1, SX0 = 5.5, SX1 = 7.5, SZ0 = 4.6, SZ1 = -1.0, SN = 20, RIS = FY / SN, TRD = (SZ0 - SZ1) / SN, HZ1 = 2.7;
+    R.FY = FY; R.wh2 = WH2; R.top2 = FY + WH2;
+    R.stair = { x0: SX0, x1: SX1, z0: SZ0, z1: SZ1, n: SN, ris: RIS, trd: TRD, hz0: SZ1, hz1: HZ1 };
+    R.bal = { g0: -2.2, g1: 2.2, x0: -5, x1: 5, z1: HD + 2.6 };
+    R.bed = [-4.6, -3.3]; R.bedUp = true;
+    const colU = (x, z, w, d, f) => { R.cols.push({ minX: OX + x - w / 2, maxX: OX + x + w / 2, minZ: OZ + z - d / 2, maxZ: OZ + z + d / 2, f }); };
+    const planU = (x, z, w, d) => R.plan.push([x - w / 2, z - d / 2, w, d, 1]);
+    const box2 = (x0, x1, y0, y1, z0, z1, mats) => { const m = new THREE.Mesh(UB, mats); m.scale.set(x1 - x0, y1 - y0, z1 - z0); m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); L.add(m); return m; };
+    const slabSide = mt('#d9d3c6'), slabBot = new THREE.MeshBasicMaterial({ color: 0xe9e4da });
+    const slab = (x0, x1, z0, z1) => box2(x0, x1, FY - 0.3, FY, z0, z1, [slabSide, slabSide, floorMat('wood', (x1 - x0) / 2, (z1 - z0) / 2), slabBot, slabSide, slabSide]);
+    // দোতলার মেঝে (সিঁড়ির জন্য ফাঁকসহ)
+    slab(-HW - 0.2, HW + 0.2, -HD - 0.2, SZ1); slab(-HW - 0.2, HW + 0.2, HZ1, HD + 0.2);
+    slab(-HW - 0.2, SX0, SZ1, HZ1); slab(SX1, HW + 0.2, SZ1, HZ1);
+    // দোতলার দেয়াল ও ছাদ
+    const wm2 = mt('#efe7d8'), UY = FY + WH2 / 2;
+    k.b(2 * HW + 0.4, WH2, 0.2, 0, UY, -HD - 0.1, wm2); k.b(0.2, WH2, 2 * HD, -HW - 0.1, UY, 0, wm2); k.b(0.2, WH2, 2 * HD, HW + 0.1, UY, 0, wm2);
+    const gl = R.bal.g0, gr = R.bal.g1, fw = (HW + 0.2 - gr);
+    k.b(fw, WH2, 0.2, -(gr + fw / 2), UY, HD + 0.1, wm2); k.b(fw, WH2, 0.2, gr + fw / 2, UY, HD + 0.1, wm2);
+    k.b(gr - gl, 0.5, 0.2, 0, FY + WH2 - 0.25, HD + 0.1, wm2);
+    k.b(2 * HW + 0.4, 0.1, 2 * HD + 0.4, 0, FY + WH2 + 0.05, 0, new THREE.MeshBasicMaterial({ color: 0xe9e4da }));
+    for (const i of [-1, 1]) for (const j of [-1, 1]) k.b(1.3, 0.04, 0.45, i * HW * 0.5, FY + WH2 - 0.03, j * HD * 0.45, lm);
+    k.b(2 * HW, 0.12, 0.04, 0, FY + 0.06, -HD + 0.02, bb); k.b(0.04, 0.12, 2 * HD, -HW + 0.02, FY + 0.06, 0, bb); k.b(0.04, 0.12, 2 * HD, HW - 0.02, FY + 0.06, 0, bb);
+    const winY = (x, z, ry, w, y) => { const P = new THREE.Group(); P.position.set(x, y, z); P.rotation.y = ry; L.add(P); const q = kit(P); q.b(w + 0.12, 1.32, 0.05, 0, 0, 0, '#f5f5f5'); q.b(w, 1.2, 0.06, 0, 0, 0.01, glowM('#9ec9ee', 0.6)); q.b(0.04, 1.2, 0.07, 0, 0, 0.02, '#f5f5f5'); q.b(w, 0.04, 0.07, 0, 0, 0.02, '#f5f5f5'); };
+    // ---- সিঁড়ি (ধাপ, রেলিং) ----
+    const wood = mt('#8b5b37'), wood2 = mt('#a47b52'), rail = mt('#2f343a', { metalness: 0.6, roughness: 0.35 });
+    for (let i = 0; i < SN; i++) { const h = (i + 1) * RIS, zc = SZ0 - (i + 0.5) * TRD; k.b(SX1 - SX0, h, TRD, (SX0 + SX1) / 2, h / 2, zc, i % 2 ? wood : wood2); k.b(SX1 - SX0, 0.04, TRD + 0.04, (SX0 + SX1) / 2, h + 0.01, zc, '#c9a273'); }
+    const slope = Math.atan2(FY, SZ0 - SZ1), RL = Math.hypot(SZ0 - SZ1, FY);
+    k.b(0.07, 0.07, RL, SX0 + 0.04, FY / 2 + 0.98, (SZ0 + SZ1) / 2, rail).rotation.x = slope;
+    for (let i = 0; i < SN; i += 2) { const h = (i + 1) * RIS; k.b(0.04, 0.9, 0.04, SX0 + 0.04, h + 0.45, SZ0 - (i + 0.5) * TRD, rail); }
+    k.b(0.12, 0.5, SZ0 - SZ1 + 0.1, SX0 - 0.1, 0.25, (SZ0 + SZ1) / 2, '#d9d3c6'); k.b(0.12, 0.5, 0.12, SX0 - 0.1, 0.25, SZ0 + 0.06, '#d9d3c6');
+    k.b(SX1 - SX0, 1.0, 0.1, (SX0 + SX1) / 2, 0.5, SZ1 - 0.05, wm);   // সিঁড়ির পেছনের দেয়াল
+    colU((SX0 + SX0) / 2 - 0.0, (SZ0 + SZ1) / 2, 0.1, SZ0 - SZ1, 0); colU((SX0 + SX1) / 2, SZ1 - 0.07, SX1 - SX0, 0.14, 0);
+    // দোতলায় সিঁড়ি-ফাঁকের রেলিং
+    const ur = (x0, z0, x1, z1) => { const len = Math.hypot(x1 - x0, z1 - z0), a = Math.atan2(x1 - x0, z1 - z0), n = Math.max(2, Math.round(len / 0.45));
+      const t = k.b(0.06, 0.06, len, (x0 + x1) / 2, FY + 0.98, (z0 + z1) / 2, rail); t.rotation.y = a; const m = k.b(0.03, 0.03, len, (x0 + x1) / 2, FY + 0.5, (z0 + z1) / 2, rail); m.rotation.y = a;
+      for (let i = 0; i <= n; i++) k.b(0.04, 0.95, 0.04, x0 + (x1 - x0) * i / n, FY + 0.48, z0 + (z1 - z0) * i / n, rail); };
+    ur(SX0, SZ1 + 0.3, SX0, HZ1); ur(SX0, HZ1, SX1, HZ1);
+    colU(SX0, (SZ1 + HZ1) / 2, 0.1, HZ1 - SZ1, 1); colU((SX0 + SX1) / 2, HZ1, SX1 - SX0, 0.1, 1);
+    // ---- বারান্দা (দোতলার সামনে) ----
+    const B = R.bal, bw = B.x1 - B.x0, bd = B.z1 - HD, bcx = (B.x0 + B.x1) / 2, bcz = HD + bd / 2;
+    box2(B.x0, B.x1, FY - 0.3, FY, HD, B.z1, [slabSide, slabSide, floorMat('tile', bw / 2, bd / 2), slabSide, slabSide, slabSide]);
+    k.b(bw + 0.2, 0.25, bd + 0.1, bcx, FY - 0.45, bcz, '#cfc9bc');
+    for (const sx of [B.x0 + 0.1, B.x1 - 0.1]) k.b(0.25, FY - 0.3, 0.25, sx, (FY - 0.3) / 2, B.z1 - 0.15, '#f2efe8');   // নিচের থাম
+    k.b(bw, 0.07, 0.07, bcx, FY + 1.0, B.z1 - 0.05, rail); k.b(0.07, 0.07, bd, B.x0 + 0.05, FY + 1.0, bcz, rail); k.b(0.07, 0.07, bd, B.x1 - 0.05, FY + 1.0, bcz, rail);
+    k.b(bw, 0.9, 0.03, bcx, FY + 0.5, B.z1 - 0.05, glass); k.b(0.03, 0.9, bd, B.x0 + 0.05, FY + 0.5, bcz, glass); k.b(0.03, 0.9, bd, B.x1 - 0.05, FY + 0.5, bcz, glass);
+    for (let i = 0; i <= 10; i++) k.b(0.04, 0.95, 0.04, B.x0 + 0.05 + (bw - 0.1) * i / 10, FY + 0.48, B.z1 - 0.05, rail);
+    for (let i = 1; i <= 4; i++) { k.b(0.04, 0.95, 0.04, B.x0 + 0.05, FY + 0.48, HD + bd * i / 5, rail); k.b(0.04, 0.95, 0.04, B.x1 - 0.05, FY + 0.48, HD + bd * i / 5, rail); }
+    // বারান্দার দরজার ফ্রেম ও সরানো কাচ
+    k.b(0.1, WH2 - 0.5, 0.24, gl, FY + (WH2 - 0.5) / 2, HD + 0.1, '#f5f5f5'); k.b(0.1, WH2 - 0.5, 0.24, gr, FY + (WH2 - 0.5) / 2, HD + 0.1, '#f5f5f5');
+    k.b(1.2, 2.5, 0.04, gr - 0.7, FY + 1.25, HD + 0.02, glass); k.b(1.2, 0.04, 0.06, gr - 0.7, FY + 2.5, HD + 0.02, '#f5f5f5');
+    // বারান্দার আসবাব + টব
+    F(-3.4, HD + 1.4, 0, 0.5, 0.5, q => { q.c(0.38, 0.05, 0, 0.45, 0, '#6b4a2f'); q.c(0.05, 0.43, 0, 0.22, 0, '#333'); });
+    chair(-4.1, HD + 1.4, Math.PI / 2, '#a47b52'); chair(-2.7, HD + 1.4, -Math.PI / 2, '#a47b52');
+    plant(3.9, HD + 1.9, 1.5); plant(-4.5, HD + 2.05, 1.2); plant(4.3, HD + 0.6, 1.1);
+    F(3.3, HD + 1.2, 0, 1.4, 0.7, q => { q.b(1.4, 0.3, 0.7, 0, 0.2, 0, '#6b4a2f'); q.b(1.3, 0.12, 0.6, 0, 0.42, 0, '#e8dcc6'); });
+    // বারান্দার বাইরের দৃশ্য: ঘাসের উঠান, পাঁচিল, গাছ, দূরের শহর
+    const grass = new THREE.Mesh(new THREE.PlaneGeometry(260, 260), new THREE.MeshBasicMaterial({ color: 0x5c9c4a })); grass.rotation.x = -Math.PI / 2; grass.position.set(0, -0.15, HD + 60); L.add(grass);
+    k.b(2.6, 0.04, 24, 0, -0.1, HD + 12, '#b9b3a6'); k.b(70, 2.1, 0.3, 0, 0.95, HD + 24, '#d8cbb0');
+    for (const [tx, tz, s] of [[-9, 9, 1.3], [10, 10.5, 1.5], [-14, 13, 1.1], [15, 14, 1.2], [-6, 19, 1.4], [8, 20, 1.1]]) { k.c(0.25 * s, 3.2 * s, tx, 1.5 * s, tz, '#7a5230'); k.s(1.9 * s, 1.6 * s, 1.9 * s, tx, 3.6 * s, tz, '#3fa34d'); k.s(1.4 * s, 1.2 * s, 1.4 * s, tx + 0.5, 4.5 * s, tz - 0.2, '#57b84f'); }
+    const sky = cvs(1024, 256, (x, w, h) => { const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#8fb6e0'); g.addColorStop(0.55, '#cfe4f4'); g.addColorStop(1, '#e8f1f6'); x.fillStyle = g; x.fillRect(0, 0, w, h);
+      for (let i = 0; i < 70; i++) { const bw2 = 18 + Math.random() * 34, bh = 30 + Math.random() * 100, bx = Math.random() * w; x.fillStyle = 'hsl(210,' + (10 + Math.random() * 12) + '%,' + (62 + Math.random() * 14) + '%)'; x.fillRect(bx, h - 36 - bh, bw2, bh + 40); x.fillStyle = 'rgba(255,255,255,.35)'; for (let a = 0; a < bh; a += 12) for (let b = 4; b < bw2 - 4; b += 9) if (Math.random() < 0.35) x.fillRect(bx + b, h - 30 - bh + a, 3, 5); }
+      x.fillStyle = '#6aa05a'; x.fillRect(0, h - 36, w, 36); });
+    sky.wrapS = THREE.RepeatWrapping; const cyl = new THREE.Mesh(new THREE.CylinderGeometry(120, 120, 60, 40, 1, true), new THREE.MeshBasicMaterial({ map: sky, side: THREE.BackSide, fog: false })); cyl.position.set(0, 24, 0); L.add(cyl);
+    // ---- নিচতলা: বসার ঘর ----
+    rug(-4.2, -2.6, 4.6, 3.2, '#8c3b3b'); tvset(-4.2, -5.4);
+    F(-4.2, -3.2, 0, 1.3, 0.7, q => { q.b(1.3, 0.05, 0.7, 0, 0.42, 0, '#8a6a48'); q.b(1.2, 0.03, 0.6, 0, 0.18, 0, '#6b4a2f'); for (const a of [-1, 1]) for (const b of [-1, 1]) q.b(0.05, 0.4, 0.05, a * 0.58, 0.2, b * 0.3, '#5a3c26'); });
+    sofa(-4.2, -1.3, Math.PI, '#4b6a88'); sofa(-6.3, -3.0, -Math.PI / 2, '#6a7f9a'); lampF(-6.9, -5.4); lampF(-1.4, -0.7); plant(-1.4, -5.4, 1.3);
+    F(-7.15, -0.4, Math.PI / 2, 2.6, 0.5, q => { q.b(2.6, 2.1, 0.4, 0, 1.05, 0, '#7a5a3a'); for (let r = 0; r < 4; r++) { q.b(2.5, 0.03, 0.38, 0, 0.35 + r * 0.5, 0.02, '#5a3c26'); for (let b = 0; b < 9; b++) q.b(0.14, 0.34, 0.26, -1.15 + b * 0.28, 0.54 + r * 0.5, 0.04, ['#c0392b', '#2e86de', '#f1c40f', '#27ae60', '#8e44ad'][(b + r) % 5]); } });
+    picture(-4.2, 2.1, -HD + 0.04, 1.2, 0.8, '#d9a441'); win(-7.45, -3.0, Math.PI / 2, 1.8); win(-0.9, -HD + 0.03, 0, 1.2);
+    // ---- নিচতলা: রান্নাঘর ও খাবার জায়গা ----
+    kitchen(3.4, -HD + 0.32, 0, 4.2); fridge(6.75, -HD + 0.45, 0);
+    F(3.4, -3.7, 0, 2.6, 0.9, q => { q.b(2.6, 0.9, 0.8, 0, 0.45, 0, '#f1ece0'); q.b(2.7, 0.06, 0.9, 0, 0.93, 0, '#3d3d42', { roughness: 0.3 }); });
+    for (const sx of [2.5, 3.4, 4.3]) F(sx, -2.95, 0, 0.4, 0.4, q => { q.c(0.17, 0.04, 0, 0.62, 0, '#333'); q.c(0.03, 0.6, 0, 0.3, 0, '#777'); });
+    rtable(3.4, -0.7, '#8a6a48'); chair(3.4, -1.55, 0, '#a47b52'); chair(3.4, 0.15, Math.PI, '#a47b52'); chair(2.5, -0.7, Math.PI / 2, '#a47b52'); chair(4.3, -0.7, -Math.PI / 2, '#a47b52');
+    win(5.2, -HD + 0.03, 0, 1.2); picture(2.0, 2.2, -HD + 0.04, 0.8, 0.55, '#4aa3a0');
+    // ---- নিচতলা: প্রবেশপথ ----
+    F(-3.3, HD - 0.4, 0, 1.6, 0.5, q => { q.b(1.6, 0.05, 0.45, 0, 0.8, 0, '#6b4a2f'); for (const a of [-1, 1]) q.b(0.05, 0.8, 0.4, a * 0.7, 0.4, 0, '#5a3c26'); q.b(0.35, 0.18, 0.2, -0.4, 0.92, 0, '#d9a441'); });
+    picture(-3.3, 1.7, HD - 0.04, 0.9, 0.6, '#4aa3a0'); bench(-5.2, HD - 0.5, 0); plant(2.3, HD - 0.5, 1.2); rug(0, HD - 1.6, 2.2, 1.6, '#3f5d78');
+    // ---- দোতলা: মাস্টার বেডরুম (বাম-পেছনে) ----
+    const FL = (x, z, ry, cw, cd, fn) => { const P = F(x, z, ry, 0, 0, fn); P.position.y = FY; if (cw) { const sw = Math.abs(Math.sin(ry)) > 0.7; colU(x, z, sw ? cd : cw, sw ? cd : cd, 1); R.cols[R.cols.length - 1].maxX = OX + x + (sw ? cd : cw) / 2; R.cols[R.cols.length - 1].minX = OX + x - (sw ? cd : cw) / 2; R.cols[R.cols.length - 1].minZ = OZ + z - (sw ? cw : cd) / 2; R.cols[R.cols.length - 1].maxZ = OZ + z + (sw ? cw : cd) / 2; planU(x, z, sw ? cd : cw, sw ? cw : cd); } return P; };
+    const seatU = (n0) => { for (let i = n0; i < R.seats.length; i++) R.seats[i].fy = FY; };
+    const bedU = (x, z, ry, col) => { const n0 = R.beds.length; R.beds.push(mkSeat(x, z, ry, 0, REST_TUNE.bedZ, REST_TUNE.bedLift, [[1.3, 0.2], [-1.3, 0.2], [0, 1.7], [1.3, -0.8], [-1.3, -0.8]], 0.63)); R.beds[n0].fy = FY;
+      return FL(x, z, ry, 1.9, 2.2, q => { q.b(1.9, 0.28, 2.2, 0, 0.24, 0, '#5a4030'); q.b(1.8, 0.22, 2.1, 0, 0.46, 0.02, '#f3f0ea'); q.b(1.84, 0.1, 1.3, 0, 0.58, 0.45, col); q.b(1.84, 0.14, 0.18, 0, 0.6, -0.2, shade(col, 1.25)); q.b(1.9, 0.95, 0.1, 0, 0.7, -1.1, '#5a4030'); for (const sx of [-0.45, 0.45]) q.s(0.34, 0.1, 0.22, sx, 0.62, -0.82, '#fff'); }); };
+    const rugU = (x, z, w, d, c) => { k.b(w, 0.02, d, x, FY + 0.012, z, c); k.b(w - 0.3, 0.025, d - 0.3, x, FY + 0.014, z, shade(c, 1.35)); };
+    rugU(-4.6, -2.8, 3.4, 3.0, '#5d7a9a'); bedU(-4.6, -4.7, 0, '#d65d5d');
+    for (const sx of [-6.5, -2.7]) FL(sx, -5.5, 0, 0.45, 0.4, q => { q.b(0.45, 0.5, 0.4, 0, 0.25, 0, '#6b4a2f'); q.c(0.06, 0.03, 0, 0.52, 0, '#777'); q.c(0.015, 0.25, 0, 0.66, 0, '#777'); q.s(0.15, 0.11, 0.15, 0, 0.88, 0, glowM('#ffe9b0', 0.8)); });
+    FL(-7.0, -1.4, Math.PI / 2, 2.4, 0.7, q => { q.b(2.4, 2.2, 0.65, 0, 1.1, 0, '#7a5a3a'); for (const sx of [-0.6, 0.6]) q.b(0.03, 1.9, 0.02, sx, 1.1, 0.33, '#c9b27c'); });
+    FL(-2.3, -1.0, -Math.PI / 2, 1.8, 0.5, q => { q.b(1.8, 0.5, 0.45, 0, 0.25, 0, '#3b2c22'); q.b(1.4, 0.8, 0.05, 0, 1.2, -0.1, glowM('#1a3a5a', 0.9)); });
+    // ---- দোতলা: পড়ার ঘর/লাউঞ্জ (ডান-পেছনে) ----
+    rugU(2.2, -3.6, 4.2, 3.0, '#7a4a3a');
+    FL(2.6, -5.5, 0, 2.2, 0.8, q => { q.b(2.2, 0.06, 0.8, 0, 0.76, 0, '#8a6a48'); for (const a of [-1, 1]) q.b(0.5, 0.74, 0.7, a * 0.85, 0.37, 0, '#7a5a3a'); q.b(0.5, 0.3, 0.04, 0.2, 1.0, 0.1, '#222'); q.b(0.44, 0.22, 0.02, 0.2, 1.0, 0.13, glowM('#4aa3ff', 0.8)); });
+    { const n0 = R.seats.length; chair(2.6, -4.6, Math.PI, '#34495e'); seatU(n0); R.cols[R.cols.length - 1].f = 1; R.plan[R.plan.length - 1][4] = 1; const P = L.children[L.children.length - 1]; P.position.y = FY; }
+    { const n0 = R.seats.length; sofa(2.0, -2.2, Math.PI, '#5b6b4f'); seatU(n0); R.cols[R.cols.length - 1].f = 1; R.plan[R.plan.length - 1][4] = 1; L.children[L.children.length - 1].position.y = FY; }
+    FL(0.1, -5.6, 0, 1.8, 0.4, q => { q.b(1.8, 2.0, 0.35, 0, 1.0, 0, '#7a5a3a'); for (let r = 0; r < 4; r++) for (let b = 0; b < 8; b++) q.b(0.15, 0.34, 0.24, -0.78 + b * 0.22, 0.4 + r * 0.46, 0.04, ['#c0392b', '#2e86de', '#f1c40f', '#27ae60', '#8e44ad'][(b + r) % 5]); });
+    FL(-0.9, 0.5, 0, 0.5, 0.5, q => { q.c(0.2, 0.36, 0, 0.18, 0, '#b5651d'); for (let i = 0; i < 6; i++) q.s(0.2, 0.3, 0.2, Math.cos(i * 1.05) * 0.14, 0.6 + (i % 3) * 0.16, Math.sin(i * 1.05) * 0.14, i % 2 ? '#2f8f46' : '#3fae5a'); });
+    FL(-6.9, 4.5, 0, 0.5, 0.5, q => { q.c(0.2, 0.36, 0, 0.18, 0, '#b5651d'); for (let i = 0; i < 6; i++) q.s(0.2, 0.3, 0.2, Math.cos(i * 1.05) * 0.14, 0.6 + (i % 3) * 0.16, Math.sin(i * 1.05) * 0.14, i % 2 ? '#2f8f46' : '#3fae5a'); });
+    winY(-2.5, -HD + 0.03, 0, 1.4, FY + 1.7); winY(0.4 + 4.6, -HD + 0.03, 0, 1.4, FY + 1.7); winY(-HW + 0.03, -3.4, Math.PI / 2, 1.6, FY + 1.7); winY(-HW + 0.03, 2.2, Math.PI / 2, 1.6, FY + 1.7); winY(HW - 0.03, -3.8, -Math.PI / 2, 1.6, FY + 1.7);
+    picture(-4.6, FY + 2.0, -HD + 0.04, 1.0, 0.7, '#d9a441'); picture(HW - 0.04, FY + 1.9, 0.5, 0.04, 0.6, '#4aa3a0');
+    // স্ল্যাবের নিচের ঘাটতি পূরণ করতে সামনের দরজা থেকে সিঁড়ির পথ চিহ্নিত
+    k.b(1.6, 0.02, 1.0, 6.5, 0.012, SZ0 + 0.8, '#8c3b3b');
   } else if (type === 'food') {
     R.counter = [2.2, 0.8]; banner(-1.3, 2.7, -HD + 0.05, 3.6);
     for (const cx of [-3.4, -1.3, 0.8]) cooler(cx, -3.6, 1.9);
@@ -4725,10 +4833,15 @@ function getRoom(type) {
   g.traverse(o => { o.castShadow = false; o.receiveShadow = false; });
   scene.add(g); return (ROOMS[type] = R);
 }
-function inBlocked(x, z) {
-  const R = inside.room;
-  if (x < R.ox - R.hw + PR || x > R.ox + R.hw - PR || z < R.oz - R.hd + PR || z > R.oz + R.hd - PR) return true;
-  for (const b of R.cols) if (x > b.minX - PR && x < b.maxX + PR && z > b.minZ - PR && z < b.maxZ + PR) return true;
+function inBlocked(x, z, y) {
+  const R = inside.room, up = !!R.FY && y > 1.75;
+  if (up && R.bal) {   // দোতলা: দরজার ফাঁক দিয়ে বারান্দায় যাওয়া যায়
+    const b = R.bal, lx = x - R.ox, lz = z - R.oz;
+    if (lz <= R.hd - PR) { if (lx < -R.hw + PR || lx > R.hw - PR || lz < -R.hd + PR) return true; }
+    else if (lz <= R.hd + 0.2 + PR) { if (!(lx > b.g0 + PR && lx < b.g1 - PR)) return true; }
+    else if (lx < b.x0 + PR || lx > b.x1 - PR || lz > b.z1 - PR) return true;
+  } else if (x < R.ox - R.hw + PR || x > R.ox + R.hw - PR || z < R.oz - R.hd + PR || z > R.oz + R.hd - PR) return true;
+  for (const b of R.cols) if ((b.f === undefined || (b.f === 1) === up) && x > b.minX - PR && x < b.maxX + PR && z > b.minZ - PR && z < b.maxZ + PR) return true;
   return false;
 }
 function indoorLight() {   // ভেতরে সবসময় উজ্জ্বল আলো (দিন-রাত নির্বিশেষে), তারা/চাঁদ বন্ধ
@@ -4740,8 +4853,10 @@ function drawMiniIn(c, R) {
   c.fillStyle = '#1c1c20'; c.fillRect(0, 0, 120, 120);
   const rr = (x0, z0, w, d, col) => { const a = T(room.ox + x0, room.oz + z0), b = T(room.ox + x0 + w, room.oz + z0 + d); c.fillStyle = col; c.fillRect(Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1])); };
   rr(-room.hw, -room.hd, 2 * room.hw, 2 * room.hd, '#4a4a50');
-  for (const p of room.plan) rr(p[0], p[1], p[2], p[3], '#8a8a92');
-  rr(-0.6, room.hd - 0.25, 1.2, 0.25, '#2ecc71');
+  const upF = room.FY && player.y > 1.75;
+  if (room.FY) { const b = room.stair; rr(b.x0, b.z1, b.x1 - b.x0, b.z0 - b.z1, '#b08a5a'); if (upF) rr(room.bal.x0, room.hd, room.bal.x1 - room.bal.x0, room.bal.z1 - room.hd, '#6f7a60'); }
+  for (const p of room.plan) if (!room.FY || !!p[4] === !!upF) rr(p[0], p[1], p[2], p[3], '#8a8a92');
+  if (!room.FY || !upF) rr(-0.6, room.hd - 0.25, 1.2, 0.25, '#2ecc71');
   c.fillStyle = '#fff'; c.beginPath(); c.arc(R - (player.x - room.ox) * S, R - (player.z - room.oz) * S, 3.5, 0, 6.283); c.fill();
   const px = R - (player.x - room.ox) * S, pz = R - (player.z - room.oz) * S;
   c.strokeStyle = '#ffd400'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(px, pz); c.lineTo(px - Math.sin(player.yaw) * 10, pz - Math.cos(player.yaw) * 10); c.stroke();
@@ -4794,10 +4909,10 @@ function doorStep(now) {
   let k = null; doorHit = null; seatHit = null;
   if (inside) {
     const R = inside.room, lx = player.x - R.ox, lz = player.z - R.oz;
-    if (lz > R.hd - 1.1 && Math.abs(lx) < 1.3) k = 'exit';
+    if (lz > R.hd - 1.1 && Math.abs(lx) < 1.3 && player.y < 1.75) k = 'exit';
     else if (R.counter && Math.hypot(lx - R.counter[0], lz - R.counter[1]) < 1.6) k = 'trade';
     else if ((seatHit = nearSeat())) k = seatHit.kind;   // 'sit' বা 'sleep'
-    else if (R.bed && Math.hypot(lx - R.bed[0], lz - R.bed[1]) < 1.8) k = 'bed';
+    else if (R.bed && (!R.bedUp || player.y > 1.75) && Math.hypot(lx - R.bed[0], lz - R.bed[1]) < 1.8) k = 'bed';
     if (k === 'exit' && now > inLock && spd > 1.2 && Math.cos(player.yaw) > 0.6) { fadeTo(leaveNow); return; }
   } else {
     let bd = 2.9; for (const d of doors) { const q = (d.x - player.x) ** 2 + (d.z - player.z) ** 2; if (q < bd) { bd = q; doorHit = d; } }
