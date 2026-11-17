@@ -1752,6 +1752,7 @@ let lampTick = 0;
 function animateWorld(t, dt) {
   windU.value = t;
   updateNPCs(dt);
+  updateResponders(dt);
   const ph = t % 12, hG = ph < 5, hY = ph >= 5 && ph < 6, vG = ph >= 6 && ph < 11, vY = ph >= 11;
   if (sigH) {
     sigH.material.color.set(hG ? 0x2ecc71 : hY ? 0xf1c40f : 0xe74c3c);
@@ -5045,6 +5046,57 @@ document.getElementById('phclose').addEventListener('click', e => { e.stopPropag
   const up = e => { if (e.pointerId === dp) { dp = null; saveLayout(); } };
   hd.addEventListener('pointerup', up); hd.addEventListener('pointercancel', up);
 }
+// ===== জরুরি সেবার গাড়ি (পুলিশ / অ্যাম্বুলেন্স) =====
+const responders = [];
+let pendingResponder = null;
+const RESP_SPEED = 13;
+function spawnResponder(kind) {
+  if (inside) { pendingResponder = kind; return; }   // ভেতরে থাকলে বাইরে গেলে আসবে
+  const tpl = cars[0];
+  if (!tpl) return;
+  const g = tpl.g.clone(), body = g.children[0];
+  body.material = body.material.clone();
+  body.material.color.set(kind === 'amb' ? 0xffffff : 0x1d3f8f);
+  let sx = player.x + 60, sz = player.z;
+  for (let k = 0; k < 24; k++) {
+    const a = Math.random() * Math.PI * 2, d = 60 + Math.random() * 20;
+    const x = player.x + Math.cos(a) * d, z = player.z + Math.sin(a) * d;
+    if (!blocked(x, z)) { sx = x; sz = z; break; }
+  }
+  g.position.set(sx, 0, sz);
+  scene.add(g);
+  responders.push({ g, kind, state: 'drive', t: 0, arrivedT: 0 });
+  toast(kind === 'amb' ? '🚑 Ambulance is on the way' : '🚓 Police are on the way');
+}
+function removeResponder(i) {
+  scene.remove(responders[i].g);
+  responders.splice(i, 1);
+}
+function updateResponders(dt) {
+  if (pendingResponder && !inside) { const k = pendingResponder; pendingResponder = null; spawnResponder(k); }
+  if (inside) return;   // ভেতরে থাকলে গাড়িগুলো থেমে থাকবে
+  for (let i = responders.length - 1; i >= 0; i--) {
+    const r = responders[i];
+    r.t += dt;
+    if (r.t > 40) { removeResponder(i); continue; }   // আটকে গেলে বা বেশি দেরি হলে সরে যাবে
+    const dx = player.x - r.g.position.x, dz = player.z - r.g.position.z, dist = Math.hypot(dx, dz);
+    if (r.state === 'drive') {
+      if (dist > 5) {
+        r.g.rotation.y = Math.atan2(dx, dz);
+        const step = Math.min(RESP_SPEED * dt, dist - 4);
+        const nx = r.g.position.x + dx / dist * step, nz = r.g.position.z + dz / dist * step;
+        if (!blocked(nx, nz)) { r.g.position.x = nx; r.g.position.z = nz; }
+      } else {
+        r.state = 'arrived';
+        if (r.kind === 'amb') { hp = Math.min(HP_MAX, hp + 50); toast('🚑 Paramedics healed you (+50 HP)'); }
+        else toast('🚓 Police have arrived');
+      }
+    } else {
+      r.arrivedT += dt;
+      if (r.arrivedT > 6) removeResponder(i);   // ৬ সেকেন্ড পর চলে যাবে
+    }
+  }
+}
 function phoneTick(dt) {
   if (!phOpen) return;
   phTimer -= dt; if (phTimer <= 0) { phTimer = 5; phClock(); }
@@ -5052,8 +5104,7 @@ function phoneTick(dt) {
     const was = phCall.t; phCall.t += dt;
     if (was <= 2 && phCall.t > 2) {
       renderPhone();
-      if (phCall.id === 'amb') { hp = Math.min(HP_MAX, hp + 50); toast('🚑 Paramedics healed you (+50 HP)'); }
-      else if (phCall.id === 'police') toast('🚓 Police are on the way');
+      if (phCall.id === 'amb' || phCall.id === 'police') spawnResponder(phCall.id === 'amb' ? 'amb' : 'police');
     }
   }
 }
