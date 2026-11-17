@@ -416,6 +416,24 @@ body.playing #enterb.show{display:flex!important}
 #panel.corner .prow button { font-size: calc(10px * var(--ps, 1)); padding: 3px 6px; }
 #bars .bar { width: 70px !important; height: 6px !important; }
 #bars .brow b svg { width: 12px; height: 12px; }
+/* ---- কাস্টমাইজ: সব UI টেনে সরানো ও ছোট-বড় করার সাপোর্ট ---- */
+body.editing #hud { pointer-events: auto; touch-action: none; padding: 4px; }
+body.editing #hud * { pointer-events: none; }
+body.editing #crosshair { display: block !important; pointer-events: auto; touch-action: none; }
+body.editing #enterb { display: flex !important; }
+body.editing #cardash { display: block !important; }
+/* কাস্টমাইজ মোডে প্যানেলের পর্দা ট্যাচ আটকাত — তাই বাটন/আইকন ধরা যেত না */
+body.editing #panel { pointer-events: none !important; }
+body.editing #panelbox { pointer-events: auto !important; }
+/* সব প্যানেল (ব্যাগ, পজ মেনু) A−/A+ দিয়ে ছোট-বড় */
+#panel:not(.corner):not(.resume) .pbox { width: calc(min(420px, calc(var(--vw) * 92)) * var(--ps, 1)); font-size: calc(13px * var(--ps, 1)); }
+#panel:not(.corner):not(.resume) .pbox button, #panel:not(.corner):not(.resume) .pbox h3 { font-size: calc(13px * var(--ps, 1)); }
+#panel.resume .pbox { width: calc(min(340px, calc(var(--vw) * 78)) * var(--ps, 1)); font-size: calc(12px * var(--ps, 1)); }
+#panel.resume .pbox button { font-size: calc(12px * var(--ps, 1)); }
+body.editing #cdrow, body.editing #cdbar { display: none !important; }
+#cdbtns button { position: fixed; }
+#cb-light { right: 156px; bottom: 80px; } #cb-gear { right: 90px; bottom: 80px; } #cb-view { right: 24px; bottom: 80px; }
+#cb-horn { right: 156px; bottom: 14px; } #cb-auto { right: 90px; bottom: 14px; }
 </style>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
@@ -549,7 +567,7 @@ body.playing #enterb.show{display:flex!important}
 </div>
 <div id="crosshair"></div><div id="flash"></div><div id="toast"></div><div id="panel"></div>
 <button id="gear" class="act">⚙</button>
-<div id="editbar"><div id="edtxt">Drag to move · tap to select</div><div class="row"><label>Size <input id="szr" type="range" min="0.5" max="2" step="0.05" value="1"></label><label>Opacity <input id="opr" type="range" min="0.3" max="1" step="0.05" value="1"></label></div><div class="row"><button id="edflip">⇅ Flip</button><button id="edreset" style="background:#e67e22;color:#fff">Reset</button><button id="edsave" style="background:#2ecc71;color:#fff">✔ Save</button></div></div>
+<div id="editbar"><div id="edtxt">Drag to move · tap to select</div><div class="row"><label>Size <input id="szr" type="range" min="0.4" max="3" step="0.05" value="1"></label><label>Opacity <input id="opr" type="range" min="0.3" max="1" step="0.05" value="1"></label></div><div class="row"><button id="edflip">⇅ Flip</button><button id="edreset" style="background:#e67e22;color:#fff">↺ Reset</button><button id="edsave" style="background:#2ecc71;color:#fff">💾 Save Layout</button></div></div>
 <div id="bigmap"><canvas id="bm"></canvas>
 <div id="bmsearch"><button id="bmclose" aria-label="Back"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><span id="bmsearchtxt">Search saved places</span><span id="bmav"></span></div>
 <div id="bmchips"><button id="bmplaces">⭐ Places</button><button data-k="Shop">🛒 Shop</button><button data-k="Home">🏠 Home</button><button data-k="Port">⚓ Port</button><button data-k="Tower">🏢 Tower</button></div>
@@ -2315,17 +2333,16 @@ function update(dt) {
       char.mixer.update(dt);
       // বসার অ্যানিমেশনের root/bone motion-এ নিতম্ব আসনের নিচে নামলে একই ফ্রেমে root উঁচু করি;
       // hold পর্যায়ের ধীর correction-এর জন্য অপেক্ষা করতে হয় না।
-      if (rest && rest.kind === 'sit' && char.hips && rest.s.sy !== undefined) {
+      // নতুন পদ্ধতি: প্রতি ফ্রেমে lift = (আসনের নিতম্ব-উচ্চতা − অ্যানিমেশনের নিতম্ব-উচ্চতা)।
+      // তাই বসা/শোয়া/ওঠার সব ধাপে নিতম্ব সবসময় আসন/বিছানার ঠিক ওপরে থাকে — মাটিতে ঢুকে আবার ওপরে ওঠে না।
+      if (rest && char.hips && rest.s.sy !== undefined) {
+        const seatHipY = rest.s.sy + (rest.kind === 'sit' ? REST_TUNE.sitHip : REST_TUNE.sleepHip);
+        char.group.position.y = player.y;
         char.group.updateMatrixWorld(true);
-        const hipLocalY = char.hips.matrixWorld.elements[13] - char.group.position.y;
-        const seatHipY = rest.s.sy + REST_TUNE.sitHip;
-        // group.position.y ইতিমধ্যেই absolute world Y (player.y + rest.lift);
-        // তাই এখানে seat lift আবার বাদ দিলে correction কম হয়ে যায় এবং Hips মাটির নিচে ঢুকে যেতে পারে।
-        const minRootY = seatHipY - hipLocalY;
-        if (char.group.position.y < minRootY) {
-          char.group.position.y = minRootY;
-          rest.lift = Math.max(0, minRootY - player.y);
-        }
+        const hipLocalY = char.hips.matrixWorld.elements[13] - player.y;
+        const lift = Math.max(0, seatHipY - hipLocalY);
+        rest.lift = lift;
+        char.group.position.y = player.y + lift;
       }
     } else {
       // ব্যাকআপ চরিত্রের সরল অ্যানিমেশন
@@ -3817,7 +3834,7 @@ function renderEye() {
 }
 
 // ---------- বাটন কাস্টমাইজ (টেনে সরানো, Size, Opacity, সেভ) ----------
-const CUST = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'medbtn', 'kick', 'eyebtn', 'mini', 'eye', 'bars', 'pausebtn', 'shop', 'aim', 'nade', 'reload', 'veh', 'cam', 'enterb', 'gear', 'wheel', 'hud', 'crosshair', 'dmg', 'cdbtns', 'cdwheel', 'cb-light', 'cb-gear', 'cb-view', 'cb-horn', 'cb-auto', 'panelbox'];
+const CUST = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'medbtn', 'kick', 'eyebtn', 'mini', 'eye', 'bars', 'pausebtn', 'shop', 'aim', 'nade', 'reload', 'veh', 'cam', 'enterb', 'gear', 'wheel', 'hud', 'crosshair', 'cb-light', 'cb-gear', 'cb-view', 'cb-horn', 'cb-auto', 'panelbox'];
 const CNAME = { joy: 'Joystick', run: 'Run', jump: 'Jump', crouch: 'Crouch', prone: 'Prone', atk: 'Attack button', wsel: 'Backpack', medbtn: 'Medkit', pausebtn: 'Resume button', shop: 'Shop', aim: 'Aim', nade: 'Grenade button', reload: 'Reload', veh: 'Car', cam: 'Camera', enterb: 'Enter / Exit', crosshair: 'Crosshair', dmg: 'Damage indicator', cdwheel: 'Car steering wheel', kick: 'Kick', eyebtn: '3rd eye button', mini: 'Mini map', eye: '3rd eye window', bars: 'Health / Water bars', gear: 'Settings icon', wheel: 'Weapon wheel', hud: 'Info text', cdbtns: 'Car buttons', 'cb-light': 'Car light', 'cb-gear': 'Car gear', 'cb-view': 'Car view', 'cb-horn': 'Car horn', 'cb-auto': 'Car auto', panelbox: 'Menu panel' };
 const OPAQ = ['joy', 'run', 'jump', 'crouch', 'prone', 'atk', 'wsel', 'medbtn', 'kick', 'eyebtn', 'pausebtn', 'shop', 'aim', 'nade', 'reload', 'veh', 'cam', 'gear'];
 let layout = { op: 1, v: 2 }, editMode = false, selId = null, dragP = null, dragOff = [0, 0];
@@ -3836,6 +3853,8 @@ function placeEl(id) {
   clampL(id);
   el.style.left = (L.x * innerWidth) + 'px'; el.style.top = (L.y * innerHeight) + 'px';
   el.style.right = 'auto'; el.style.bottom = 'auto';
+  if (id === 'panelbox' || id === 'crosshair' || id === 'wheel') el.style.margin = '0';
+  if (id === 'panelbox') el.style.position = 'fixed';
   el.style.transform = `translate(-50%,-50%) scale(${L.s || 1})`;
 }
 function applyLayout() {
@@ -3878,34 +3897,44 @@ function toggleEdit() {
     document.getElementById('edtxt').textContent = 'Tap an item, then drag to move · use Size to resize';
     CUST.forEach(id => { const el = document.getElementById(id); if (el) el.dataset.cust = id; });
     if (customPreview) { const pb = document.getElementById('panelbox'); if (pb) pb.dataset.cust = 'panelbox'; }
+    if (!drv) { dashEl.style.display = 'block'; dashEl.classList.remove('cock'); }   // গাড়ির বাটনও সাজানো যাবে
     applyLayout();
   } else {
     document.getElementById('eye').style.display = eyeOn ? 'block' : 'none';
     CUST.forEach(i => { const el = document.getElementById(i); if (el) el.classList.remove('sel'); });
-    saveLayout();
+    saveLayout(); toast('💾 Layout saved');
+    if (!drv && !ent) dashEl.style.display = 'none';
     wheelEl.style.display = 'none';
     if (customPreview) { panelEl.style.display = 'none'; panelEl.innerHTML = ''; paused = false; customPreview = false; }
   }
 }
-{ const g = document.getElementById('gear'); let gT = 0;
-  g.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); clearTimeout(gT); gT = setTimeout(toggleEdit, 900); });
+{ const g = document.getElementById('gear'); let gT = 0, gLong = false;
+  g.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); clearTimeout(gT); gLong = false; gT = setTimeout(() => { gLong = true; if (!editMode) startHudCustomize(); }, 900); });
   for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) g.addEventListener(ev, () => clearTimeout(gT));
-  g.addEventListener('click', e => { e.stopPropagation(); }); }
+  g.addEventListener('click', e => {
+    e.stopPropagation();
+    if (editMode || gLong || !started || pDead) { gLong = false; return; }
+    openPanel(() => ({ title: '⚙ Settings', rows: [
+      { t: 'Move / resize buttons, bars, weapon wheel & menu panels', b: '🎛 Customize', f: startHudCustomize },
+      { t: 'Restore all buttons to default positions', b: '↺ Reset', f: () => { resetLayoutAll(); toast('Layout reset'); } }
+    ] }), false, true);
+  }); }
 document.getElementById('edsave').addEventListener('click', () => { if (editMode) toggleEdit(); });
 document.getElementById('edflip').addEventListener('click', () => document.getElementById('editbar').classList.toggle('bottom'));
-document.getElementById('edreset').addEventListener('click', () => {
+function resetLayoutAll() {
   layout = { op: 1, v: 2 };
-  CUST.forEach(id => { const el = document.getElementById(id); if (el) { const st = el.style; st.left = st.top = st.right = st.bottom = st.transform = st.opacity = ''; } });
+  CUST.forEach(id => { const el = document.getElementById(id); if (el) { const st = el.style; st.left = st.top = st.right = st.bottom = st.transform = st.opacity = st.position = st.margin = ''; } });
   document.getElementById('opr').value = 1; document.getElementById('szr').value = 1; selId = null;
   CUST.forEach(i => { const el = document.getElementById(i); if (el) el.classList.remove('sel'); });
   try { localStorage.removeItem('wt_layout'); } catch (e) {}
   if (activeProfile) { delete activeProfile.layout; saveProfiles(); }
-});
+}
+document.getElementById('edreset').addEventListener('click', resetLayoutAll);
 document.getElementById('szr').addEventListener('input', e => {
   if (!selId) return; ensureLayout(selId).s = +e.target.value; placeEl(selId);
 });
 document.getElementById('opr').addEventListener('input', e => { layout.op = +e.target.value; applyLayout(); });
-const inBar = e => e.target.closest && e.target.closest('#editbar,#gear');
+const inBar = e => e.target.closest && e.target.closest('#editbar');
 addEventListener('pointerdown', e => {
   if (!editMode || inBar(e)) return;
   e.preventDefault(); e.stopPropagation();
@@ -3956,20 +3985,18 @@ function renderPanel() {
   if (!panelFn) return;
   const dd = panelFn(); if (!dd) return;
   const corner = panelEl.classList.contains('corner');
-  const ctl = '<div class="pctl"><button class="pback">◀ Back</button>' + (corner ? '<span><button class="psz" data-d="-1">A−</button> <button class="psz" data-d="1">A+</button></span>' : '') + '</div>';
+  const ctl = '<div class="pctl"><button class="pback">◀ Back</button>' + '<span><button class="psz" data-d="-1">A−</button> <button class="psz" data-d="1">A+</button></span></div>';
   panelEl.style.setProperty('--ps', shopScale);
   panelEl.innerHTML = '<div id="panelbox" class="pbox" data-cust="panelbox">' + ctl + '<h3>' + dd.title + '</h3><div class="plist">' + dd.rows.map((r, i) => '<div class="prow"><span>' + r.t + '</span>' + (r.b ? '<button data-r="' + i + '">' + r.b + '</button>' : '') + '</div>').join('') + '</div><button class="pclose">✕ Close</button></div>';
   if (layout.panelbox) placeEl('panelbox');
   panelEl.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { dd.rows[b.dataset.r].f(); renderPanel(); saveProgress(); });
   panelEl.querySelector('.pclose').onclick = closePanel;
   panelEl.querySelector('.pback').onclick = closePanel;
-  if (corner) {
-    panelEl.querySelectorAll('.psz').forEach(b => b.onclick = () => {
-      shopScale = Math.max(0.6, Math.min(1.6, +(shopScale + (+b.dataset.d) * 0.15).toFixed(2)));
-      if (activeProfile) { activeProfile.shopScale = shopScale; saveProfiles(); }
-      renderPanel();
-    });
-  }
+  panelEl.querySelectorAll('.psz').forEach(b => b.onclick = () => {
+    shopScale = Math.max(0.5, Math.min(1.8, +(shopScale + (+b.dataset.d) * 0.15).toFixed(2)));
+    if (activeProfile) { activeProfile.shopScale = shopScale; saveProfiles(); }
+    renderPanel();
+  });
 }
 function openPanel(fn, corner, resume) { if (panelEl.style.display !== 'flex') navPush(); panelEl.classList.toggle('corner', !!corner); panelEl.classList.toggle('resume', !!resume); panelFn = fn; paused = !corner; fireHeld = false; atkHeld = false; jx = 0; jy = 0; panelEl.style.display = 'flex'; renderPanel(); }
 function closePanelRaw() { panelFn = null; paused = false; panelEl.style.display = 'none'; panelEl.classList.remove('corner', 'resume'); }
@@ -4834,7 +4861,7 @@ async function enterGame() {
   const p = curP();
   if (!p) return;
   activeProfile = p;
-  shopScale = Math.min(1, p.shopScale || 0.8);
+  shopScale = Math.max(0.5, Math.min(1.8, p.shopScale || 0.9));
   navPush();
   const intro = document.getElementById('intro'), sub = document.getElementById('intro-sub'), fill = document.getElementById('ibarfill');
   showScr('intro');
