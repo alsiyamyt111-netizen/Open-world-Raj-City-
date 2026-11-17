@@ -432,7 +432,6 @@ body.editing #panelbox { pointer-events: auto !important; }
 #panel.resume .pbox button { font-size: calc(12px * var(--ps, 1)); }
 /* ---- মোবাইল ফোন ---- */
 #phonebtn { left: 12px; top: 190px; right: auto; bottom: auto; width: 48px; height: 48px; font-size: 12px; }
-body.driving #phonebtn { display: none !important; }
 #phone { position: fixed; left: 78%; top: 50%; width: 190px; height: 330px; transform: translate(-50%, -50%); display: none; flex-direction: column; z-index: 22; background: #0b0c10; border: 3px solid #3a3d46; border-radius: 26px; padding: 7px 7px 10px; box-sizing: border-box; box-shadow: 0 6px 18px rgba(0,0,0,.6); color: #fff; font-family: 'Trebuchet MS', sans-serif; user-select: none; }
 #phone.on { display: flex; }
 body.mapping #phone { display: none !important; }
@@ -1831,7 +1830,9 @@ const ANIMS = {
 // গাড়িতে ওঠা / নামা (models/entercar.fbx, models/exitcar.fbx)
 entercar: 'entercar', exitcar: 'exitcar',
 // মোবাইল ফোন (models/ ফোল্ডারে এই নামের .fbx ফাইল): কলে কথা বলা / কলে হাঁটা / মেসেজ টাইপ করা
-phonetalk: 'TalkingCellPhone', phonepace: 'TalkingPhonePacing', phonetext: 'textingwhilestanding', phonerun: 'StandingTorchRun'
+phonetalk: 'TalkingCellPhone', phonepace: 'TalkingPhonePacing', phonetext: 'textingwhilestanding',
+// লবি: চরিত্র লোড হওয়ার সময় পেছন থেকে দৌড়ে এসে সামনে থামে (শুধু লবিতে চলে)
+lobbyrun: 'StandingTorchRun'
 };
 // NPC-দের অ্যানিমেশন (মার খাওয়া, মরা, ওঠা) — পরিস্থিতি অনুযায়ী নিজে চলে
 const NPC_ANIMS = { hit: 'Hitreaction', death: 'death', getup: 'Getup' };
@@ -1840,6 +1841,8 @@ const PRELOAD = ['boy', 'girl', ...Object.values(ANIMS), ...Object.values(NPC_AN
 const GUN_POS = [0, 0.1, 0.05], GUN_ROT = [0, 0, Math.PI / 2];
 // ফোন বাঁ হাতে কীভাবে বসবে — ভুল দিকে/জায়গায় থাকলে এই সংখ্যাগুলো বদলান
 const PHONE_POS = [0, 0.08, 0.03], PHONE_ROT = [0, 0, 0];
+// লবির দৌড়: ক্লিপে সামনে এগোনোর মোশন না থাকলে (জায়গায় দৌড়) এতটা মিটার পেছন থেকে এগিয়ে আসবে
+const LOBBY_RUN_DIST = 6;
 let preDone = 0;
 const preloadAll = () => Promise.all(PRELOAD.map(n => loadAsset(n).then(() => { preDone++; })));
 
@@ -1874,6 +1877,7 @@ async function buildCharacter(gender) {
   const KEEP_Y = ['crouchidle', 'crouchwalk', 'prone', 'standtosit', 'sittostand', 'lyingdown', 'sleepingidle', 'entercar', 'exitcar'];      // এগুলোতে নিতম্বের উচ্চতা রাখতে হবে (নইলে শূন্যে ভাসবে)
   const ONCE = { jump: 0.75, walljump: 0.9, punch: 0.9, kick: 1.1, entercar: 2.2, exitcar: 2.2 };   // entercar/exitcar: বেশি লম্বা হলে ২.২ সেকেন্ডে দ্রুত চলবে        // একবার চলবে, সর্বোচ্চ এত সেকেন্ডে শেষ হবে (ক্লিপ ছোট হলে নিজের স্বাভাবিক সময়ে)
   const dur = {};
+  let lobbyPath = false;   // লবির দৌড় ক্লিপে নিজস্ব সামনে-এগোনো মোশন আছে কিনা
   for (const [n, f] of Object.entries(ANIMS)) {
     const a = await loadAsset(f);
     if (!(a && a.animations.length)) continue;
@@ -1881,7 +1885,7 @@ async function buildCharacter(gender) {
     // ক্রাউচ/প্রোন ক্লিপ যেই মূল (সোর্স) চরিত্র দিয়ে বানানো, তার নিজের উচ্চতা ও দাঁড়ানো Hips-উচ্চতা বের করা —
     // যাতে এই ক্লিপ অন্য উচ্চতা/অনুপাতের মডেলে লাগালেও বসা/শোয়ার গভীরতাটা মাটির সাপেক্ষে ঠিক থাকে, মাটির নিচে না ঢুকে যায়
     let srcHipsRestY = null, srcRawHeight = 0;
-    if (KEEP_Y.includes(n)) {
+    if (KEEP_Y.includes(n) || n === 'lobbyrun') {
       try { const bb = new THREE.Box3().setFromObject(a); srcRawHeight = bb.max.y - bb.min.y; } catch (e) {}
       a.traverse(o => { if (srcHipsRestY === null && (o.isBone || o.type === 'Bone') && normBone(o.name) === 'hips') srcHipsRestY = o.position.y; });
     }
@@ -1898,6 +1902,21 @@ async function buildCharacter(gender) {
     if (!clip.tracks.length) { console.warn('Animation "' + f + '" bone names did not match the model, skipped'); continue; }
     clip.tracks = clip.tracks.filter(t => {
       if (!t.name.endsWith('.position')) return true;
+      if (n === 'lobbyrun' && /Hips\.position$/.test(t.name)) {   // দৌড়ে আসার পথ রাখো, তবে শেষ বিন্দু = লবিতে দাঁড়ানোর জায়গা
+        const v = t.values, Ln = v.length - 3, xe = v[Ln], ze = v[Ln + 2];
+        const canNorm = srcHipsRestY !== null && srcRawHeight > 0.01 && rawHeight > 0.01;
+        const fk = canNorm ? rawHeight / srcRawHeight : 1;
+        const hx = hipsObj ? hipsObj.position.x : 0, hz = hipsObj ? hipsObj.position.z : 0;
+        let travel = 0;
+        for (let i = 0; i < v.length; i += 3) travel = Math.max(travel, Math.hypot(v[i] - xe, v[i + 2] - ze) * fk);
+        lobbyPath = travel > 0.35 * rawHeight;
+        for (let i = 0; i < v.length; i += 3) {
+          v[i] = lobbyPath ? hx + (v[i] - xe) * fk : hx;
+          v[i + 2] = lobbyPath ? hz + (v[i + 2] - ze) * fk : hz;
+          if (canNorm) v[i + 1] = modelHipsRestY + (v[i + 1] - srcHipsRestY) / srcRawHeight * rawHeight;
+        }
+        return true;
+      }
       if (KEEP_Y.includes(n) && /Hips\.position$/.test(t.name)) {   // শুধু উচ্চতা (Y) রাখো, সামনে-পিছনে সরা Close
         const v = t.values, x0 = v[0], z0 = v[2];
         const canNorm = srcHipsRestY !== null && srcRawHeight > 0.01 && rawHeight > 0.01;
@@ -1915,7 +1934,7 @@ async function buildCharacter(gender) {
     });
     const act = mixer.clipAction(clip, model);
     if (ONCE[n]) { const d = Math.min(clip.duration, ONCE[n]); act.setLoop(THREE.LoopOnce, 1); act.clampWhenFinished = true; speed[n] = clip.duration / d; dur[n] = d; }
-    else if (['standtosit', 'sittostand', 'lyingdown'].includes(n)) { act.setLoop(THREE.LoopOnce, 1); act.clampWhenFinished = true; dur[n] = clip.duration; }   // একবার চলে শেষ পোজে থেমে থাকে
+    else if (['standtosit', 'sittostand', 'lyingdown', 'lobbyrun'].includes(n)) { act.setLoop(THREE.LoopOnce, 1); act.clampWhenFinished = true; dur[n] = clip.duration; }   // একবার চলে শেষ পোজে থেমে থাকে
     actions[n] = act;
   }
   if (actions.walk) speed.walk = 0.75; if (actions.run) speed.run = 1.0;
@@ -1951,7 +1970,7 @@ async function buildCharacter(gender) {
   }
   console.log('Loaded animations:', Object.keys(actions).join(', '));
   for (const k of Object.keys(ANIMS)) if (!actions[k]) console.warn('Animation failed to load:', k);
-  return { group, mixer, actions, speed, dur, gun, phone: phoneM, hips: hipsObj, current: null, state: null, key: null };
+  return { group, mixer, actions, speed, dur, gun, phone: phoneM, hips: hipsObj, lobbyPath, current: null, state: null, key: null };
 }
 
 // মডেল না পেলে সাধারণ চরিত্র (ব্যাকআপ)
@@ -2373,7 +2392,7 @@ function update(dt) {
       else if (stance === 'prone' && A.prone) state = 'prone';
       else if (stance === 'crouch' && (A.crouchidle || A.crouchwalk)) state = (moving && A.crouchwalk) || !A.crouchidle ? 'crouchwalk' : 'crouchidle';
       else if (phoneSt && stance === 'stand' && !atk) {   // ফোন ব্যবহার: কলে কথা / কলে হাঁটা / মেসেজ টাইপ — যুদ্ধের সময়ও বাটন টিপলেই চলবে
-        if (phoneSt === 'call') state = moving ? (run ? (A.phonerun ? 'phonerun' : 'run') : (A.phonepace ? 'phonepace' : 'walk')) : (A.phonetalk ? 'phonetalk' : 'idle');
+        if (phoneSt === 'call') state = moving ? (run ? 'run' : (A.phonepace ? 'phonepace' : 'walk')) : (A.phonetalk ? 'phonetalk' : 'idle');
         else state = moving ? (run ? 'run' : 'walk') : (A.phonetext ? 'phonetext' : 'idle');
       }
       else if (atk && A[atk.type]) state = atk.type;
@@ -4418,7 +4437,7 @@ function driveStep(dt) {
 }
 function extra(dt) {
   if (paused) return;
-  if (phOpen) { if (drv || pDead || rest) closePhone(); else phoneTick(dt); }
+  if (phOpen) { if (pDead || rest) closePhone(); else phoneTick(dt); }
   const mv = Math.hypot(jx, jy) > 0.1 || runTouch;
   if (runTouch && mv && !drv) stam = Math.max(0, stam - (500 / 300) * dt); else stam = Math.min(500, stam + 0.6 * dt);
   if (stam <= 0 && runTouch) setRun(false);
@@ -4753,9 +4772,8 @@ function renderPhone() {
     phSet(`<div class="phh">📱 Phone</div><div class="phgrid"><button class="phapp" data-a="call"><i>📞</i>Call</button><button class="phapp" data-a="msg"><i>💬</i>Message</button><button class="phapp" data-a="bank"><i>🏦</i>Bank</button></div>`);
     phOn('[data-a]', b => { phScreen = b.dataset.a; phSel = null; renderPhone(); });
   } else if (phScreen === 'call') {
-    phSet(`<button class="phb phback">◀ Back</button><div class="phh">Call</div>${contactList()}<button class="phb phgo" id="phdial" ${phSel ? '' : 'disabled'}>📞 Call</button>`);
-    phBack(); phOn('.phrow', b => { phSel = b.dataset.c; renderPhone(); });
-    const d = document.getElementById('phdial'); d.onclick = e => { e.stopPropagation(); if (phSel) startCall(phSel); };
+    phSet(`<button class="phb phback">◀ Back</button><div class="phh">Call</div>${contactList()}`);
+    phBack(); phOn('.phrow', b => startCall(b.dataset.c));   // যেকোনো নম্বরে ট্যাপ = সাথে সাথে কল
   } else if (phScreen === 'calling') {
     const c = phContacts().find(x => x.id === phCall.id), on = phCall.t > 2;
     phSet(`<div class="phcalling"><div class="big">${c.av}</div><div class="phh">${c.name}</div><div class="phnum">${c.num}</div><div id="phst">${on ? 'Connected' : 'Calling…'}</div><button class="phb phend" id="phend">📵 End</button></div>`);
@@ -4790,7 +4808,7 @@ function sendMsg(id, t) {
   renderPhone();
 }
 function openPhone() {
-  if (drv || pDead || rest) return;
+  if (pDead || rest) return;   // গাড়ি চালানোর সময়ও ফোন/কল চলবে
   fireHeld = false; atkHeld = false;   // ফোন খোলার সাথে সাথে গুলি/ঘুসি থেমে যাবে, যুদ্ধের মধ্যেও
   phOpen = true; phScreen = 'home'; phoneEl.classList.add('on'); phoneSt = 'text';
   if (layout.phone) placeEl('phone');
@@ -4800,6 +4818,16 @@ function closePhone() {
   phOpen = false; phCall = null; phoneSt = null; phoneEl.classList.remove('on');
 }
 bindTap(document.getElementById('phonebtn'), () => { if (phOpen) closePhone(); else openPhone(); });
+// কল চলার সময় স্ক্রিনের ফাঁকা জায়গায় (গেমের দৃশ্যে) ট্যাপ করলে কল কেটে যাবে, চরিত্র স্বাভাবিক অবস্থায় ফিরবে
+{
+  let tp = null; const cv = renderer.domElement;
+  cv.addEventListener('pointerdown', e => { tp = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now() }; });
+  cv.addEventListener('pointerup', e => {
+    if (!tp || tp.id !== e.pointerId) return;
+    const tap = Math.hypot(e.clientX - tp.x, e.clientY - tp.y) < 14 && performance.now() - tp.t < 450; tp = null;
+    if (tap && phCall && !editMode) closePhone();
+  });
+}
 document.getElementById('phclose').addEventListener('click', e => { e.stopPropagation(); closePhone(); });
 // হেডার ধরে টেনে ফোন সরানো (Customize-এর লেআউটের সাথে একই সেভ)
 {
@@ -4921,6 +4949,7 @@ addEventListener('resize', () => {
 
 // ---------- লবিতে 3D চরিত্র প্রিভিউ (মাটিতে দাঁড়ানো, স্থির, ড্র্যাগ করে ৩৬০° ঘোরানো) ----------
 let lbFill = null, lbChar = null, lbOn = false, lbHidden = [], lbPivot = null, lbRing = null, lbBgTex = null, lbBuildSeq = 0;
+let lbIntroFor = null;   // শেষ যে চরিত্রের জন্য দৌড়ে আসার অ্যানিমেশন চলেছে
 let lbSavedBg = null, lbSavedFog = null, lbSavedFov = 60, lbYaw = 0, lbHeight = 1.8, lbDrag = null;
 function lbEnsurePivot() {
   if (lbPivot) return;
@@ -4988,11 +5017,36 @@ async function enterLobby(p) {
   c.group.position.set(-cx, -box.min.y, -cz);
   lbHeight = Math.max(1.2, box.max.y - box.min.y);
   lbPivot.rotation.y = savedYaw;
+  // গেমে প্রথমবার ঢুকলে এবং নতুন চরিত্র বেছে লবিতে এলে: StandingTorchRun — পেছন থেকে দৌড়ে এসে সামনে থামে
+  if (lbIntroFor !== p.gender) {
+    lbIntroFor = p.gender;
+    const R = c.actions && c.actions.lobbyrun;
+    if (R && c.mixer) {
+      if (c.actions.idle) c.actions.idle.stop();
+      R.reset().play(); c.mixer.update(0);
+      c.current = R; c.state = 'lobbyrun'; c.key = 'lobbyrun';
+      c.lobbyRun = { t: 0, dur: R.getClip().duration, z0: c.group.position.z, path: c.lobbyPath };
+    }
+  }
 }
 function updateLobby(dt, t) {
   if (lbPivot) lbPivot.rotation.y = lbYaw;
   hemi.intensity = 1.5; sun.intensity = 1.8; if (lbFill) lbFill.intensity = 1.4;
-  if (lbChar && lbChar.mixer) { lbChar.mixer.update(dt); lbGroundFix(lbChar.group); }
+  if (lbChar && lbChar.mixer) {
+    lbChar.mixer.update(dt);
+    const r = lbChar.lobbyRun;
+    if (r) {
+      r.t += dt;
+      const u = Math.min(1, r.t / r.dur);
+      if (!r.path) lbChar.group.position.z = r.z0 - LOBBY_RUN_DIST * Math.pow(1 - u, 1.8);   // জায়গায় দৌড়ের ক্লিপ হলে নিজে এগিয়ে আনি
+      if (u >= 1) {
+        lbChar.group.position.z = r.z0; lbChar.lobbyRun = null;
+        const I = lbChar.actions.idle, R = lbChar.actions.lobbyrun;
+        if (I) { I.reset().fadeIn(0.3).play(); R.fadeOut(0.3); lbChar.current = I; lbChar.state = 'idle'; lbChar.key = 'idle'; }
+      }
+    }
+    lbGroundFix(lbChar.group);
+  }
   const d = lbHeight * 2.1;
   camera.position.set(0, lbHeight * 0.75, d);
   camera.lookAt(0, lbHeight * 0.45, 0);
