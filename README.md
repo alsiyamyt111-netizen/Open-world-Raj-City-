@@ -81,6 +81,15 @@
 - রেডিও ও গান
 - মাল্টিপ্লেয়ার
 - পারফরম্যান্স উন্নতি
+- 
+## স্ক্রিনশট
+
+![লবি](branding/lobby.jpg)
+![খোলা শহর](branding/city.jpg)
+![ম্যাপ](branding/map.jpg)
+![ফোন ও জরুরি সেবা](branding/phone.jpg)
+![বাটন সাজানো](branding/layout.jpg)
+![অফলাইন প্যাক](branding/offline-pack.jpg)
 
 ## প্ল্যাটফর্ম সাপোর্ট
 | প্ল্যাটফর্ম | কীভাবে খেলবেন | অবস্থা |
