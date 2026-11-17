@@ -2215,7 +2215,7 @@ function restStep(dt, wake) {
   if (r.phase === 'in') {
     const q = ease(Math.min(1, r.t / Math.min(r.dur, 0.9)));
     player.x = r.fx + (r.tx - r.fx) * q; player.z = r.fz + (r.tz - r.fz) * q;
-    player.yaw = r.fyaw + wrap(r.s.ry - r.fyaw) * q; r.lift = Math.max(0, r.s.lift + r.adj) * Math.min(1, q * 2.5);
+    player.yaw = r.fyaw + wrap(r.s.ry - r.fyaw) * q; r.lift = 0; // বসার অ্যানিমেশন শুরুতেই পুরো শরীর ওপরে তুলবে না; hips alignment প্রতি ফ্রেমে করবে
     if (r.t >= r.dur) { r.phase = 'hold'; r.t = 0; r.sp = 1; if (!sit) r.anim = 'sleepingidle'; }
   } else if (r.phase === 'hold') {
     player.x = r.tx; player.z = r.tz; player.yaw = r.s.ry;
@@ -2581,7 +2581,7 @@ function update(dt) {
       const S = R.stair, B = R.bal, lx = p.x - R.ox, lz = p.z - R.oz, inHole = lx > S.x0 - 0.2 && lx < S.x1 + 0.2 && lz > S.hz0 && lz < S.hz1;
       if (player.y >= R.FY - 0.3) {
         lo = R.FY + 0.5; hi = onBal ? R.FY + 6 : R.top2 - 0.3; if (inHole) lo = 0.5;
-        if (lx > B.x0 && lx < B.x1) p.z = Math.max(R.oz - R.hd + 0.35, Math.min(R.oz + B.z1 - 0.35, camera.position.z));
+        if (lx > B.x0 && lx < B.x1) p.z = Math.max(R.oz + R.hd + 0.5, Math.min(R.oz + B.z1 - 0.35, p.z));
       } else if (inHole || player.y >= 2.0) hi = R.top2 - 0.3;
     }
     p.y = Math.max(lo, Math.min(hi, p.y));
@@ -4383,7 +4383,13 @@ function carHalfW(c) { const g = c.g.children[0].geometry; if (!g.boundingBox) g
 function makeDoor(c, sgn) {   // গাড়ির পাশে একটা দরজার পাল্লা (সামনে কব্জা, পেছনটা বাইরে খোলে)
   const hw = carHalfW(c), pivot = new THREE.Group();
   pivot.position.set(sgn * (hw - 0.02), 0, 0.65);
-  const m = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.55, 1.1), c.g.children[0].material); m.position.set(0, 0.8, -0.55); m.castShadow = true;
+  const body = c.g.children[0], src = Array.isArray(body.material) ? body.material.find(v => v && v.color) || body.material[0] : body.material;
+  const paint = src && src.clone ? src.clone() : new THREE.MeshStandardMaterial({ color: 0x777777, roughness: 0.55 });
+  if (paint.map) { paint.map = null; paint.needsUpdate = true; }
+  if (src && src.color && paint.color) paint.color.copy(src.color);
+  paint.metalness = src && Number.isFinite(src.metalness) ? src.metalness : 0.25;
+  paint.roughness = src && Number.isFinite(src.roughness) ? src.roughness : 0.5;
+  const m = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.55, 1.1), paint); m.position.set(0, 0.8, -0.55); m.castShadow = true; m.receiveShadow = true;
   pivot.add(m); c.g.add(pivot); return { pivot, hw, sgn };
 }
 function charAnimTo(st) {
@@ -4392,7 +4398,7 @@ function charAnimTo(st) {
   nx.reset().fadeIn(0.15).play(); nx.timeScale = char.speed[st] || 1; char.current = nx; char.state = st; char.key = st;
 }
 // গাড়িতে ওঠা/নামার অ্যানিমেশন টিউনিং — ভঙ্গি ঠিক না লাগলে শুধু এই সংখ্যাগুলো বদলান
-const CAR_TUNE = { yawIn: 0, yawOut: 0, seatLift: 0.48, slideFrom: 0.35, slideTo: 0.85 };
+const CAR_TUNE = { yawIn: 0, yawOut: 0, seatHip: 0.68, slideFrom: 0.35, slideTo: 0.85 };
 function stepEnter(dt) {
 const e = ent, c = e.c, y = c.g.rotation.y; e.t += dt; const t = e.t, sg = e.sgn;
 const outP = carToWorld(c, sg * (e.door.hw + 0.9), 0.2), seatP = carToWorld(c, -0.4, 0.15);
@@ -4452,10 +4458,10 @@ if (char.mixer) {
     char.group.rotation.set(0, yaw, 0);
     char.group.updateMatrixWorld(true);
     const hipLocalY = char.hips.matrixWorld.elements[13] - char.group.position.y;
-    const targetHipY = e.hipBase + CAR_TUNE.seatLift * blend;
+    const targetHipY = e.hipBase + (CAR_TUNE.seatHip - e.hipBase) * blend;
     rootY = Math.max(0, targetHipY - hipLocalY);
   } else {
-    rootY = useAnim && (st === 'entercar' || st === 'exitcar') ? CAR_TUNE.seatLift : 0;
+    rootY = 0; // fallback animation-এ কৃত্রিমভাবে চরিত্রকে ছাদের দিকে তোলা হবে না
   }
   e.lift = rootY;
   char.group.position.set(p[0], rootY, p[1]);
@@ -4806,6 +4812,13 @@ function getRoom(type) {
         const bm = new THREE.Mesh(bgeo, new THREE.MeshBasicMaterial({ color: tints[i % tints.length], map: t2, fog: false }));
         bm.scale.set(w2, h2, d2); bm.position.set(Math.sin(a) * r, h2 / 2 - 0.15, Math.cos(a) * r); bm.rotation.y = a; L.add(bm);
       } }
+    // বারান্দার জন্য লাইভ আউটডোর পোর্টাল: মূল গেম-ওয়ার্ল্ডের ক্যামেরা-ভিউ এখানে দেখাবে
+    const outdoorTarget = new THREE.WebGLRenderTarget(640, 360, { depthBuffer: true, stencilBuffer: false });
+    outdoorTarget.texture.colorSpace = THREE.SRGBColorSpace;
+    outdoorTarget.texture.generateMipmaps = false;
+    const outdoorScreen = new THREE.Mesh(new THREE.PlaneGeometry(56, 31.5), new THREE.MeshBasicMaterial({ map: outdoorTarget.texture, side: THREE.DoubleSide, toneMapped: false }));
+    outdoorScreen.visible = false; L.add(outdoorScreen);
+    R.outdoorView = { target: outdoorTarget, camera: new THREE.PerspectiveCamera(60, 16 / 9, 0.1, 900), screen: outdoorScreen, last: 0 };
     // ---- নিচতলা: বসার ঘর ----
     rug(-4.2, -2.6, 4.6, 3.2, '#8c3b3b'); tvset(-4.2, -5.4);
     F(-4.2, -3.2, 0, 1.3, 0.7, q => { q.b(1.3, 0.05, 0.7, 0, 0.42, 0, '#8a6a48'); q.b(1.2, 0.03, 0.6, 0, 0.18, 0, '#6b4a2f'); for (const a of [-1, 1]) for (const b of [-1, 1]) q.b(0.05, 0.4, 0.05, a * 0.58, 0.2, b * 0.3, '#5a3c26'); });
@@ -4898,6 +4911,49 @@ function indoorLight() {   // ভেতরে সবসময় উজ্জ্
   hemi.intensity = 1.3; hemi.color.set(0xfff3e0); hemi.groundColor.set(0xb9a58d);
   sun.intensity = 0.45; sun.color.set(0xfff0d8); stars.visible = false; moon.visible = false;
 }
+function updateHomeExteriorPortal(now) {
+  if (!inside || inside.room.type !== 'home' || !inOut || !inOut.d) return;
+  const R = inside.room, V = R.outdoorView;
+  if (!V || !R.bal) return;
+  const onBal = player.y >= R.FY - 0.3 && player.z - R.oz > R.hd + 0.1;
+  V.screen.visible = onBal;
+  if (!onBal || now - V.last < 120) return;
+  V.last = now;
+  const d = inOut.d, dir = new THREE.Vector3();
+  camera.getWorldDirection(dir);
+  // ঘরের লোকাল ক্যামেরা-অবস্থানকে বাড়ির আসল বাইরের দরজার অবস্থানে রূপান্তর
+  const lx = camera.position.x - R.ox, lz = camera.position.z - R.oz;
+  const wx = d.x + lx * d.oz + lz * d.ox;
+  const wz = d.z - lx * d.ox + lz * d.oz;
+  const wy = Math.max(1.5, camera.position.y - R.FY);
+  const dx = dir.x * d.oz + dir.z * d.ox;
+  const dz = -dir.x * d.ox + dir.z * d.oz;
+  V.camera.position.set(wx, wy, wz);
+  V.camera.up.set(0, 1, 0);
+  V.camera.lookAt(wx + dx * 100, wy + dir.y * 100, wz + dz * 100);
+  V.camera.updateMatrixWorld(true);
+  // ঘরের মডেল সাময়িক লুকিয়ে মূল শহর/রাস্তা/বাড়ি রেন্ডার করে আবার আগের অবস্থা ফিরিয়ে আনা
+  const roomWasVisible = R.group.visible, oldTarget = renderer.getRenderTarget();
+  const indoorLightState = { hemiIntensity: hemi.intensity, hemiColor: hemi.color.clone(), groundColor: hemi.groundColor.clone(), sunIntensity: sun.intensity, sunColor: sun.color.clone(), starsVisible: stars.visible, moonVisible: moon.visible };
+  const daylight = inOut.outdoorLight;
+  R.group.visible = false;
+  for (const o of inHidden) o.visible = true;
+  try {
+    if (daylight) { hemi.intensity = daylight.hemiIntensity; hemi.color.copy(daylight.hemiColor); hemi.groundColor.copy(daylight.groundColor); sun.intensity = daylight.sunIntensity; sun.color.copy(daylight.sunColor); stars.visible = daylight.starsVisible; moon.visible = daylight.moonVisible; }
+    renderer.setRenderTarget(V.target);
+    renderer.clear();
+    renderer.render(scene, V.camera);
+  } finally {
+    renderer.setRenderTarget(oldTarget);
+    hemi.intensity = indoorLightState.hemiIntensity; hemi.color.copy(indoorLightState.hemiColor); hemi.groundColor.copy(indoorLightState.groundColor); sun.intensity = indoorLightState.sunIntensity; sun.color.copy(indoorLightState.sunColor); stars.visible = indoorLightState.starsVisible; moon.visible = indoorLightState.moonVisible;
+    for (const o of inHidden) o.visible = false;
+    R.group.visible = roomWasVisible;
+  }
+  // পোর্টাল-স্ক্রিনটি প্লেয়ারের ক্যামেরার সামনে রাখি, যাতে বারান্দা থেকে আসল বাইরের দৃশ্য দেখা যায়
+  V.screen.position.set(camera.position.x - R.ox + dir.x * 25, camera.position.y + dir.y * 25, camera.position.z - R.oz + dir.z * 25);
+  V.screen.lookAt(camera.position);
+  V.screen.updateMatrixWorld(true);
+}
 function drawMiniIn(c, R) {
   const S = 7, room = inside.room, T = (x, z) => [R - (x - room.ox) * S, R - (z - room.oz) * S];
   c.fillStyle = '#1c1c20'; c.fillRect(0, 0, 120, 120);
@@ -4925,7 +4981,7 @@ function fadeTo(mid) {   // স্ক্রিন কালো → মাঝখ�
 }
 function goIn(d) {
   fadeTo(() => {
-    inOut = { x: player.x, z: player.z, d };
+    inOut = { x: player.x, z: player.z, d, outdoorLight: { hemiIntensity: hemi.intensity, hemiColor: hemi.color.clone(), groundColor: hemi.groundColor.clone(), sunIntensity: sun.intensity, sunColor: sun.color.clone(), starsVisible: stars.visible, moonVisible: moon.visible } };
     const R = getRoom(d.type);
     inHidden = []; for (const o of scene.children) if (!o.isLight && o !== char.group && !o.userData.indoor && o.visible) { o.visible = false; inHidden.push(o); }
     R.group.visible = true; inside = { room: R };
@@ -5153,6 +5209,7 @@ function loop(now) {
   if (started) { extra(dt); doorStep(now); }
   if (lbOn) updateLobby(dt, now / 1000); else updateDayNight(dt, !paused);
   if (inside) indoorLight();
+  if (inside && inside.room.type === 'home') updateHomeExteriorPortal(now);
   if (mapOpen) mapCamUpdate();
   const mapOn = mapOpen && mapScene && started && !lbOn;
   renderer.render(mapOn ? mapScene : scene, mapOn ? mapCam : camera);
@@ -5184,7 +5241,7 @@ requestAnimationFrame(loop);
 
 // ===== গাড়ির GLB মডেল (models/ ফোল্ডার) =====
 // ফাইল না থাকলে পুরোনো বক্স গাড়িই চলবে। গাড়ির সামনের দিক উল্টো দেখালে CAR_YAW = Math.PI করুন।
-const CAR_YAW = 0;
+const CAR_YAW = Math.PI;
 const CAR_MODEL_FILES = {
   normal1: 'NormalCar1', normal2: 'NormalCar2', sports: 'SportsCar', sports2: 'SportsCar2',
   suv: 'SUV', taxi: 'Taxi', cop: 'Cop'
