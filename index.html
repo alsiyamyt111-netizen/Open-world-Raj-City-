@@ -693,6 +693,7 @@ let nightK = 0;           // 0 = পুরো দিন, 1 = গভীর রা
 const sstep = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const interp1 = (x, xs, ys) => { for (let i = 0; i < xs.length - 1; i++) if (x <= xs[i + 1]) { const t = (x - xs[i]) / (xs[i + 1] - xs[i]); return ys[i] + (ys[i + 1] - ys[i]) * t; } return ys[ys.length - 1]; };
 const roadMats = [], wallMats = [];
+const mrcWindowMats = []; // মিনি রিচ সিটির কাচের ভবনের রাতের জানালার আলো
 const skyDay = new THREE.Color(0x8fb6e0), skyDusk = new THREE.Color(0xe8905a), skyNight = new THREE.Color(0x050914), skyTmp = new THREE.Color();
 const hemiSkyD = new THREE.Color(0xcfe3ff), hemiSkyN = new THREE.Color(0x2a3a66), hemiGrD = new THREE.Color(0x6a8a50), hemiGrN = new THREE.Color(0x141a14);
 const sunDayCol = new THREE.Color(0xffd9a8), sunDuskCol = new THREE.Color(0xff8a4a), moonLightCol = new THREE.Color(0x8fa8ff);
@@ -727,6 +728,7 @@ function updateDayNight(dt, advance) {
   // ভেজা রাস্তা: রাতে রাস্তা চকচকে হয়ে বাতির আলো প্রতিফলিত করে; বাড়ির জানালা জ্বলে
   for (const m of roadMats) { m.roughness = 0.95 - 0.8 * nightK; m.metalness = 0.2 * nightK; }
   for (const m of wallMats) m.emissiveIntensity = 1.3 * nightK;
+  for (const m of mrcWindowMats) m.emissiveIntensity = 1.25 * nightK;
   const day = 1 - nightK;
   // আকাশ ও কুয়াশার রং
   if (el > 0) skyTmp.copy(skyDusk).lerp(skyDay, sstep(0, 0.4, el)); else skyTmp.copy(skyDay).lerp(skyDusk, sstep(-0.5, 0, el)).lerp(skyNight, nightK);
@@ -904,7 +906,7 @@ const compBoxes = [], compCaps = [], compPlants = [], compounds = [];
 const wallCols = ['#c97b5a', '#d8cbb0', '#b8bdc4', '#e4d5a8', '#a86f4a', '#e9e2d0'];
 const flowerCols = ['#ff4d6d', '#ffd23f', '#ffffff', '#c77dff', '#ff9f1c', '#ff6fb5'];
 const leafCols = ['#2f8f3f', '#3fa34d', '#57b84f', '#4c9a3a'];
-function addCompound(cx, cz, gs, w, d, shop, hasGarage, enterable) {
+function addCompound(cx, cz, gs, w, d, shop, hasGarage, enterable, gateWidth = 2.2) {
   const C = [1, 0, -1, 0][gs], S = [0, 1, 0, -1][gs], Y0 = 0.15;
   const rc = (lx, lz) => [cx + lx * C + lz * S, cz - lx * S + lz * C];
   const rect = (lx0, lz0, lx1, lz1) => {
@@ -917,7 +919,7 @@ function addCompound(cx, cz, gs, w, d, shop, hasGarage, enterable) {
     if (solid) boxes.push({ ...r, h: y1, ...(name ? { name } : {}) });
   };
   const cap = (lx, lz, y, r, color) => { const q = rc(lx, lz); compCaps.push({ p: [q[0], Y0 + y, q[1]], s: [r, r, r], c: color }); };
-  const wc = pick(wallCols), HW = 12.5, T = 0.3, WH = 2.1, G = 2.2;
+  const wc = pick(wallCols), HW = 12.5, T = 0.3, WH = 2.1, G = gateWidth;
   // পাঁচিল (সামনে গেটের ফাঁক)
   box(-HW, -HW, HW, -HW + T, 0, WH, wc, true);
   box(-HW, -HW, -HW + T, HW, 0, WH, wc, true);
@@ -1464,6 +1466,82 @@ function dressBuilding(ty, cx, cz, gs, w, d, h) {
   palm(-w / 2 - 2.2, -1, 1);
 }
 
+function addMRCGlassBuilding(cx, cz, style) {
+  const grp = new THREE.Group();
+  const w = style === 0 ? 17 : 15, d = style === 0 ? 15 : 18;
+  const floors = style === 0 ? 8 : 10, fh = style === 0 ? 4.0 : 3.6, totalH = floors * fh;
+  const coreMat = new THREE.MeshStandardMaterial({ color: style === 0 ? 0x303b49 : 0x263d4d, roughness: 0.58, metalness: 0.28 });
+  const glass = style === 0 ? glassReflMat : glassReflMatB;
+  const frame = new THREE.MeshStandardMaterial({ color: style === 0 ? 0xc8d5df : 0x9eb4c2, roughness: 0.35, metalness: 0.65 });
+  const windowGlow = new THREE.MeshStandardMaterial({ color: 0xffd99a, emissive: 0xffb84d, emissiveIntensity: 0, roughness: 0.35, metalness: 0.05 });
+  mrcWindowMats.push(windowGlow);
+  const core = new THREE.Mesh(new THREE.BoxGeometry(w, totalH, d), coreMat);
+  core.position.y = totalH / 2 + 0.2; core.castShadow = true; core.receiveShadow = true; grp.add(core);
+  // Floor-to-floor horizontal bands and vertical mullions.
+  for (let f = 1; f < floors; f++) {
+    const band = new THREE.Mesh(new THREE.BoxGeometry(w + 0.18, 0.16, d + 0.18), frame);
+    band.position.y = 0.2 + f * fh; grp.add(band);
+  }
+  for (const side of [-1, 1]) {
+    const z = side * (d / 2 + 0.035);
+    const pane = new THREE.Mesh(new THREE.PlaneGeometry(w - 0.35, totalH - 0.5), glass);
+    pane.position.set(0, totalH / 2 + 0.2, z); if (side < 0) pane.rotation.y = Math.PI; grp.add(pane);
+    for (let x = -w / 2 + 1.2; x < w / 2; x += 2.4) {
+      const mullion = new THREE.Mesh(new THREE.BoxGeometry(0.10, totalH, 0.12), frame);
+      mullion.position.set(x, totalH / 2 + 0.2, z + (side > 0 ? 0.04 : -0.04)); grp.add(mullion);
+    }
+    for (let f = 0; f < floors - 1; f++) {
+      for (let x = -w / 2 + 1.35; x < w / 2 - 0.5; x += 2.4) {
+        const win = new THREE.Mesh(new THREE.PlaneGeometry(1.75, fh * 0.62), windowGlow);
+        win.position.set(x, 0.2 + f * fh + fh * 0.52, z + (side > 0 ? 0.075 : -0.075));
+        if (side < 0) win.rotation.y = Math.PI;
+        grp.add(win);
+      }
+    }
+  }
+  // End-wall glazing and narrow corner fins make the two towers visibly distinct.
+  for (const side of [-1, 1]) {
+    const x = side * (w / 2 + 0.035);
+    const pane = new THREE.Mesh(new THREE.PlaneGeometry(d - 0.35, totalH - 0.5), glass);
+    pane.position.set(x, totalH / 2 + 0.2, 0); pane.rotation.y = side * Math.PI / 2; grp.add(pane);
+    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.18, totalH + 0.5, 0.18), frame);
+    fin.position.set(x, totalH / 2 + 0.2, 0); grp.add(fin);
+  }
+  // Transparent ground-floor lobby, double-height entrance and canopy.
+  const lobby = new THREE.Mesh(new THREE.BoxGeometry(w - 1.2, 3.5, 0.10), glass);
+  lobby.position.set(0, 1.95, d / 2 + 0.08); grp.add(lobby);
+  const entry = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.8, 0.16), new THREE.MeshStandardMaterial({ color: 0x173044, roughness: 0.18, metalness: 0.25, transparent: true, opacity: 0.72 }));
+  entry.position.set(0, 1.6, d / 2 + 0.18); grp.add(entry);
+  const canopy = new THREE.Mesh(new THREE.BoxGeometry(w * 0.58, 0.22, 2.0), frame);
+  canopy.position.set(0, 3.85, d / 2 + 0.9); canopy.castShadow = true; grp.add(canopy);
+  const base = new THREE.Mesh(new THREE.BoxGeometry(w + 1.4, 0.35, d + 1.4), new THREE.MeshStandardMaterial({ color: 0x7d8990, roughness: 0.8 }));
+  base.position.y = 0.18; grp.add(base);
+  if (style === 0) {
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(w * 0.58, 1.1, d * 0.58), coreMat); roof.position.set(0, totalH + 0.75, 0); grp.add(roof);
+    const crown = new THREE.Mesh(new THREE.BoxGeometry(w * 0.32, 0.22, d * 0.32), frame); crown.position.y = totalH + 1.4; grp.add(crown);
+  } else {
+    const crown = new THREE.Mesh(new THREE.BoxGeometry(w * 0.7, 0.65, d * 0.7), frame); crown.position.y = totalH + 0.5; grp.add(crown);
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.22, 4.5, 8), frame); mast.position.y = totalH + 3.0; grp.add(mast);
+  }
+  grp.position.set(cx, 0, cz); scene.add(grp);
+  boxes.push({ minX: cx - (w + 1.4) / 2, maxX: cx + (w + 1.4) / 2, minZ: cz - (d + 1.4) / 2, maxZ: cz + (d + 1.4) / 2, h: totalH + 5, name: style === 0 ? 'Glass Office Tower' : 'Glass Business Tower' });
+}
+
+function addMRCBungalow(cx, cz, gs) {
+  // Existing home facade, indoor door interaction and compound system are reused.
+  const w = 18.5, d = 16.0, h = 8.2;
+  const C = [1, 0, -1, 0][gs], S = [0, 1, 0, -1][gs];
+  const bx = cx - 2.5 * S, bz = cz - 2.5 * C, ry = Math.atan2(S, C);
+  const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), modMat('home'));
+  body.position.set(bx, h / 2, bz); body.rotation.y = ry; body.castShadow = true; body.receiveShadow = true; scene.add(body);
+  // Keep the collision AABB aligned with the rotated bungalow footprint.
+  const swapFootprint = gs % 2 === 1, halfX = (swapFootprint ? d : w) / 2, halfZ = (swapFootprint ? w : d) / 2;
+  boxes.push({ minX: bx - halfX, maxX: bx + halfX, minZ: bz - halfZ, maxZ: bz + halfZ, h, name: 'Modern Bungalow' });
+  dressBuilding('home', cx, cz, gs, w, d, h);
+  // Wider vehicle gate; the home door remains linked to the existing enter/interior system.
+  addCompound(cx, cz, gs, w, d, false, false, 'home', 3.6);
+}
+
 function buildMRC() {
   const W = MRC.x1 - MRC.x0, D = MRC.z1 - MRC.z0;
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(W + 30, D + 30), new THREE.MeshStandardMaterial({ color: 0x9a9c94, roughness: 1 }));
@@ -1478,14 +1556,21 @@ function buildMRC() {
   road(MRC.linkX1 - MRC.linkX0, ROAD_W, (MRC.linkX0 + MRC.linkX1) / 2, MRC.linkZ, 0.025, roadTexH, (MRC.linkX1 - MRC.linkX0) / 8, 1);   // বন্দর ↔ শহর
   const parkAt = (i, j) => (i === 0 && j === 3) || (i === 4 && j === 0);
   for (let i = 0; i < MRC.xs.length - 1; i++) for (let j = 0; j < MRC.zs.length - 1; j++) addSidewalk(MRC.xs[i] + 20, MRC.zs[j] + 20, parkAt(i, j));
-  // রিচ সিটির প্রতিটি প্লট সাজানো: কোণাগুলোয় কাচের স্কাইস্ক্র্যাপার, বাকি সব প্লটে বিলাসবহুল প্রাসাদ চত্বর
-  const towerAt = (i, j) => (i === 0 && j === 0) || (i === 4 && j === 3) || (i === 2 && j === 0) || (i === 2 && j === 3);
+  // নির্দিষ্ট প্লট বিন্যাস: ২টি পুরোনো টাওয়ার, ২টি নতুন কাচের ভবন,
+  // Apartment Block-এর নিজস্ব GLB এবং ৪টি প্রবেশযোগ্য বাংলো; বাকি প্লট খালি থাকবে।
+  const towerAt = (i, j) => (i === 0 && j === 0) || (i === 4 && j === 3);
+  const glassAt = (i, j) => (i === 2 && j === 0) || (i === 2 && j === 3);
+  const bungalowAt = (i, j) => (i === 0 && j === 1) || (i === 3 && j === 1) || (i === 1 && j === 2) || (i === 3 && j === 2);
   for (let i = 0; i < MRC.xs.length - 1; i++) {
     for (let j = 0; j < MRC.zs.length - 1; j++) {
       if (parkAt(i, j)) continue;
+      // Custom GLB plot: do not spawn any procedural house/building underneath it.
+      if (MRC_BUILDINGS.some(b => b.bx === i && b.bz === j)) continue;
       const cx = MRC.xs[i] + 20, cz = MRC.zs[j] + 20;
       if (towerAt(i, j)) addSkyscraper(cx, cz, 0, 9.5, 85 + Math.random() * 45);
-      else addPalaceCompound(cx, cz, Math.floor(Math.random() * 4));
+      else if (glassAt(i, j)) addMRCGlassBuilding(cx, cz, j === 0 ? 0 : 1);
+      else if (bungalowAt(i, j)) addMRCBungalow(cx, cz, Math.floor(Math.random() * 4));
+      // All remaining plots intentionally stay empty for future development.
     }
   }
   // প্রবেশদ্বার-তোরণ: বন্দর থেকে আসা সড়কের ওপর "MINI RICH CITY" সাইনবোর্ড
