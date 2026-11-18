@@ -844,6 +844,61 @@ const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 const roofMat = new THREE.MeshStandardMaterial({ color: 0x8a8f96, roughness: 0.9 });
 const trunkMat = new THREE.MeshStandardMaterial({ color: 0x7a5230, roughness: 1 });
 
+// ---------- রিচ সিটি: স্কাইস্ক্র্যাপার/প্রাসাদের জন্য রোদ-প্রতিফলিত কাচের এনভায়রনমেন্ট ম্যাপ ----------
+const richEnvCv = document.createElement('canvas'); richEnvCv.width = 256; richEnvCv.height = 128;
+(() => {
+  const g = richEnvCv.getContext('2d');
+  const grad = g.createLinearGradient(0, 0, 0, 128);
+  grad.addColorStop(0, '#bfe3ff'); grad.addColorStop(0.5, '#eef7ff'); grad.addColorStop(0.62, '#d9e4c8'); grad.addColorStop(1, '#9fae86');
+  g.fillStyle = grad; g.fillRect(0, 0, 256, 128);
+  g.fillStyle = '#fff8e0'; g.beginPath(); g.ellipse(195, 26, 34, 15, 0, 0, Math.PI * 2); g.fill();
+})();
+const richEnvTex = new THREE.CanvasTexture(richEnvCv);
+richEnvTex.mapping = THREE.EquirectangularReflectionMapping; richEnvTex.colorSpace = THREE.SRGBColorSpace;
+const richEnvMap = new THREE.PMREMGenerator(renderer).fromEquirectangular(richEnvTex).texture;
+const glassReflMat = new THREE.MeshPhysicalMaterial({ color: 0x9fd8ff, metalness: 0.2, roughness: 0.06, envMap: richEnvMap, envMapIntensity: 1.8, transparent: true, opacity: 0.65, side: THREE.DoubleSide });
+const glassReflMatB = new THREE.MeshPhysicalMaterial({ color: 0x7fc8e8, metalness: 0.25, roughness: 0.08, envMap: richEnvMap, envMapIntensity: 1.6, transparent: true, opacity: 0.6, side: THREE.DoubleSide });
+const towerMullionMat = new THREE.MeshStandardMaterial({ color: 0xe7ecf0, roughness: 0.4, metalness: 0.55 });
+const towerCoreMat = new THREE.MeshStandardMaterial({ color: 0xd7dde2, roughness: 0.55, metalness: 0.3 });
+const poolWaterMat = new THREE.MeshStandardMaterial({ color: 0x2fa8d8, roughness: 0.1, metalness: 0.25, transparent: true, opacity: 0.88, envMap: richEnvMap, envMapIntensity: 0.6 });
+const poolDeckMat = new THREE.MeshStandardMaterial({ color: 0xe9e2d0, roughness: 0.85 });
+// বুর্জ খলিফা-ধাঁচের ধাপে-ধাপে সরু হয়ে ওঠা কাচের আকাশচুম্বী ভবন (রোদে প্রতিফলিত)
+function addSkyscraper(cx, cz, ry, baseHalf, totalH) {
+  const tiers = 4, grp = new THREE.Group();
+  let curHalf = baseHalf, curH = 0;
+  const tierFrac = [0.42, 0.26, 0.18, 0.14];
+  for (let t = 0; t < tiers; t++) {
+    const tierH = totalH * tierFrac[t];
+    const nextHalf = curHalf * (t === tiers - 1 ? 0.3 : 0.78);
+    const core = new THREE.Mesh(new THREE.BoxGeometry(Math.max(0.6, curHalf * 2 - 0.3), tierH, Math.max(0.6, curHalf * 2 - 0.3)), towerCoreMat);
+    core.position.set(0, curH + tierH / 2, 0); core.castShadow = true; core.receiveShadow = true; grp.add(core);
+    const glassMat = t % 2 === 0 ? glassReflMat : glassReflMatB;
+    const w = curHalf * 2 - 0.05, off = curHalf - 0.02;
+    for (let face = 0; face < 4; face++) {
+      const skin = new THREE.Mesh(new THREE.PlaneGeometry(w, tierH * 0.94), glassMat);
+      if (face === 0) skin.position.set(0, curH + tierH / 2, off);
+      else if (face === 1) { skin.position.set(0, curH + tierH / 2, -off); skin.rotation.y = Math.PI; }
+      else if (face === 2) { skin.position.set(off, curH + tierH / 2, 0); skin.rotation.y = Math.PI / 2; }
+      else { skin.position.set(-off, curH + tierH / 2, 0); skin.rotation.y = -Math.PI / 2; }
+      grp.add(skin);
+    }
+    const floors = Math.max(2, Math.round(tierH / 5.5));
+    for (let f = 1; f < floors; f++) {
+      const band = new THREE.Mesh(new THREE.BoxGeometry(curHalf * 2 + 0.06, 0.14, curHalf * 2 + 0.06), towerMullionMat);
+      band.position.set(0, curH + f * (tierH / floors), 0); grp.add(band);
+    }
+    curH += tierH; curHalf = nextHalf;
+  }
+  const spire = new THREE.Mesh(new THREE.ConeGeometry(Math.max(0.3, curHalf * 0.9), totalH * 0.1, 8), towerMullionMat);
+  spire.position.set(0, curH + totalH * 0.05, 0); grp.add(spire);
+  const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.14, totalH * 0.06, 6), towerMullionMat);
+  antenna.position.set(0, curH + totalH * 0.1 + totalH * 0.03, 0); grp.add(antenna);
+  const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff3b30 }));
+  beacon.position.set(0, curH + totalH * 0.16, 0); grp.add(beacon);
+  grp.position.set(cx, 0, cz); grp.rotation.y = ry; scene.add(grp);
+  boxes.push({ minX: cx - baseHalf, maxX: cx + baseHalf, minZ: cz - baseHalf, maxZ: cz + baseHalf, h: curH + totalH * 0.16, name: 'Rich Tower' });
+}
+
 // ---------- বাড়ির চত্বর: পাঁচিল, গেট, গ্যারেজ, ফুলের বাগান ----------
 const compBoxes = [], compCaps = [], compPlants = [], compounds = [];
 const wallCols = ['#c97b5a', '#d8cbb0', '#b8bdc4', '#e4d5a8', '#a86f4a', '#e9e2d0'];
@@ -947,6 +1002,87 @@ function finalizeCompounds() {
     Ls.forEach((s, i) => { q.setFromAxisAngle(UPV, s.ry); m.compose(new THREE.Vector3(s.p[0], s.p[1], s.p[2]), q, new THREE.Vector3(1, 1, 1)); im.setMatrixAt(i, m); });
     im.frustumCulled = false; scene.add(im);
   }
+}
+
+// ---------- বিলাসবহুল প্রাসাদ চত্বর: উঁচু পাঁচিল, বড় গেট (গাড়ি+মানুষ) + ছোট গেট (শুধু মানুষ),
+// গাছঘেরা ড্রাইভওয়ে, সুইমিংপুল, গ্যারেজ, ছোট ফুলের বাগান ----------
+function addPalaceCompound(cx, cz, gs) {
+  const C = [1, 0, -1, 0][gs], S = [0, 1, 0, -1][gs], ry = Math.atan2(S, C), Y0 = 0.15;
+  const rc = (lx, lz) => [cx + lx * C + lz * S, cz - lx * S + lz * C];
+  const HW = 14.0, T = 0.35, WH = 2.7, GBIG = 3.2, GSML = 0.75, GSML_X = HW - 3.5;
+  const pushWallBox = (minXl, minZl, maxXl, maxZl, y0, y1, color) => {
+    const a = rc(minXl, minZl), b = rc(maxXl, maxZl);
+    const r = { minX: Math.min(a[0], b[0]), maxX: Math.max(a[0], b[0]), minZ: Math.min(a[1], b[1]), maxZ: Math.max(a[1], b[1]) };
+    compBoxes.push({ p: [(r.minX + r.maxX) / 2, Y0 + (y0 + y1) / 2, (r.minZ + r.maxZ) / 2], s: [r.maxX - r.minX, y1 - y0, r.maxZ - r.minZ], c: color });
+    boxes.push({ ...r, h: y1 });
+  };
+  const cap = (lx, lz, y, r, color) => { const q = rc(lx, lz); compCaps.push({ p: [q[0], Y0 + y, q[1]], s: [r, r, r], c: color }); };
+  const B = (lx, y, lz, sx, sy, sz, color) => { const q = rc(lx, lz); compBoxes.push({ p: [q[0], Y0 + y, q[1]], s: [sx, sy, sz], ry, c: color }); };
+  const SOL = (a0, b0, a1, b1, hh) => { const a = rc(a0, b0), b = rc(a1, b1); boxes.push({ minX: Math.min(a[0], b[0]), maxX: Math.max(a[0], b[0]), minZ: Math.min(a[1], b[1]), maxZ: Math.max(a[1], b[1]), h: hh, name: 'Palace' }); };
+  // চারপাশে উঁচু পাঁচিল — সামনের দেয়ালে বড় গেট (মাঝে) ও ছোট গেট (পাশে) এর জন্য দুটো ফাঁক
+  pushWallBox(-HW, -HW, HW, -HW + T, 0, WH, '#f1ead6');
+  pushWallBox(-HW, -HW, -HW + T, HW, 0, WH, '#f1ead6');
+  pushWallBox(HW - T, -HW, HW, HW, 0, WH, '#f1ead6');
+  pushWallBox(-HW, HW - T, -GBIG, HW, 0, WH, '#f1ead6');
+  pushWallBox(-GBIG, HW - T, GSML_X - GSML, HW, 0, WH, '#f1ead6');
+  pushWallBox(GSML_X + GSML, HW - T, HW, HW, 0, WH, '#f1ead6');
+  pushWallBox(-HW, HW - T, -GBIG, HW - T + 0.08, WH, WH + 0.3, '#d4af37');
+  pushWallBox(-GBIG, HW - T, GSML_X - GSML, HW - T + 0.08, WH, WH + 0.3, '#d4af37');
+  pushWallBox(GSML_X + GSML, HW - T, HW, HW - T + 0.08, WH, WH + 0.3, '#d4af37');
+  for (const [px, pz] of [[-HW, -HW], [HW, -HW], [-HW, HW], [HW, HW]]) { pushWallBox(px - 0.4, pz - 0.4, px + 0.4, pz + 0.4, 0, 3.0, '#e9e2d0'); cap(px, pz, 3.2, 0.34, '#d4af37'); }
+  // বড় গেট: গাড়ি+মানুষ উভয়ের জন্য প্রশস্ত, সোনালি পিলার ও খোলা ফটক-পাতা
+  for (const sg of [-1, 1]) {
+    pushWallBox(sg * GBIG - 0.4, HW - T / 2 - 0.4, sg * GBIG + 0.4, HW - T / 2 + 0.4, 0, 3.3, '#e9e2d0');
+    cap(sg * GBIG, HW - T / 2, 3.5, 0.4, '#d4af37');
+    const dx = -sg * 0.35, dz = -0.937, cl = rc(sg * (GBIG - 0.4) + dx * 1.1, HW - T / 2 + dz * 1.1);
+    compBoxes.push({ p: [cl[0], Y0 + 1.1, cl[1]], s: [2.4, 2.0, 0.07], ry: ry + Math.atan2(-dz, dx) + Math.PI / 2, c: '#d4af37' });
+  }
+  // ছোট দরজা: শুধু হেঁটে চলাচলের জন্য, সরু খিলান-ফ্রেম
+  { const q = rc(GSML_X, HW - T / 2); compBoxes.push({ p: [q[0], Y0 + 1.1, q[1]], s: [GSML * 2 + 0.3, 2.2, 0.07], ry, c: '#5a4a32' });
+    pushWallBox(GSML_X - GSML - 0.15, HW - T, GSML_X + GSML + 0.15, HW - T + 0.08, WH - 0.02, WH + 0.5, '#d4af37'); }
+  // ---- মূল প্রাসাদ ভবন: দোতলা, কলাম, বড় কাচের জানালা ----
+  const PW = 15.5, PD = 11, PH = 7.4, pf = -HW + 7.5;
+  SOL(-PW / 2, pf - PD / 2, PW / 2, pf + PD / 2, PH);
+  B(0, PH / 2, pf, PW, PH, PD, '#f6f1e4');
+  B(0, PH + 0.18, pf, PW + 0.7, 0.36, PD + 0.7, '#efe9da');
+  for (let i = -3; i <= 3; i++) if (i) B(i * PW / 8, PH + 0.5, pf, 0.5, 0.65, 0.5, '#efe9da');
+  for (const sx of [-1, 1]) for (let fl = 0; fl < 2; fl++) B(sx * PW * 0.3, 2.2 + fl * 3.4, pf + PD / 2 + 0.02, 0.45, 2.9, 0.06, '#1c2230');
+  { const q0 = rc(0, pf + PD / 2); modGlass.push({ p: [q0[0], Y0 + 1.95 + 1.7, q0[1]], s: [PW * 0.62, 3.9, 0.08], c: '#214258', ry }); }
+  for (const sx of [-1, 1]) B(sx * PW * 0.44, PH * 0.5, pf + PD / 2 + 0.05, 0.55, PH * 0.92, 0.55, '#efe9da');
+  for (let i = -1; i <= 1; i += 2) B(i * 2.6, 2.4, pf + PD / 2 + 2.1, 0.42, 4.9, 0.42, '#efe9da');
+  B(0, 4.95, pf + PD / 2 + 2.1, 6.0, 0.3, 4.6, '#efe9da');
+  B(0, 0.15, pf + PD / 2 + 2.1, 6.6, 0.3, 5.0, '#d9d3c4');
+  // ---- গ্যারেজ ----
+  B(HW - 5.6, 1.6, pf + PD / 2 + 4.0, 7.8, 3.2, 6.0, '#e4dccb'); SOL(HW - 9.5, pf + PD / 2 + 1.0, HW - 1.7, pf + PD / 2 + 7.0, 3.2);
+  B(HW - 5.6, 3.25, pf + PD / 2 + 4.0, 8.0, 0.1, 6.2, '#5b4a42');
+  // ---- সুইমিংপুল (ডেকসহ), প্রাসাদের পাশে ----
+  const px0 = -HW + 2.0, pz0 = pf + PD / 2 + 1.5, pw = 7.0, pd2 = 5.5;
+  const deckA = rc(px0 - 1.3, pz0 - 1.3), deckB = rc(px0 + pw + 1.3, pz0 + pd2 + 1.3);
+  const deckMesh = new THREE.Mesh(new THREE.PlaneGeometry(Math.abs(deckB[0] - deckA[0]), Math.abs(deckB[1] - deckA[1])), poolDeckMat);
+  deckMesh.rotation.x = -Math.PI / 2; deckMesh.position.set((deckA[0] + deckB[0]) / 2, Y0 + 0.08, (deckA[1] + deckB[1]) / 2); deckMesh.receiveShadow = true; scene.add(deckMesh);
+  const wA = rc(px0, pz0), wB = rc(px0 + pw, pz0 + pd2);
+  const waterMesh = new THREE.Mesh(new THREE.PlaneGeometry(Math.abs(wB[0] - wA[0]), Math.abs(wB[1] - wA[1])), poolWaterMat);
+  waterMesh.rotation.x = -Math.PI / 2; waterMesh.position.set((wA[0] + wB[0]) / 2, Y0 + 0.1, (wA[1] + wB[1]) / 2); scene.add(waterMesh);
+  // ---- গাছঘেরা ড্রাইভওয়ে: বড় গেট থেকে প্রাসাদের সামনে পর্যন্ত, মাঝে রাস্তা, দুই পাশে বড় গাছ ----
+  const driveZ0 = HW - T, driveZ1 = pf + PD / 2 + 2.1 + 2.2;
+  B(0, 0.015, (driveZ0 + driveZ1) / 2, 4.6, 0.03, Math.abs(driveZ0 - driveZ1), '#8f8f8b');
+  const steps = 5;
+  for (let i = 0; i <= steps; i++) {
+    const lz = driveZ0 - (driveZ0 - driveZ1) * (i / steps);
+    for (const sx of [-1, 1]) { const q = rc(sx * 5.0, lz); addTree(q[0], q[1], 1.15); }
+  }
+  // ---- ছোট ফুলের বাগান ----
+  const beds = [[-HW + 1.2, pf + PD / 2 + 8.6, -HW + 6.5, pf + PD / 2 + 11.2], [HW - 7.8, HW - T - 5.0, HW - 1.2, HW - T - 1.4]];
+  for (const [x0, z0, x1, z1] of beds) {
+    B((x0 + x1) / 2, 0.05, (z0 + z1) / 2, Math.abs(x1 - x0), 0.1, Math.abs(z1 - z0), '#4b3425');
+    const n = Math.max(6, Math.round(Math.max(Math.abs(x1 - x0), Math.abs(z1 - z0)) * 1.6));
+    for (let i = 0; i < n; i++) {
+      const lx = x0 + 0.15 + Math.random() * (x1 - x0 - 0.3), lz = z0 + 0.15 + Math.random() * (z1 - z0 - 0.3), q = rc(lx, lz);
+      compPlants.push({ p: [q[0], Y0 + 0.28, q[1]], s: [0.26, 0.2, 0.26], c: pick(leafCols) });
+      compPlants.push({ p: [q[0], Y0 + 0.5 + Math.random() * 0.3, q[1]], s: [0.13, 0.13, 0.13], c: pick(flowerCols) });
+    }
+  }
+  compounds.push({ cx, cz, out: rc(0, HW + 2.5), gate: rc(0, HW) });
 }
 
 
@@ -1342,6 +1478,16 @@ function buildMRC() {
   road(MRC.linkX1 - MRC.linkX0, ROAD_W, (MRC.linkX0 + MRC.linkX1) / 2, MRC.linkZ, 0.025, roadTexH, (MRC.linkX1 - MRC.linkX0) / 8, 1);   // বন্দর ↔ শহর
   const parkAt = (i, j) => (i === 0 && j === 3) || (i === 4 && j === 0);
   for (let i = 0; i < MRC.xs.length - 1; i++) for (let j = 0; j < MRC.zs.length - 1; j++) addSidewalk(MRC.xs[i] + 20, MRC.zs[j] + 20, parkAt(i, j));
+  // রিচ সিটির প্রতিটি প্লট সাজানো: কোণাগুলোয় কাচের স্কাইস্ক্র্যাপার, বাকি সব প্লটে বিলাসবহুল প্রাসাদ চত্বর
+  const towerAt = (i, j) => (i === 0 && j === 0) || (i === 4 && j === 3) || (i === 2 && j === 0) || (i === 2 && j === 3);
+  for (let i = 0; i < MRC.xs.length - 1; i++) {
+    for (let j = 0; j < MRC.zs.length - 1; j++) {
+      if (parkAt(i, j)) continue;
+      const cx = MRC.xs[i] + 20, cz = MRC.zs[j] + 20;
+      if (towerAt(i, j)) addSkyscraper(cx, cz, 0, 9.5, 85 + Math.random() * 45);
+      else addPalaceCompound(cx, cz, Math.floor(Math.random() * 4));
+    }
+  }
   // প্রবেশদ্বার-তোরণ: বন্দর থেকে আসা সড়কের ওপর "MINI RICH CITY" সাইনবোর্ড
   const gx = 78, gz = MRC.linkZ, navy = new THREE.MeshStandardMaterial({ color: 0x1c2230, roughness: 0.6 }), gold = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.4, metalness: 0.5 });
   for (const sz of [-1, 1]) {
