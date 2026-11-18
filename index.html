@@ -619,6 +619,7 @@ body.editing #cdrow, body.editing #cdbar { display: none !important; }
 import * as THREE from 'three';
 import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/FBXLoader.js';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/DRACOLoader.js';
 import * as SkeletonUtils from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/SkeletonUtils.js';
 
 // ---------- সরাসরি landscape: ফোন portrait-এ থাকলে পুরো গেম ভেতরে ৯০° ঘুরিয়ে দেখায় (কোনো পারমিশন/ঘোরানো লাগে না) ----------
@@ -1790,6 +1791,10 @@ function animateWorld(t, dt) {
 // ---------- চরিত্র ----------
 const fbxLoader = new FBXLoader();
 const gltfLoader = new GLTFLoader();
+// Draco-কম্প্রেস করা .glb (যেমন apartment-block-01.glb) লোড করতে; ডিকোডার ফাইল একই CDN থেকে আসে (ইন্টারনেট লাগবে, শুধু Draco মডেলের জন্য)
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/gltf/');
+gltfLoader.setDRACOLoader(dracoLoader);
 // চরিত্র (boy/girl) প্রথমে models/NAME.glb (ছোট Size) খোঁজে, না পেলে .fbx; অ্যানিমেশন শুধু .fbx
 // ===== চরিত্রের তালিকা =====
 // নতুন চরিত্র যোগ করতে: ফাইলটা models/ ফোল্ডারে রাখুন (যেমন models/soldier.glb), তারপর নিচে একটা লাইন যোগ করুন।
@@ -1830,7 +1835,7 @@ const loadAsset = name => assetCache[name] || (assetCache[name] = (async () => {
 // অ্যানিমেশনের নাম -> models/ ফোল্ডারের ফাইলের নাম (.fbx ছাড়া)
 const ANIMS = {
   idle: 'Idle', walk: 'Walk', run: 'Run',
-  jump: 'Jump', walljump: 'WallJump',
+  jump: 'Jump', walljump: 'WallJump', jumpdown: 'JumpingDown',   // jumpdown: models/JumpingDown.fbx — উঁচু জায়গা (বারান্দা/ছাদ/পাঁচিল) থেকে লাফ/পড়ার সময়
   crouchidle: 'crouchidle', crouchwalk: 'crouch', prone: 'prone',
   punch: 'punch', kick: 'kick', fire: 'firing',
   // বসা / ঘুমানো (models/ ফোল্ডারে এই নামের .fbx ফাইল)
@@ -1930,7 +1935,7 @@ async function buildCharacter(gender) {
   let modelHipsRestY = 0, hipsObj = null;
   { const hn = boneMap.get('hips'); if (hn) { const hb = model.getObjectByName(hn); if (hb) { modelHipsRestY = hb.position.y; hipsObj = hb; } } }
   const KEEP_Y = ['crouchidle', 'crouchwalk', 'prone', 'standtosit', 'sittostand', 'lyingdown', 'sleepingidle', 'entercar', 'exitcar'];      // এগুলোতে নিতম্বের উচ্চতা রাখতে হবে (নইলে শূন্যে ভাসবে)
-  const ONCE = { jump: 0.75, walljump: 0.9, punch: 0.9, kick: 1.1, entercar: 2.2, exitcar: 2.2 };   // entercar/exitcar: বেশি লম্বা হলে ২.২ সেকেন্ডে দ্রুত চলবে        // একবার চলবে, সর্বোচ্চ এত সেকেন্ডে শেষ হবে (ক্লিপ ছোট হলে নিজের স্বাভাবিক সময়ে)
+  const ONCE = { jump: 0.75, walljump: 0.9, jumpdown: 1.0, punch: 0.9, kick: 1.1, entercar: 2.2, exitcar: 2.2 };   // entercar/exitcar: বেশি লম্বা হলে ২.২ সেকেন্ডে দ্রুত চলবে        // একবার চলবে, সর্বোচ্চ এত সেকেন্ডে শেষ হবে (ক্লিপ ছোট হলে নিজের স্বাভাবিক সময়ে)
   const dur = {};
   let lobbyPath = false;   // লবির দৌড় ক্লিপে নিজস্ব সামনে-এগোনো মোশন আছে কিনা
   for (const [n, f] of Object.entries(ANIMS)) {
@@ -2296,7 +2301,7 @@ addEventListener('pointercancel', endPtr);
 // ---------- প্লেয়ার ----------
 const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
 const player = { x: 0, y: 0, z: 20, yaw: 0 };
-let stance = 'stand', jumping = false, vy = 0, cr = 0, pr = 0;
+let stance = 'stand', jumping = false, vy = 0, cr = 0, pr = 0, highDrop = false;   // highDrop: উঁচু থেকে পড়ছে → Jumping Down অ্যানিমেশন
 // ===== বসা / ঘুমানো: মাপ ঠিক না লাগলে শুধু এই সংখ্যাগুলো বদলান =====
 const REST_TUNE = {
   chairLift: 0.25,      // চেয়ারে বসলে শরীর কতটা ওপরে (মিটার) — বসা ভাসলে কমান, ডুবলে বাড়ান
@@ -2431,10 +2436,11 @@ function update(dt) {
   // ক্যারেক্টার
   if (char) {
     const gnd = supportY(player.x, player.z, player.y);
-    if (!jumping && player.y - gnd > 0.5) { jumping = true; vy = 0; vaulting = false; vaultT = 0; vaultGo = 0; }   // পাঁচিলের ওপর থেকে নামলে পড়বে
+    if (!jumping && player.y - gnd > 0.5) { jumping = true; vy = 0; vaulting = false; vaultT = 0; vaultGo = 0; highDrop = player.y - gnd > 1.0; }   // পাঁচিলের ওপর থেকে নামলে পড়বে
     if (jumping) {
       vy -= 20 * dt; player.y += vy * dt;
-      if (player.y <= gnd && vy <= 0) { player.y = gnd; vy = 0; jumping = false; vaulting = false; vaultT = 0; vaultGo = 0; }
+      if (jumping && !vaulting && vy < 0 && player.y - gnd > 1.6) highDrop = true;   // লাফিয়ে উঁচু থেকে নামলে মাঝ-আকাশেই পড়ার অ্যানিমেশন
+      if (player.y <= gnd && vy <= 0) { player.y = gnd; vy = 0; jumping = false; highDrop = false; vaulting = false; vaultT = 0; vaultGo = 0; }
     } else player.y += (gnd - player.y) * (1 - Math.exp(-dt * 20));
     cr += ((stance === 'crouch' ? 1 : 0) - cr) * (1 - Math.exp(-dt * 12));
     pr += ((stance === 'prone' ? 1 : 0) - pr) * (1 - Math.exp(-dt * 10));
@@ -2460,6 +2466,7 @@ function update(dt) {
         window.__spy = player.y; }
       if (rest) state = rest.anim;
       else if (jumping && vaulting && A.walljump) state = 'walljump';
+      else if (jumping && highDrop && A.jumpdown) state = 'jumpdown';
       else if (jumping && A.jump) state = 'jump';
       else if (stance === 'prone' && A.prone) state = 'prone';
       else if (stance === 'crouch' && (A.crouchidle || A.crouchwalk)) state = (moving && A.crouchwalk) || !A.crouchidle ? 'crouchwalk' : 'crouchidle';
@@ -2598,7 +2605,7 @@ function update(dt) {
       const S = R.stair, B = R.bal, lx = p.x - R.ox, lz = p.z - R.oz, inHole = lx > S.x0 - 0.2 && lx < S.x1 + 0.2 && lz > S.hz0 && lz < S.hz1;
       if (player.y >= R.FY - 0.3) {
         lo = R.FY + 0.5; hi = onBal ? R.FY + 6 : R.top2 - 0.3; if (inHole) lo = 0.5;
-        if (lx > B.x0 && lx < B.x1) p.z = Math.max(R.oz + R.hd + 0.5, Math.min(R.oz + B.z1 - 0.35, p.z));
+        if (onBal && lx > B.x0 && lx < B.x1) p.z = Math.max(R.oz + R.hd + 0.5, Math.min(R.oz + B.z1 - 0.35, p.z));   // শুধু বারান্দায় থাকলে; ঘরের ভেতরে থাকলে ক্যামেরাকে সামনের দেয়ালের বাইরে ঠেলবে না
       } else if (inHole || player.y >= 2.0) hi = R.top2 - 0.3;
     }
     p.y = Math.max(lo, Math.min(hi, p.y));
@@ -4806,11 +4813,15 @@ function getRoom(type) {
     const bc0 = R.cols.length, bp0 = R.plan.length;
     F(-3.4, HD + 1.4, 0, 0.5, 0.5, q => { q.c(0.38, 0.05, 0, 0.45, 0, '#6b4a2f'); q.c(0.05, 0.43, 0, 0.22, 0, '#333'); });
     chair(-4.1, HD + 1.4, Math.PI / 2, '#a47b52'); chair(-2.7, HD + 1.4, -Math.PI / 2, '#a47b52');
-    plant(3.9, HD + 1.9, 1.5); plant(-4.5, HD + 2.05, 1.2); plant(4.3, HD + 0.6, 1.1);
+    plant(-4.5, HD + 2.05, 1.2);
     F(3.3, HD + 1.2, 0, 1.4, 0.7, q => { q.b(1.4, 0.3, 0.7, 0, 0.2, 0, '#6b4a2f'); q.b(1.3, 0.12, 0.6, 0, 0.42, 0, '#e8dcc6'); });
     F(4.2, HD + 3.2, 0, 0.5, 0.5, q => { q.c(0.38, 0.05, 0, 0.45, 0, '#6b4a2f'); q.c(0.05, 0.43, 0, 0.22, 0, '#333'); });
     chair(3.5, HD + 3.2, Math.PI / 2, '#a47b52'); chair(4.9, HD + 3.2, -Math.PI / 2, '#a47b52'); chair(-3.4, HD + 3.4, Math.PI, '#a47b52');
     plant(6.1, HD + 0.9, 1.4); plant(-6.1, HD + 0.9, 1.4); plant(6.1, HD + 4.0, 1.3); plant(-6.1, HD + 4.0, 1.3); plant(0, HD + 4.2, 1.1);
+    for (let i = bc0; i < R.cols.length; i++) {   // বারান্দার আসবাবের সংঘর্ষ-বাক্স ছোট (সর্বোচ্চ ০.৫×০.৫) যাতে পুরো বারান্দায় হাঁটা যায়
+      const c = R.cols[i], cx = (c.minX + c.maxX) / 2, cz = (c.minZ + c.maxZ) / 2, hx = Math.min((c.maxX - c.minX) / 2, 0.25), hz = Math.min((c.maxZ - c.minZ) / 2, 0.25);
+      c.minX = cx - hx; c.maxX = cx + hx; c.minZ = cz - hz; c.maxZ = cz + hz;
+    }
     for (let i = bc0; i < R.cols.length; i++) R.cols[i].f = 1; for (let i = bp0; i < R.plan.length; i++) if (R.plan[i]) R.plan[i][4] = 1;
     // বারান্দার বাইরের দৃশ্য: ঘাসের উঠান, পাঁচিল, গাছ, দূরের শহর
     const yc0 = L.children.length;
@@ -4955,56 +4966,56 @@ function indoorLight() {   // ভেতরে সবসময় উজ্জ্
   hemi.intensity = 1.3; hemi.color.set(0xfff3e0); hemi.groundColor.set(0xb9a58d);
   sun.intensity = 0.45; sun.color.set(0xfff0d8); stars.visible = false; moon.visible = false;
 }
-function updateHomeExteriorPortal(now) {
-  if (!inside || inside.room.type !== 'home' || !inOut || !inOut.d) return;
+// বারান্দা/দোতলার দরজার কাছে থাকলে আসল ওপেন-ওয়ার্ল্ড লাইভ ব্যাকড্রপ:
+// ১) ঘরের ক্যামেরাকে আসল বাড়ির দরজার সাথে মিলিয়ে বাইরের ক্যামেরায় রূপান্তর করে আসল ওয়ার্ল্ড স্ক্রিনে আঁকা
+// ২) ডেপথ মুছে ঘরের ভেতরের জিনিস (দেয়াল, বারান্দা, রেলিং, ক্যারেক্টার) ওপরে আঁকা
+// কোনো পর্দা/কোয়াড নেই, তাই ক্যামেরার সাথে লেগে নড়ার প্রশ্নই নেই; ক্যামেরা নড়লে বাইরের দৃশ্যের প্যারালাক্সও ঠিক থাকে।
+function homeBackdropBegin() {
+  if (!inside || inside.room.type !== 'home' || !inOut || !inOut.d) return null;
   const R = inside.room, V = R.outdoorView;
-  if (!V || !R.bal) return;
-  const onBal = player.y >= R.FY - 0.3 && player.z - R.oz > R.hd + 0.1;
-  V.screen.visible = onBal;
-  if (R.fakeYard) for (const o of R.fakeYard) o.visible = !onBal;
-  if (!onBal) return;
-  {   // পর্দা প্রতি ফ্রেমে ক্যামেরার সামনে ঠিক ফ্রাস্টামের মাপে বসে (আগে ১২০ms পরপর লাফিয়ে সরত)
-    const dn = new THREE.Vector3(); camera.getWorldDirection(dn);
-    const hh = 2 * 25 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.04;
-    V.screen.scale.set(hh * camera.aspect / 56, hh / 31.5, 1);
-    V.screen.position.set(camera.position.x - R.ox + dn.x * 25, camera.position.y + dn.y * 25, camera.position.z - R.oz + dn.z * 25);
-    V.screen.quaternion.copy(camera.quaternion);
-    V.screen.updateMatrixWorld(true);
+  if (!V || !R.bal) return null;
+  V.screen.visible = false;
+  camera.updateMatrixWorld(true);
+  const up = player.y >= R.FY - 0.3, onBal = up && player.z - R.oz > R.hd + 0.1;
+  let live = onBal;   // বারান্দায় সবসময় লাইভ
+  if (up && !onBal) {   // দোতলার ভেতরে: ক্যামেরার ফ্রাস্টামে বারান্দার দরজার ফাঁক পড়লেই লাইভ (নইলে বাড়তি রেন্ডার নেই)
+    const fr = new THREE.Frustum().setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorld.clone().invert()));
+    const B = R.bal, door = new THREE.Box3(new THREE.Vector3(R.ox + B.g0, R.FY, R.oz + R.hd - 0.1), new THREE.Vector3(R.ox + B.g1, R.FY + 2.6, R.oz + R.hd + 0.6));
+    live = fr.intersectsBox(door);
   }
-  if (now - V.last < 70) return;
-  V.last = now;
+  if (R.fakeYard) for (const o of R.fakeYard) o.visible = !live;
+  if (!live) return null;
   const d = inOut.d, dir = new THREE.Vector3();
   camera.getWorldDirection(dir);
-  // ঘরের লোকাল ক্যামেরা-অবস্থানকে বাড়ির আসল বাইরের দরজার অবস্থানে রূপান্তর
-  const lx = camera.position.x - R.ox, lz = camera.position.z - R.oz;
+  const lx = camera.position.x - R.ox, lz = camera.position.z - R.oz - R.hd;   // সামনের দেয়াল = আসল দরজা
   const wx = d.x + lx * d.oz + lz * d.ox;
   const wz = d.z - lx * d.ox + lz * d.oz;
-  const wy = Math.max(1.5, camera.position.y - R.FY);
+  const wy = groundY(d.x, d.z) + Math.max(1.2, camera.position.y);   // দোতলার উচ্চতা থেকে দেখা (ঘরের মেঝে = ভূমি থেকে FY উঁচু)
   const dx = dir.x * d.oz + dir.z * d.ox;
   const dz = -dir.x * d.ox + dir.z * d.oz;
-  V.camera.position.set(wx, wy, wz);
-  V.camera.up.set(0, 1, 0);
-  V.camera.fov = camera.fov; V.camera.aspect = camera.aspect; V.camera.updateProjectionMatrix();
-  V.camera.lookAt(wx + dx * 100, wy + dir.y * 100, wz + dz * 100);
-  V.camera.updateMatrixWorld(true);
-  // ঘরের মডেল সাময়িক লুকিয়ে মূল শহর/রাস্তা/বাড়ি রেন্ডার করে আবার আগের অবস্থা ফিরিয়ে আনা
-  const roomWasVisible = R.group.visible, oldTarget = renderer.getRenderTarget();
-  const indoorLightState = { hemiIntensity: hemi.intensity, hemiColor: hemi.color.clone(), groundColor: hemi.groundColor.clone(), sunIntensity: sun.intensity, sunColor: sun.color.clone(), starsVisible: stars.visible, moonVisible: moon.visible };
-  const daylight = inOut.outdoorLight;
+  const VC = V.camera;
+  VC.position.set(wx, wy, wz); VC.up.set(0, 1, 0);
+  VC.fov = camera.fov; VC.aspect = camera.aspect; VC.near = 0.1; VC.far = camera.far; VC.updateProjectionMatrix();
+  VC.lookAt(wx + dx * 100, wy + dir.y * 100, wz + dz * 100);
+  VC.updateMatrixWorld(true);
+  const st = { bg: scene.background, ac: renderer.autoClear, hi: hemi.intensity, hc: hemi.color.clone(), gc: hemi.groundColor.clone(), si: sun.intensity, sc: sun.color.clone(), sv: stars.visible, mv: moon.visible, sp: stars.position.clone(), mp: moon.position.clone() };
+  const dl = inOut.outdoorLight;
   R.group.visible = false;
   for (const o of inHidden) o.visible = true;
   try {
-    if (daylight) { hemi.intensity = daylight.hemiIntensity; hemi.color.copy(daylight.hemiColor); hemi.groundColor.copy(daylight.groundColor); sun.intensity = daylight.sunIntensity; sun.color.copy(daylight.sunColor); stars.visible = daylight.starsVisible; moon.visible = daylight.moonVisible; }
-    renderer.setRenderTarget(V.target);
-    renderer.clear();
-    renderer.render(scene, V.camera);
+    if (dl) { hemi.intensity = dl.hemiIntensity; hemi.color.copy(dl.hemiColor); hemi.groundColor.copy(dl.groundColor); sun.intensity = dl.sunIntensity; sun.color.copy(dl.sunColor); stars.visible = dl.starsVisible; moon.visible = dl.moonVisible; }
+    stars.position.copy(VC.position); moon.position.add(VC.position).sub(camera.position);   // তারা/চাঁদ বাইরের ক্যামেরার সাথে চলবে
+    renderer.setRenderTarget(null); renderer.autoClear = true;
+    renderer.render(scene, VC);
   } finally {
-    renderer.setRenderTarget(oldTarget);
-    hemi.intensity = indoorLightState.hemiIntensity; hemi.color.copy(indoorLightState.hemiColor); hemi.groundColor.copy(indoorLightState.groundColor); sun.intensity = indoorLightState.sunIntensity; sun.color.copy(indoorLightState.sunColor); stars.visible = indoorLightState.starsVisible; moon.visible = indoorLightState.moonVisible;
+    hemi.intensity = st.hi; hemi.color.copy(st.hc); hemi.groundColor.copy(st.gc); sun.intensity = st.si; sun.color.copy(st.sc); stars.visible = st.sv; moon.visible = st.mv; stars.position.copy(st.sp); moon.position.copy(st.mp);
     for (const o of inHidden) o.visible = false;
-    R.group.visible = roomWasVisible;
+    R.group.visible = true;
   }
+  scene.background = null; renderer.autoClear = false; renderer.clearDepth();   // ব্যাকড্রপ রেখে শুধু ডেপথ মুছে ভেতরের অংশ ওপরে
+  return st;
 }
+function homeBackdropEnd(st) { scene.background = st.bg; renderer.autoClear = st.ac; }
 function drawMiniIn(c, R) {
   const S = 7, room = inside.room, T = (x, z) => [R - (x - room.ox) * S, R - (z - room.oz) * S];
   c.fillStyle = '#1c1c20'; c.fillRect(0, 0, 120, 120);
@@ -5021,7 +5032,7 @@ function drawMiniIn(c, R) {
 function setAct(k) {
   if (k === actKey) return; actKey = k;
   if (!k) { enterB.classList.remove('show'); return; }
-  const M = k === 'trade' ? { food: ['bag', 'Order'], cloth: ['bag', 'Wear'], car: ['car', 'Cars'], med: ['cross', 'Medic'], bank: ['bag', 'Bank'] }[inside.room.type] : { enter: ['door', 'Enter'], exit: ['door', 'Exit'], bed: ['cross', 'Rest'], sit: ['crouch', 'Sit'], sleep: ['cross', 'Sleep'], stand: ['jump', 'Stand'], wake: ['jump', 'Wake'] }[k];
+  const M = k === 'trade' ? { food: ['bag', 'Order'], cloth: ['bag', 'Wear'], car: ['car', 'Cars'], med: ['cross', 'Medic'], bank: ['bag', 'Bank'] }[inside.room.type] : { enter: ['door', 'Enter'], exit: ['door', 'Exit'], dive: ['jump', 'Jump Down'], bed: ['cross', 'Rest'], sit: ['crouch', 'Sit'], sleep: ['cross', 'Sleep'], stand: ['jump', 'Stand'], wake: ['jump', 'Wake'] }[k];
   enterB.innerHTML = svgW(ICONS[M[0]]) + '<span>' + M[1] + '</span>'; enterB.classList.add('show');
 }
 function fadeTo(mid) {   // স্ক্রিন কালো → মাঝখানে জায়গা বদল → আবার পরিষ্কার
@@ -5036,7 +5047,7 @@ function goIn(d) {
     const R = getRoom(d.type);
     inHidden = []; for (const o of scene.children) if (!o.isLight && o !== char.group && !o.userData.indoor && o.visible) { o.visible = false; inHidden.push(o); }
     R.group.visible = true; inside = { room: R };
-    player.x = R.ox; player.z = R.oz + R.hd - 2.2; player.y = 0; player.yaw = Math.PI; camYaw = Math.PI; spd = 0; jumping = false; vy = 0;
+    player.x = R.ox; player.z = R.oz + R.hd - 2.2; player.y = 0; player.yaw = Math.PI; camYaw = Math.PI; spd = 0; jumping = false; highDrop = false; vy = 0;
     camera.position.set(player.x, 1.8, player.z + 2.5);
     toast({ home: '🏠 Home', food: '🍔 Food Mart', cloth: '👗 Fashion Mall', car: '🚗 Auto Showroom', med: '✚ Pharmacy', bank: '🏦 Bank' }[d.type]);
   });
@@ -5049,10 +5060,28 @@ function leaveNow() {
   player.yaw = Math.atan2(d.ox, d.oz); camYaw = player.yaw; spd = 0;
   camera.position.set(player.x - Math.sin(camYaw) * 5, 2.2 + player.y, player.z - Math.cos(camYaw) * 5);
 }
+// বারান্দার রেলিং টপকে আসল ওয়ার্ল্ডে নিচে লাফ: বাড়ির সামনের ঠিক নিচের জায়গায় পড়ে (ওই জায়গা থেকেই লাইভ দৃশ্যে দেখা যেত)
+function balconyDive() {
+  if (!inside || inside.room.type !== 'home' || xfade || !inOut || !inOut.d) return;
+  const R = inside.room, d = inOut.d, B = R.bal;
+  if (!B || player.y < R.FY - 0.3) return;
+  const lx = Math.max(B.x0 + 0.5, Math.min(B.x1 - 0.5, player.x - R.ox)), lzOut = (B.z1 - R.hd) + 0.9;
+  const wx = d.x + lx * d.oz + lzOut * d.ox, wz = d.z - lx * d.ox + lzOut * d.oz;
+  stance = 'stand'; setRun(false); aimOn = false; document.getElementById('aim').classList.remove('on'); setAct(null);
+  inside.room.group.visible = false; inside = null;
+  for (const o of inHidden) o.visible = true; inHidden = [];
+  player.x = wx; player.z = wz; player.y = groundY(wx, wz) + R.FY;
+  player.yaw = Math.atan2(d.ox, d.oz); camYaw = player.yaw; spd = 0;
+  jumping = true; highDrop = true; vy = 2.2; vaulting = false; vaultT = 0; vaultGo = 0;
+  camera.position.set(wx - Math.sin(camYaw) * 6, player.y + 2.5, wz - Math.cos(camYaw) * 6);
+  inLock = performance.now() + 1500;
+  toast('🪂 Jumped down');
+}
 function doAct() {
   if (xfade || !actKey) return;
   if (actKey === 'enter' && doorHit) goIn(doorHit);
   else if (actKey === 'exit') fadeTo(leaveNow);
+  else if (actKey === 'dive') balconyDive();
   else if (actKey === 'trade') tradeAct(inside.room.type);
   else if (actKey === 'sit' || actKey === 'sleep') { if (seatHit) startRest(seatHit); }
   else if (actKey === 'stand' || actKey === 'wake') restWake = true;
@@ -5067,6 +5096,7 @@ function doorStep(now) {
   if (inside) {
     const R = inside.room, lx = player.x - R.ox, lz = player.z - R.oz;
     if (lz > R.hd - 1.1 && Math.abs(lx) < 1.3 && player.y < 1.75) k = 'exit';
+    else if (R.bal && player.y >= R.FY - 0.3 && lz > R.bal.z1 - 1.3 && Math.abs(lx) < R.bal.x1) k = 'dive';   // বারান্দার সামনের রেলিংয়ের কাছে: নিচে লাফ
     else if (R.counter && Math.hypot(lx - R.counter[0], lz - R.counter[1]) < 1.6) k = 'trade';
     else if ((seatHit = nearSeat())) k = seatHit.kind;   // 'sit' বা 'sleep'
     else if (R.bed && (!R.bedUp || player.y > 1.75) && Math.hypot(lx - R.bed[0], lz - R.bed[1]) < 1.8) k = 'bed';
@@ -5260,10 +5290,11 @@ function loop(now) {
   if (started) { extra(dt); doorStep(now); }
   if (lbOn) updateLobby(dt, now / 1000); else updateDayNight(dt, !paused);
   if (inside) indoorLight();
-  if (inside && inside.room.type === 'home') updateHomeExteriorPortal(now);
   if (mapOpen) mapCamUpdate();
   const mapOn = mapOpen && mapScene && started && !lbOn;
+  const hbd = mapOn ? null : homeBackdropBegin();
   renderer.render(mapOn ? mapScene : scene, mapOn ? mapCam : camera);
+  if (hbd) homeBackdropEnd(hbd);
   if (snapFlag) shot();
   if (!mapOpen) renderEye();
   if (started) { if (!inside) updateRoute(now); if (!mapOpen && (frameN & 1) === 0) drawMini(); if (mapOpen) drawBig(); }
