@@ -608,7 +608,7 @@ body.editing #cdrow, body.editing #cdbar { display: none !important; }
 <div id="editbar"><div id="edtxt">Drag to move · tap to select</div><div class="row"><label>Size <input id="szr" type="range" min="0.4" max="3" step="0.05" value="1"></label><label>Opacity <input id="opr" type="range" min="0.3" max="1" step="0.05" value="1"></label></div><div class="row"><button id="edflip">⇅ Flip</button><button id="edreset" style="background:#e67e22;color:#fff">↺ Reset</button><button id="edsave" style="background:#2ecc71;color:#fff">💾 Save Layout</button></div></div>
 <div id="bigmap"><canvas id="bm"></canvas>
 <div id="bmsearch"><button id="bmclose" aria-label="Back"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><span id="bmsearchtxt">Search saved places</span><span id="bmav"></span></div>
-<div id="bmchips"><button id="bmplaces">⭐ Places</button><button data-k="Shop">🛒 Shop</button><button data-k="Home">🏠 Home</button><button data-k="Port">⚓ Port</button><button data-k="Tower">🏢 Tower</button></div>
+<div id="bmchips"><button id="bmplaces">⭐ Places</button><button data-k="Shop">🛒 Shop</button><button data-k="Home">🏠 Home</button><button data-k="Port">⚓ Port</button><button data-k="Rich">🏙 Rich City</button><button data-k="Tower">🏢 Tower</button></div>
 <div id="bmright"><button id="bmlayer" class="rb cyan" aria-label="2D / 3D"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 12.5l9 5 9-5"/><path d="M3 16.5l9 5 9-5"/></svg></button><button id="bmcomp" class="rb" aria-label="North"><svg id="bmcsvg" width="26" height="26" viewBox="0 0 24 24"><path d="M12 2l4.5 10h-9z" fill="#e53935"/><path d="M12 22l4.5-10h-9z" fill="#9aa0a6"/></svg></button></div>
 <div id="bmbr"><div id="bmzoom"><button id="bmin">＋</button><button id="bmout">－</button></div><button id="bmme" class="sq" aria-label="My location"><svg width="26" height="26" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#e3ecfd"/><circle cx="12" cy="12" r="5" fill="#1a73e8"/></svg></button><button id="bmdir" class="sq teal" aria-label="Go to destination"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 9-9 9-9-9z" fill="currentColor" stroke="none"/><path d="M9 14v-3h5.5M12.5 8.5L15 11l-2.5 2.5" stroke="#0b7a85"/></svg></button></div>
 <div id="bmscale"><i id="bmscbar"></i><span id="bmsctxt"></span></div>
@@ -962,6 +962,16 @@ for (const C of CITIES) {
   C.cx = (C.x0 + C.x1) / 2; C.cz = (C.z0 + C.z1) / 2;
 }
 const PORT = { cx: 0, cz: 520, x0: -50, x1: 50, z0: 470, z1: 570 };   // ১০০×১০০ মি
+// ===== মিনি রিচ সিটি: বন্দরের পূর্ব পাশের নতুন শহর (২১০×১৭০ মি, ৫×৪ ব্লক, প্রতি ব্লক ৩০×৩০ মি) =====
+const MRC = { name: 'Mini Rich City', bn: 'মিনি রিচ সিটি', x0: 100, x1: 310, z0: 440, z1: 610,
+  xs: [105, 145, 185, 225, 265, 305], zs: [445, 485, 525, 565, 605],      // রাস্তার মাঝরেখা (xs: উত্তর-দক্ষিণ রাস্তা, zs: পূর্ব-পশ্চিম রাস্তা)
+  linkX0: 50, linkX1: 105, linkZ: 525 };                                  // বন্দর থেকে শহরে যাওয়ার সংযোগ সড়ক
+MRC.cx = (MRC.x0 + MRC.x1) / 2; MRC.cz = (MRC.z0 + MRC.z1) / 2;
+// এখানে বাড়ি/বিল্ডিং যোগ করুন: bx = ০–৪ (পশ্চিম→পূর্ব ব্লক), bz = ০–৩ (উত্তর→দক্ষিণ ব্লক), ry = ঘোরানো (০, Math.PI/2, Math.PI, -Math.PI/2), s = স্কেল,
+// dx/dz = ব্লকের কেন্দ্র থেকে সরানো (মি), w/d/h = ফুটপ্রিন্ট ও উচ্চতা (সংঘর্ষ-বাক্সের জন্য), file = models/FILE.glb
+const MRC_BUILDINGS = [
+  { file: 'apartment-block-01', bx: 1, bz: 1, ry: 0, w: 7.7, d: 6.9, h: 13.4, name: 'Apartment Block 01' },
+];
 const MX0 = -470, MX1 = 1710, MZ0 = -740, MZ1 = 720;                  // দুনিয়ার সীমা
 const HW_W = 16;                                                      // ৪ লেন হাইওয়ের প্রস্থ
 const hwElev = t => 34 * Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, t))), 1.5);
@@ -1001,6 +1011,7 @@ function rawH(x, z) {
   let dC = 1e9, cover = 0;
   for (const c of CITIES) { const d = rd(x, z, c.x0, c.x1, c.z0, c.z1); dC = Math.min(dC, d); cover = Math.max(cover, 1 - d / 170); }
   const dP = rd(x, z, PORT.x0, PORT.x1, PORT.z0, PORT.z1); dC = Math.min(dC, dP); cover = Math.max(cover, 1 - dP / 60);
+  const dM = rd(x, z, MRC.x0, MRC.x1, MRC.z0, MRC.z1); dC = Math.min(dC, dM); cover = Math.max(cover, 1 - dM / 90);   // মিনি রিচ সিটির সমতল ভূমি
   const h1 = nearPoly(HWY, x, z), h2 = nearPoly(PRD, x, z);
   cover = Math.max(cover, 1 - h1.d / 330, 1 - h2.d / 150);
   const n = fbmz(x / 180, z / 180), ridge = 1 - Math.abs(2 * fbmz(x / 260 + 50, z / 260) - 1);
@@ -1121,6 +1132,7 @@ function buildVegetation() {
     const px = x + (rnd() - 0.5) * STEP, pz = z + (rnd() - 0.5) * STEP, h = terrainAt(px, pz);
     if (h < 1.0 || h > 54) continue;
     if (rd(px, pz, PORT.x0, PORT.x1, PORT.z0, PORT.z1) < 22) continue;
+    if (rd(px, pz, MRC.x0, MRC.x1, MRC.z0, MRC.z1) < 22) continue;
     let near = false; for (const c of CITIES) if (rd(px, pz, c.x0, c.x1, c.z0, c.z1) < 20) { near = true; break; }
     if (near || nearPoly(HWY, px, pz).d < 24 || nearPoly(PRD, px, pz).d < 16) continue;
     if (Math.hypot(terrainAt(px + 3, pz) - terrainAt(px - 3, pz), terrainAt(px, pz + 3) - terrainAt(px, pz - 3)) / 6 > 0.8) continue;
@@ -1316,6 +1328,67 @@ function dressBuilding(ty, cx, cz, gs, w, d, h) {
   palm(-w / 2 - 2.2, -1, 1);
 }
 
+function buildMRC() {
+  const W = MRC.x1 - MRC.x0, D = MRC.z1 - MRC.z0;
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(W + 30, D + 30), new THREE.MeshStandardMaterial({ color: 0x9a9c94, roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2; ground.position.set(MRC.cx, 0.005, MRC.cz); ground.receiveShadow = true; scene.add(ground);
+  const road = (w, d, x, z, y, tex, rx, rz) => {
+    const t = tex.clone(); t.repeat.set(rx, rz); t.needsUpdate = true;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), roadMats.push(new THREE.MeshStandardMaterial({ map: t, roughness: 0.95 })) && roadMats[roadMats.length - 1]);
+    m.rotation.x = -Math.PI / 2; m.position.set(x, y, z); m.receiveShadow = true; scene.add(m);
+  };
+  for (const z of MRC.zs) road(W, ROAD_W, MRC.cx, z, 0.02, roadTexH, W / 8, 1);
+  for (const x of MRC.xs) road(ROAD_W, D, x, MRC.cz, 0.03, roadTexV, 1, D / 8);
+  road(MRC.linkX1 - MRC.linkX0, ROAD_W, (MRC.linkX0 + MRC.linkX1) / 2, MRC.linkZ, 0.025, roadTexH, (MRC.linkX1 - MRC.linkX0) / 8, 1);   // বন্দর ↔ শহর
+  const parkAt = (i, j) => (i === 0 && j === 3) || (i === 4 && j === 0);
+  for (let i = 0; i < MRC.xs.length - 1; i++) for (let j = 0; j < MRC.zs.length - 1; j++) addSidewalk(MRC.xs[i] + 20, MRC.zs[j] + 20, parkAt(i, j));
+  // প্রবেশদ্বার-তোরণ: বন্দর থেকে আসা সড়কের ওপর "MINI RICH CITY" সাইনবোর্ড
+  const gx = 78, gz = MRC.linkZ, navy = new THREE.MeshStandardMaterial({ color: 0x1c2230, roughness: 0.6 }), gold = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.4, metalness: 0.5 });
+  for (const sz of [-1, 1]) {
+    const p = new THREE.Mesh(new THREE.BoxGeometry(1.4, 11, 1.4), navy); p.position.set(gx, 5.5, gz + sz * 9); p.castShadow = true; scene.add(p);
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.5, 1.8), gold); cap.position.set(gx, 11.2, gz + sz * 9); scene.add(cap);
+    boxes.push({ minX: gx - 0.7, maxX: gx + 0.7, minZ: gz + sz * 9 - 0.7, maxZ: gz + sz * 9 + 0.7, h: 11, nomap: true });
+  }
+  const beam = new THREE.Mesh(new THREE.BoxGeometry(1.2, 3.4, 20), navy); beam.position.set(gx, 10, gz); beam.castShadow = true; scene.add(beam);
+  const signTex = canvasTex(1024, 180, (g, w, h) => {
+    g.fillStyle = '#1c2230'; g.fillRect(0, 0, w, h); g.strokeStyle = '#d4af37'; g.lineWidth = 8; g.strokeRect(8, 8, w - 16, h - 16);
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#f5d76e'; g.font = 'bold 92px sans-serif'; g.fillText('MINI RICH CITY', w / 2, h * 0.42);
+    g.fillStyle = '#ffffff'; g.font = 'bold 40px sans-serif'; g.fillText('মিনি রিচ সিটি', w / 2, h * 0.8);
+  });
+  signTex.wrapS = signTex.wrapT = THREE.ClampToEdgeWrapping;
+  for (const sd of [-1, 1]) {
+    const pl = new THREE.Mesh(new THREE.PlaneGeometry(19.2, 3.2), new THREE.MeshBasicMaterial({ map: signTex }));
+    pl.position.set(gx + sd * 0.65, 10, gz); pl.rotation.y = sd * Math.PI / 2; scene.add(pl);
+  }
+  loadMRCBuildings();
+}
+// মিনি রিচ সিটির বিল্ডিং: models/FILE.glb (Draco হলেও চলবে); ফাইল না পেলে একটা সাধারণ ইটের বাক্স দেখাবে
+function loadMRCBuildings() {
+  for (const def of MRC_BUILDINGS) {
+    const sc = def.s || 1, ry = def.ry || 0, cx = MRC.xs[def.bx] + 20 + (def.dx || 0), cz = MRC.zs[def.bz] + 20 + (def.dz || 0), top = 0.15;
+    const q = Math.abs(Math.sin(ry)) > 0.7, hw = (q ? def.d : def.w) * sc / 2, hd = (q ? def.w : def.d) * sc / 2;
+    boxes.push({ minX: cx - hw, maxX: cx + hw, minZ: cz - hd, maxZ: cz + hd, h: top + def.h * sc, name: def.name });
+    const urls = ['models/' + def.file + '.glb', def.file + '.glb'], why = [];   // আগে models/ ফোল্ডার, না পেলে index.html-এর পাশের ফোল্ডার
+    const fallback = () => {
+      const msg = 'Building "' + def.file + '.glb" load failed: ' + why.join(' | ');
+      console.error(msg); try { toast('⚠ ' + def.file + '.glb লোড হয়নি — Console দেখুন'); } catch (e) {}
+      const m = new THREE.Mesh(new THREE.BoxGeometry(hw * 2, def.h * sc, hd * 2), new THREE.MeshStandardMaterial({ color: 0xb04a35, roughness: 0.9, emissive: 0x2a0d08 }));
+      m.position.set(cx, top + def.h * sc / 2, cz); m.castShadow = true; m.receiveShadow = true; scene.add(m);
+    };
+    const tryLoad = i => {
+      if (i >= urls.length) { fallback(); return; }
+      gltfLoader.load(urls[i], g => {
+        const o = g.scene; o.scale.setScalar(sc); o.rotation.y = ry; o.updateMatrixWorld(true);
+        const b = new THREE.Box3().setFromObject(o);
+        o.position.x += cx - (b.min.x + b.max.x) / 2; o.position.z += cz - (b.min.z + b.max.z) / 2; o.position.y += top - b.min.y;
+        o.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
+        scene.add(o);
+        console.log('MRC building loaded:', urls[i]);
+      }, undefined, err => { why.push(urls[i] + ' → ' + ((err && (err.message || err.type)) || 'error')); tryLoad(i + 1); });
+    };
+    tryLoad(0);
+  }
+}
 function buildWorld() {
   buildTerrain();
   CITIES.forEach(C => {
@@ -1334,7 +1407,7 @@ function buildWorld() {
       v.rotation.x = -Math.PI / 2; v.position.set(C.ox + i * SPACING, 0.03, C.cz); v.receiveShadow = true; scene.add(v);
     }
   });
-  buildHighway(); buildPort(); buildVegetation();
+  buildHighway(); buildPort(); buildMRC(); buildVegetation();
   for (const CY of CITIES) {
   let ci = 0; const nb = Math.round(CY.nx * CY.nz * 2 / 3), SPC = { [Math.floor(nb * 0.2)]: 'cloth', [Math.floor(nb * 0.4)]: 'car', [Math.floor(nb * 0.6)]: 'med', [Math.floor(nb * 0.8)]: 'bank' };
   for (let kx = CY.kx0; kx < CY.kx0 + CY.nx; kx++) {
@@ -1496,6 +1569,10 @@ function groundY(x, z) {
       const mx = (((x - c.ox) % 40) + 40) % 40, mz = (((z - c.oz) % 40) + 40) % 40;
       return (mx > 5 && mx < 35 && mz > 5 && mz < 35) ? 0.15 : 0;
     }
+  }
+  if (x > MRC.x0 + 5 && x < MRC.x1 - 5 && z > MRC.z0 + 5 && z < MRC.z1 - 5) {
+    const mx = (((x - MRC.xs[0]) % 40) + 40) % 40, mz = (((z - MRC.zs[0]) % 40) + 40) % 40;
+    return (mx > 5 && mx < 35 && mz > 5 && mz < 35) ? 0.15 : 0;
   }
   return Math.max(terrainAt(x, z), -1);
 }
@@ -2684,6 +2761,16 @@ function bakeMap(K = BK, flat = false) {
     c.strokeStyle = SAT.road; c.lineWidth = ROAD_W * K; c.stroke();
     c.strokeStyle = SAT.roadHi; c.lineWidth = Math.max(0.6, ROAD_W * K * 0.35); c.stroke();
   }
+  {   // মিনি রিচ সিটির মাটি ও রাস্তা
+    const r0 = rectP(MRC.x0 - 6, MRC.z0 - 6, MRC.x1 + 6, MRC.z1 + 6);
+    c.fillStyle = SAT.cityGround; c.fillRect(...r0);
+    c.beginPath();
+    for (const z of MRC.zs) { const a = bp(MRC.x0, z), b = bp(MRC.x1, z); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); }
+    for (const x of MRC.xs) { const a = bp(x, MRC.z0), b = bp(x, MRC.z1); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); }
+    { const a = bp(MRC.linkX0, MRC.linkZ), b = bp(MRC.linkX1, MRC.linkZ); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); }
+    c.strokeStyle = SAT.road; c.lineWidth = ROAD_W * K; c.stroke();
+    c.strokeStyle = SAT.roadHi; c.lineWidth = Math.max(0.6, ROAD_W * K * 0.35); c.stroke();
+  }
   for (const k of blocksList) {
     const hs = k.park ? 13 : 15;
     c.fillStyle = k.park ? SAT.park : (hash2(Math.round(k.cx), Math.round(k.cz)) > 0.5 ? '#7b7568' : '#857d6d');
@@ -2727,6 +2814,7 @@ function drawLayer(c, T, big, size) {
     const z3 = Math.max(0.9, Math.min(2.2, size / 300));
     for (const C of CITIES) { lab(C.bn, C.cx, C.cz + 8, 20 * z3, '#fff3b0'); lab(C.name + ' · ' + Math.round(C.x1 - C.x0 - 10) + '×' + Math.round(C.z1 - C.z0 - 10) + ' m', C.cx, C.cz - 12, 11 * z3); }
     lab('বন্দর', PORT.cx, PORT.cz + 4, 16 * z3, '#bdf3ff'); lab('Port · 100 m', PORT.cx, PORT.cz - 12, 10 * z3);
+    lab(MRC.bn, MRC.cx, MRC.cz + 6, 16 * z3, '#ffe9a8'); lab(MRC.name, MRC.cx, MRC.cz - 12, 10 * z3);
     const mid = HWY.pts[Math.floor(HWY.pts.length / 2)]; lab('⛰ 4-lane Hill Highway', mid.x, mid.z + 28, 11 * z3, '#ffe08a');
   }
 }
@@ -2829,6 +2917,7 @@ function drawBig() {
   if (bmDist > 320) {   // বেশি দূর থেকে দেখলে শহর/বন্দরের নাম
     for (const C of CITIES) { const q = bmProj(C.cx, 20, C.cz); if (q) { lab(C.bn, q, 22, '#ffffff'); lab(C.name, [q[0], q[1] + 16], 12); } }
     const q = bmProj(PORT.cx, 10, PORT.cz); if (q) lab('বন্দর · Port', q, 16, '#bdf3ff');
+    const qm = bmProj(MRC.cx, 20, MRC.cz); if (qm) { lab(MRC.bn, qm, 18, '#ffe9a8'); lab(MRC.name, [qm[0], qm[1] + 16], 12); }
     const m = HWY.pts[Math.floor(HWY.pts.length / 2)], h = bmProj(m.x, hwElev(m.s / HWY.len) * MAPY + 14, m.z); if (h) lab('⛰ Hill Highway', h, 13, '#ffe08a');
   }
   if (route.length > 1) {   // পথের রেখা (সাদা কিনারাসহ নীল)
@@ -2899,6 +2988,7 @@ function setMarker(x, z) {
   for (const C of CITIES) if (x > C.x0 && x < C.x1 && z > C.z0 && z < C.z1) name = C.name + ' road';
   if (nearPoly(HWY, x, z).d < 12) name = 'Hill Highway'; else if (nearPoly(PRD, x, z).d < 9) name = 'Port Road';
   if (x > PORT.x0 && x < PORT.x1 && z > PORT.z0 && z < PORT.z1) name = 'Port';
+  if (x > MRC.x0 && x < MRC.x1 && z > MRC.z0 && z < MRC.z1) name = 'Mini Rich City';
   for (const b of boxes) if (b.name && x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ) name = b.name;
   for (const k of parks) if (Math.abs(x - k.x) < 13 && Math.abs(z - k.z) < 13) name = 'Park';
   for (const k of compounds) if (Math.abs(x - k.cx) < 12.6 && Math.abs(z - k.cz) < 12.6) { if (name.endsWith('road')) name = 'House yard'; x = k.out[0]; z = k.out[1]; }
@@ -2951,7 +3041,7 @@ function nearestNamed(nm) {
   return best;
 }
 document.querySelectorAll('#bmchips [data-k]').forEach(b => b.addEventListener('click', () => {
-  const k = b.dataset.k, pt = k === 'Port' ? [PORT.cx, PORT.cz] : nearestNamed(k === 'Tower' ? 'Office Tower' : k);
+  const k = b.dataset.k, pt = k === 'Port' ? [PORT.cx, PORT.cz] : k === 'Rich' ? [MRC.cx, MRC.cz] : nearestNamed(k === 'Tower' ? 'Office Tower' : k);
   if (!pt) { toast('Nothing found'); return; }
   setMarker(pt[0], pt[1]); bmFollow = false; bmCx = marker.x; bmCz = marker.z; bmDist = Math.min(bmDist, 260); clampBm();
 }));
@@ -2963,6 +3053,9 @@ function drawDetail(c, T) {   // বেশি জুমে পরিষ্কা
     for (let j = C.kz0; j <= C.kz0 + C.nz; j++) { const a = T(C.x0, C.oz + j * SPACING), b = T(C.x1, C.oz + j * SPACING); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); }
     for (let i = C.kx0; i <= C.kx0 + C.nx; i++) { const a = T(C.ox + i * SPACING, C.z0), b = T(C.ox + i * SPACING, C.z1); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); }
   }
+  for (const z of MRC.zs) { const a = T(MRC.x0, z), b = T(MRC.x1, z); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); }
+  for (const x of MRC.xs) { const a = T(x, MRC.z0), b = T(x, MRC.z1); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); }
+  { const a = T(MRC.linkX0, MRC.linkZ), b = T(MRC.linkX1, MRC.linkZ); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); }
   c.strokeStyle = SAT.road; c.lineWidth = ROAD_W * bmS; c.stroke();
   c.strokeStyle = SAT.roadHi; c.lineWidth = Math.max(1, ROAD_W * bmS * 0.35); c.stroke();
   for (const [P, w, fill] of [[HWY, HW_W, SAT.hwyFill], [PRD, 10, '#e8d49a']]) {
