@@ -1795,11 +1795,11 @@ const gltfLoader = new GLTFLoader();
 // নতুন চরিত্র যোগ করতে: ফাইলটা models/ ফোল্ডারে রাখুন (যেমন models/soldier.glb), তারপর নিচে একটা লাইন যোগ করুন।
 // id = যেকোনো ইংরেজি নাম (ছোট হাতের), files = models/ ফোল্ডারের ফাইলের নাম (.glb ছাড়া; একাধিক নাম দিলে প্রথম যেটা পাবে)
 const CHARACTERS = [
-  { id: 'boy', gender: 'boy', name: 'Boy 1', icon: '👦', files: ['boy', 'x boy', 'x_boy', 'xboy'] },
+  { id: 'boy', gender: 'boy', name: 'Boy 1', icon: '👦', files: ['x boy', 'xboy', 'x_boy', 'boy'] },
   { id: 'bc2', gender: 'boy', name: 'Boy 2', icon: '👦', files: ['bc2'] },
   { id: 'bc3', gender: 'boy', name: 'Boy 3', icon: '👦', files: ['bc3'] },
   { id: 'bc4', gender: 'boy', name: 'Boy 4', icon: '👦', files: ['bc4'] },
-  { id: 'girl', gender: 'girl', name: 'Girl 1', icon: '👧', files: ['girl', 'Y girl', 'y girl', 'Y_girl', 'ygirl'] },
+  { id: 'girl', gender: 'girl', name: 'Girl 1', icon: '👧', files: ['Y girl', 'ygirl', 'Y_girl', 'y girl', 'girl'] },
   { id: 'gc2', gender: 'girl', name: 'Girl 2', icon: '👧', files: ['gc2'] },
   { id: 'gc3', gender: 'girl', name: 'Girl 3', icon: '👧', files: ['gc3'] },
   { id: 'gc4', gender: 'girl', name: 'Girl 4', icon: '👧', files: ['gc4'] },
@@ -1832,7 +1832,7 @@ const ANIMS = {
   idle: 'Idle', walk: 'Walk', run: 'Run',
   jump: 'Jump', walljump: 'WallJump',
   crouchidle: 'crouchidle', crouchwalk: 'crouch', prone: 'prone',
-  punch: 'punch', kick: 'kick', fire: 'firing', fightidle: 'fightidel',
+  punch: 'punch', kick: 'kick', fire: 'firing',
   // বসা / ঘুমানো (models/ ফোল্ডারে এই নামের .fbx ফাইল)
   standtosit: 'standtosit', sittostand: 'sittostand', lyingdown: 'lyingdown', sleepingidle: 'sleepingidle',
 // গাড়িতে ওঠা / নামা (models/entercar.fbx, models/exitcar.fbx)
@@ -2573,6 +2573,14 @@ function update(dt) {
       want.copy(safe);
     }
   }
+  if (inside) {   // ঘরের ভেতরে: প্লেয়ার থেকে ক্যামেরা পর্যন্ত রেখা ধরে দেয়ালের আগে থামা (দেয়াল ভেদ করবে না)
+    let bx = null, bz = null;
+    for (let i = 1; i <= 24; i++) {
+      const t = i / 24, x = player.x + (want.x - player.x) * t, z = player.z + (want.z - player.z) * t;
+      if (homeCamOK(inside.room, x, z)) { bx = x; bz = z; } else if (bx !== null) break;
+    }
+    if (bx !== null) { want.x = bx; want.z = bz; }
+  }
   camera.position.lerp(want, 1 - Math.exp(-dt * (dragId !== null ? 30 : 6)));
   if (!inside && blocked(camera.position.x, camera.position.z, -9)) {
     camera.position.copy(want);
@@ -2580,8 +2588,11 @@ function update(dt) {
   if (inside) {   // ঘরের ভেতরে ক্যামেরা দেয়ালের বাইরে যেতে পারে না
     const R = inside.room, p = camera.position;
     const B0 = R.bal, onBal = !!B0 && player.y >= R.FY - 0.3 && player.z - R.oz > R.hd + 0.1;
-    if (onBal) { p.x = Math.max(R.ox + B0.x0 + 0.3, Math.min(R.ox + B0.x1 - 0.3, p.x)); p.z = Math.max(R.oz + R.hd + 0.5, Math.min(R.oz + B0.z1 - 0.3, p.z)); }
-    else { p.x = Math.max(R.ox - R.hw + 0.35, Math.min(R.ox + R.hw - 0.35, p.x)); p.z = Math.max(R.oz - R.hd + 0.35, Math.min(R.oz + R.hd - 0.35, p.z)); }
+    if (!homeCamOK(R, p.x, p.z)) {   // লার্প করতে গিয়ে দেয়ালে ঢুকলে নিরাপদ জায়গায় ফেরানো
+      if (homeCamOK(R, want.x, want.z)) { p.x = want.x; p.z = want.z; }
+      else if (onBal) { p.x = Math.max(R.ox + B0.x0 + 0.3, Math.min(R.ox + B0.x1 - 0.3, p.x)); p.z = Math.max(R.oz + R.hd + 0.5, Math.min(R.oz + B0.z1 - 0.3, p.z)); }
+      else { p.x = Math.max(R.ox - R.hw + 0.35, Math.min(R.ox + R.hw - 0.35, p.x)); p.z = Math.max(R.oz - R.hd + 0.35, Math.min(R.oz + R.hd - 0.35, p.z)); }
+    }
     let lo = 0.5, hi = R.wh - 0.3;
     if (R.FY) {
       const S = R.stair, B = R.bal, lx = p.x - R.ox, lz = p.z - R.oz, inHole = lx > S.x0 - 0.2 && lx < S.x1 + 0.2 && lz > S.hz0 && lz < S.hz1;
@@ -4802,6 +4813,7 @@ function getRoom(type) {
     plant(6.1, HD + 0.9, 1.4); plant(-6.1, HD + 0.9, 1.4); plant(6.1, HD + 4.0, 1.3); plant(-6.1, HD + 4.0, 1.3); plant(0, HD + 4.2, 1.1);
     for (let i = bc0; i < R.cols.length; i++) R.cols[i].f = 1; for (let i = bp0; i < R.plan.length; i++) if (R.plan[i]) R.plan[i][4] = 1;
     // বারান্দার বাইরের দৃশ্য: ঘাসের উঠান, পাঁচিল, গাছ, দূরের শহর
+    const yc0 = L.children.length;
     const grass = new THREE.Mesh(new THREE.PlaneGeometry(260, 260), new THREE.MeshBasicMaterial({ color: 0x5c9c4a })); grass.rotation.x = -Math.PI / 2; grass.position.set(0, -0.15, HD + 60); L.add(grass);
     k.b(2.6, 0.04, 24, 0, -0.1, HD + 12, '#b9b3a6'); k.b(70, 2.1, 0.3, 0, 0.95, HD + 24, '#d8cbb0');
     for (const [tx, tz, s] of [[-9, 9, 1.3], [10, 10.5, 1.5], [-14, 13, 1.1], [15, 14, 1.2], [-6, 19, 1.4], [8, 20, 1.1]]) { k.c(0.25 * s, 3.2 * s, tx, 1.5 * s, tz, '#7a5230'); k.s(1.9 * s, 1.6 * s, 1.9 * s, tx, 3.6 * s, tz, '#3fa34d'); k.s(1.4 * s, 1.2 * s, 1.4 * s, tx + 0.5, 4.5 * s, tz - 0.2, '#57b84f'); }
@@ -4833,6 +4845,7 @@ function getRoom(type) {
         const bm = new THREE.Mesh(bgeo, new THREE.MeshBasicMaterial({ color: tints[i % tints.length], map: t2, fog: false }));
         bm.scale.set(w2, h2, d2); bm.position.set(Math.sin(a) * r, h2 / 2 - 0.15, Math.cos(a) * r); bm.rotation.y = a; L.add(bm);
       } }
+    R.fakeYard = L.children.slice(yc0);   // নকল উঠান/গাছ/স্কাইলাইন: আসল পোর্টাল চালু থাকলে লুকানো হবে
     // বারান্দার জন্য লাইভ আউটডোর পোর্টাল: মূল গেম-ওয়ার্ল্ডের ক্যামেরা-ভিউ এখানে দেখাবে
     const outdoorTarget = new THREE.WebGLRenderTarget(640, 360, { depthBuffer: true, stencilBuffer: false });
     outdoorTarget.texture.colorSpace = THREE.SRGBColorSpace;
@@ -4928,6 +4941,16 @@ function inBlocked(x, z, y) {
   for (const b of R.cols) if ((b.f === undefined || (b.f === 1) === up) && x > b.minX - PR && x < b.maxX + PR && z > b.minZ - PR && z < b.maxZ + PR) return true;
   return false;
 }
+// ক্যামেরা কোথায় থাকতে পারবে: ঘরের ভেতর; দোতলায় হলে দরজার ফাঁক; প্লেয়ার বারান্দায় থাকলে বারান্দা
+function homeCamOK(R, x, z) {
+  const M = 0.35, lx = x - R.ox, lz = z - R.oz;
+  if (lx > -R.hw + M && lx < R.hw - M && lz > -R.hd + M && lz < R.hd - M) return true;
+  const B = R.bal;
+  if (!B || !R.FY || player.y < R.FY - 0.3) return false;
+  if (lx > B.g0 + M && lx < B.g1 - M && lz >= R.hd - M && lz <= R.hd + 0.5) return true;   // দরজার ফাঁক
+  const onBal = player.z - R.oz > R.hd + 0.1;
+  return onBal && lx > B.x0 + 0.3 && lx < B.x1 - 0.3 && lz >= R.hd + 0.5 && lz < B.z1 - 0.3;
+}
 function indoorLight() {   // ভেতরে সবসময় উজ্জ্বল আলো (দিন-রাত নির্বিশেষে), তারা/চাঁদ বন্ধ
   hemi.intensity = 1.3; hemi.color.set(0xfff3e0); hemi.groundColor.set(0xb9a58d);
   sun.intensity = 0.45; sun.color.set(0xfff0d8); stars.visible = false; moon.visible = false;
@@ -4938,7 +4961,17 @@ function updateHomeExteriorPortal(now) {
   if (!V || !R.bal) return;
   const onBal = player.y >= R.FY - 0.3 && player.z - R.oz > R.hd + 0.1;
   V.screen.visible = onBal;
-  if (!onBal || now - V.last < 120) return;
+  if (R.fakeYard) for (const o of R.fakeYard) o.visible = !onBal;
+  if (!onBal) return;
+  {   // পর্দা প্রতি ফ্রেমে ক্যামেরার সামনে ঠিক ফ্রাস্টামের মাপে বসে (আগে ১২০ms পরপর লাফিয়ে সরত)
+    const dn = new THREE.Vector3(); camera.getWorldDirection(dn);
+    const hh = 2 * 25 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.04;
+    V.screen.scale.set(hh * camera.aspect / 56, hh / 31.5, 1);
+    V.screen.position.set(camera.position.x - R.ox + dn.x * 25, camera.position.y + dn.y * 25, camera.position.z - R.oz + dn.z * 25);
+    V.screen.quaternion.copy(camera.quaternion);
+    V.screen.updateMatrixWorld(true);
+  }
+  if (now - V.last < 70) return;
   V.last = now;
   const d = inOut.d, dir = new THREE.Vector3();
   camera.getWorldDirection(dir);
@@ -4951,6 +4984,7 @@ function updateHomeExteriorPortal(now) {
   const dz = -dir.x * d.ox + dir.z * d.oz;
   V.camera.position.set(wx, wy, wz);
   V.camera.up.set(0, 1, 0);
+  V.camera.fov = camera.fov; V.camera.aspect = camera.aspect; V.camera.updateProjectionMatrix();
   V.camera.lookAt(wx + dx * 100, wy + dir.y * 100, wz + dz * 100);
   V.camera.updateMatrixWorld(true);
   // ঘরের মডেল সাময়িক লুকিয়ে মূল শহর/রাস্তা/বাড়ি রেন্ডার করে আবার আগের অবস্থা ফিরিয়ে আনা
@@ -4970,10 +5004,6 @@ function updateHomeExteriorPortal(now) {
     for (const o of inHidden) o.visible = false;
     R.group.visible = roomWasVisible;
   }
-  // পোর্টাল-স্ক্রিনটি প্লেয়ারের ক্যামেরার সামনে রাখি, যাতে বারান্দা থেকে আসল বাইরের দৃশ্য দেখা যায়
-  V.screen.position.set(camera.position.x - R.ox + dir.x * 25, camera.position.y + dir.y * 25, camera.position.z - R.oz + dir.z * 25);
-  V.screen.lookAt(camera.position);
-  V.screen.updateMatrixWorld(true);
 }
 function drawMiniIn(c, R) {
   const S = 7, room = inside.room, T = (x, z) => [R - (x - room.ox) * S, R - (z - room.oz) * S];
