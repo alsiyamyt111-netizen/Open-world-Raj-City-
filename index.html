@@ -693,7 +693,6 @@ let nightK = 0;           // 0 = পুরো দিন, 1 = গভীর রা
 const sstep = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const interp1 = (x, xs, ys) => { for (let i = 0; i < xs.length - 1; i++) if (x <= xs[i + 1]) { const t = (x - xs[i]) / (xs[i + 1] - xs[i]); return ys[i] + (ys[i + 1] - ys[i]) * t; } return ys[ys.length - 1]; };
 const roadMats = [], wallMats = [];
-const mrcWindowMats = []; // মিনি রিচ সিটির কাচের ভবনের রাতের জানালার আলো
 const skyDay = new THREE.Color(0x8fb6e0), skyDusk = new THREE.Color(0xe8905a), skyNight = new THREE.Color(0x050914), skyTmp = new THREE.Color();
 const hemiSkyD = new THREE.Color(0xcfe3ff), hemiSkyN = new THREE.Color(0x2a3a66), hemiGrD = new THREE.Color(0x6a8a50), hemiGrN = new THREE.Color(0x141a14);
 const sunDayCol = new THREE.Color(0xffd9a8), sunDuskCol = new THREE.Color(0xff8a4a), moonLightCol = new THREE.Color(0x8fa8ff);
@@ -728,7 +727,6 @@ function updateDayNight(dt, advance) {
   // ভেজা রাস্তা: রাতে রাস্তা চকচকে হয়ে বাতির আলো প্রতিফলিত করে; বাড়ির জানালা জ্বলে
   for (const m of roadMats) { m.roughness = 0.95 - 0.8 * nightK; m.metalness = 0.2 * nightK; }
   for (const m of wallMats) m.emissiveIntensity = 1.3 * nightK;
-  for (const m of mrcWindowMats) m.emissiveIntensity = 1.25 * nightK;
   const day = 1 - nightK;
   // আকাশ ও কুয়াশার রং
   if (el > 0) skyTmp.copy(skyDusk).lerp(skyDay, sstep(0, 0.4, el)); else skyTmp.copy(skyDay).lerp(skyDusk, sstep(-0.5, 0, el)).lerp(skyNight, nightK);
@@ -906,7 +904,7 @@ const compBoxes = [], compCaps = [], compPlants = [], compounds = [];
 const wallCols = ['#c97b5a', '#d8cbb0', '#b8bdc4', '#e4d5a8', '#a86f4a', '#e9e2d0'];
 const flowerCols = ['#ff4d6d', '#ffd23f', '#ffffff', '#c77dff', '#ff9f1c', '#ff6fb5'];
 const leafCols = ['#2f8f3f', '#3fa34d', '#57b84f', '#4c9a3a'];
-function addCompound(cx, cz, gs, w, d, shop, hasGarage, enterable, gateWidth = 2.2) {
+function addCompound(cx, cz, gs, w, d, shop, hasGarage, enterable) {
   const C = [1, 0, -1, 0][gs], S = [0, 1, 0, -1][gs], Y0 = 0.15;
   const rc = (lx, lz) => [cx + lx * C + lz * S, cz - lx * S + lz * C];
   const rect = (lx0, lz0, lx1, lz1) => {
@@ -919,7 +917,7 @@ function addCompound(cx, cz, gs, w, d, shop, hasGarage, enterable, gateWidth = 2
     if (solid) boxes.push({ ...r, h: y1, ...(name ? { name } : {}) });
   };
   const cap = (lx, lz, y, r, color) => { const q = rc(lx, lz); compCaps.push({ p: [q[0], Y0 + y, q[1]], s: [r, r, r], c: color }); };
-  const wc = pick(wallCols), HW = 12.5, T = 0.3, WH = 2.1, G = gateWidth;
+  const wc = pick(wallCols), HW = 12.5, T = 0.3, WH = 2.1, G = 2.2;
   // পাঁচিল (সামনে গেটের ফাঁক)
   box(-HW, -HW, HW, -HW + T, 0, WH, wc, true);
   box(-HW, -HW, -HW + T, HW, 0, WH, wc, true);
@@ -1011,7 +1009,7 @@ function finalizeCompounds() {
 function addPalaceCompound(cx, cz, gs) {
   const C = [1, 0, -1, 0][gs], S = [0, 1, 0, -1][gs], ry = Math.atan2(S, C), Y0 = 0.15;
   const rc = (lx, lz) => [cx + lx * C + lz * S, cz - lx * S + lz * C];
-  const HW = 14.0, T = 0.35, WH = 2.7, GBIG = 3.2, GSML = 0.75, GSML_X = HW - 3.5;
+  const HW = 16.5, T = 0.35, WH = 2.7, GBIG = 4.4, GSML = 1.0, GSML_X = HW - 4.5;
   const pushWallBox = (minXl, minZl, maxXl, maxZl, y0, y1, color) => {
     const a = rc(minXl, minZl), b = rc(maxXl, maxZl);
     const r = { minX: Math.min(a[0], b[0]), maxX: Math.max(a[0], b[0]), minZ: Math.min(a[1], b[1]), maxZ: Math.max(a[1], b[1]) };
@@ -1020,7 +1018,14 @@ function addPalaceCompound(cx, cz, gs) {
   };
   const cap = (lx, lz, y, r, color) => { const q = rc(lx, lz); compCaps.push({ p: [q[0], Y0 + y, q[1]], s: [r, r, r], c: color }); };
   const B = (lx, y, lz, sx, sy, sz, color) => { const q = rc(lx, lz); compBoxes.push({ p: [q[0], Y0 + y, q[1]], s: [sx, sy, sz], ry, c: color }); };
-  const SOL = (a0, b0, a1, b1, hh) => { const a = rc(a0, b0), b = rc(a1, b1); boxes.push({ minX: Math.min(a[0], b[0]), maxX: Math.max(a[0], b[0]), minZ: Math.min(a[1], b[1]), maxZ: Math.max(a[1], b[1]), h: hh, name: 'Palace' }); };
+  const SOL = (a0, b0, a1, b1, hh) => {
+    // সামনের মাঝখানে দরজার জন্য ২.৬ মিটার খোলা রেখে চারপাশে collision wall
+    const doorHalf = 1.3, front = b1, back = b0;
+    const addSolid = (x0,z0,x1,z1) => { const a=rc(x0,z0), b=rc(x1,z1); boxes.push({ minX:Math.min(a[0],b[0]), maxX:Math.max(a[0],b[0]), minZ:Math.min(a[1],b[1]), maxZ:Math.max(a[1],b[1]), h:hh, name:'Palace' }); };
+    addSolid(a0, back, a1, front - 1.4);
+    addSolid(a0, front - 1.4, -doorHalf, front);
+    addSolid(doorHalf, front - 1.4, a1, front);
+  };
   // চারপাশে উঁচু পাঁচিল — সামনের দেয়ালে বড় গেট (মাঝে) ও ছোট গেট (পাশে) এর জন্য দুটো ফাঁক
   pushWallBox(-HW, -HW, HW, -HW + T, 0, WH, '#f1ead6');
   pushWallBox(-HW, -HW, -HW + T, HW, 0, WH, '#f1ead6');
@@ -1043,13 +1048,26 @@ function addPalaceCompound(cx, cz, gs) {
   { const q = rc(GSML_X, HW - T / 2); compBoxes.push({ p: [q[0], Y0 + 1.1, q[1]], s: [GSML * 2 + 0.3, 2.2, 0.07], ry, c: '#5a4a32' });
     pushWallBox(GSML_X - GSML - 0.15, HW - T, GSML_X + GSML + 0.15, HW - T + 0.08, WH - 0.02, WH + 0.5, '#d4af37'); }
   // ---- মূল প্রাসাদ ভবন: দোতলা, কলাম, বড় কাচের জানালা ----
-  const PW = 15.5, PD = 11, PH = 7.4, pf = -HW + 7.5;
+  const PW = 18.0, PD = 13.0, PH = 8.2, pf = -HW + 8.2;
   SOL(-PW / 2, pf - PD / 2, PW / 2, pf + PD / 2, PH);
-  B(0, PH / 2, pf, PW, PH, PD, '#f6f1e4');
+  // ফাঁপা ঘরের কাঠামো: মেঝে, দুই পাশ ও পেছনের দেয়াল; সামনের কাচ দিয়ে ঘরের ভেতর দেখা যাবে
+  B(0, 0.22, pf, PW, 0.44, PD, '#d8d0c2');
+  B(-PW/2 + 0.22, PH/2, pf, 0.44, PH, PD, '#f6f1e4');
+  B(PW/2 - 0.22, PH/2, pf, 0.44, PH, PD, '#f6f1e4');
+  B(0, PH/2, pf - PD/2 + 0.22, PW, PH, 0.44, '#f6f1e4');
+  // সাধারণ বসার ঘরের আসবাব, সামনের কাচের আড়ালে
+  B(-4.6, 0.72, pf - 1.0, 3.2, 0.55, 1.15, '#8b5b45');
+  B(3.8, 0.42, pf - 2.8, 2.4, 0.12, 1.5, '#6c5947');
+  B(0.2, 1.25, pf - 4.3, 2.2, 1.8, 0.18, '#c7b89f');
   B(0, PH + 0.18, pf, PW + 0.7, 0.36, PD + 0.7, '#efe9da');
   for (let i = -3; i <= 3; i++) if (i) B(i * PW / 8, PH + 0.5, pf, 0.5, 0.65, 0.5, '#efe9da');
   for (const sx of [-1, 1]) for (let fl = 0; fl < 2; fl++) B(sx * PW * 0.3, 2.2 + fl * 3.4, pf + PD / 2 + 0.02, 0.45, 2.9, 0.06, '#1c2230');
   { const q0 = rc(0, pf + PD / 2); modGlass.push({ p: [q0[0], Y0 + 1.95 + 1.7, q0[1]], s: [PW * 0.62, 3.9, 0.08], c: '#214258', ry }); }
+  // প্রধান প্রবেশদ্বার: দৃশ্যমান কাঠের ডাবল-ডোর; সামনে ২.৬ মিটার চলাচলের জায়গা
+  B(0, 1.45, pf + PD / 2 + 0.10, 2.45, 2.85, 0.14, '#65432f');
+  B(-0.62, 1.45, pf + PD / 2 + 0.19, 1.12, 2.55, 0.045, '#9a704b');
+  B(0.62, 1.45, pf + PD / 2 + 0.19, 1.12, 2.55, 0.045, '#9a704b');
+  B(0, 1.45, pf + PD / 2 + 0.23, 0.07, 2.55, 0.05, '#d8c39a');
   for (const sx of [-1, 1]) B(sx * PW * 0.44, PH * 0.5, pf + PD / 2 + 0.05, 0.55, PH * 0.92, 0.55, '#efe9da');
   for (let i = -1; i <= 1; i += 2) B(i * 2.6, 2.4, pf + PD / 2 + 2.1, 0.42, 4.9, 0.42, '#efe9da');
   B(0, 4.95, pf + PD / 2 + 2.1, 6.0, 0.3, 4.6, '#efe9da');
@@ -1099,18 +1117,22 @@ for (const C of CITIES) {
   C.z0 = C.oz + C.kz0 * SPACING - ROAD_W / 2; C.z1 = C.oz + (C.kz0 + C.nz) * SPACING + ROAD_W / 2;
   C.cx = (C.x0 + C.x1) / 2; C.cz = (C.z0 + C.z1) / 2;
 }
-const PORT = { cx: 0, cz: 520, x0: -50, x1: 50, z0: 470, z1: 570 };   // ১০০×১০০ মি
-// ===== মিনি রিচ সিটি: বন্দরের পূর্ব পাশের নতুন শহর (২১০×১৭০ মি, ৫×৪ ব্লক, প্রতি ব্লক ৩০×৩০ মি) =====
-const MRC = { name: 'Mini Rich City', bn: 'মিনি রিচ সিটি', x0: 100, x1: 310, z0: 440, z1: 610,
-  xs: [105, 145, 185, 225, 265, 305], zs: [445, 485, 525, 565, 605],      // রাস্তার মাঝরেখা (xs: উত্তর-দক্ষিণ রাস্তা, zs: পূর্ব-পশ্চিম রাস্তা)
-  linkX0: 50, linkX1: 105, linkZ: 525 };                                  // বন্দর থেকে শহরে যাওয়ার সংযোগ সড়ক
+const PORT = { cx: 0, cz: 520, x0: -50, x1: 50, z0: 470, z1: 570 };   // দক্ষিণ বন্দর
+const PORT2 = { cx: 0, cz: -350, x0: -50, x1: 50, z0: -400, z1: -300 }; // উত্তর পাশে দ্বিতীয় বন্দর
+// ===== মিনি রিচ সিটি: ৫×৪ ব্লক, প্রতিটি প্লট ৫০×৫০ মিটার =====
+const MRC = { name: 'Mini Rich City', bn: 'মিনি রিচ সিটি', x0: 100, x1: 360, z0: 440, z1: 660,
+  xs: [105, 155, 205, 255, 305, 355], zs: [445, 495, 545, 595, 645],
+  linkX0: 50, linkX1: 105, linkZ: 545 };
 MRC.cx = (MRC.x0 + MRC.x1) / 2; MRC.cz = (MRC.z0 + MRC.z1) / 2;
-// এখানে বাড়ি/বিল্ডিং যোগ করুন: bx = ০–৪ (পশ্চিম→পূর্ব ব্লক), bz = ০–৩ (উত্তর→দক্ষিণ ব্লক), ry = ঘোরানো (০, Math.PI/2, Math.PI, -Math.PI/2), s = স্কেল,
-// dx/dz = ব্লকের কেন্দ্র থেকে সরানো (মি), w/d/h = ফুটপ্রিন্ট ও উচ্চতা (সংঘর্ষ-বাক্সের জন্য), file = models/FILE.glb
+// পাঁচটি apartment-block-01 মডেল হাউস; প্রতিটি প্লটের কেন্দ্র থেকে বসানো
 const MRC_BUILDINGS = [
-  { file: 'apartment-block-01', bx: 1, bz: 1, ry: 0, w: 7.7, d: 6.9, h: 13.4, name: 'Apartment Block 01' },
+  { file: 'apartment-block-01', bx: 1, bz: 0, ry: 0, s: 1.45, w: 7.7, d: 6.9, h: 13.4, name: 'Apartment House 01' },
+  { file: 'apartment-block-01', bx: 3, bz: 0, ry: Math.PI / 2, s: 1.45, w: 7.7, d: 6.9, h: 13.4, name: 'Apartment House 02' },
+  { file: 'apartment-block-01', bx: 1, bz: 2, ry: Math.PI, s: 1.45, w: 7.7, d: 6.9, h: 13.4, name: 'Apartment House 03' },
+  { file: 'apartment-block-01', bx: 2, bz: 2, ry: 0, s: 1.45, w: 7.7, d: 6.9, h: 13.4, name: 'Apartment House 04' },
+  { file: 'apartment-block-01', bx: 3, bz: 2, ry: -Math.PI / 2, s: 1.45, w: 7.7, d: 6.9, h: 13.4, name: 'Apartment House 05' },
 ];
-const MX0 = -470, MX1 = 1710, MZ0 = -740, MZ1 = 720;                  // দুনিয়ার সীমা
+const MX0 = -470, MX1 = 1710, MZ0 = -800, MZ1 = 780;                  // দুনিয়ার সীমা
 const HW_W = 16;                                                      // ৪ লেন হাইওয়ের প্রস্থ
 const hwElev = t => 34 * Math.pow(Math.sin(Math.PI * Math.min(1, Math.max(0, t))), 1.5);
 function makePoly(ctrl) {   // Catmull-Rom → ঘন বিন্দু + আর্ক-দৈর্ঘ্য
@@ -1148,7 +1170,8 @@ const fbmz = (x, y) => { let a = 0.5, s = 0; for (let i = 0; i < 5; i++) { s += 
 function rawH(x, z) {
   let dC = 1e9, cover = 0;
   for (const c of CITIES) { const d = rd(x, z, c.x0, c.x1, c.z0, c.z1); dC = Math.min(dC, d); cover = Math.max(cover, 1 - d / 170); }
-  const dP = rd(x, z, PORT.x0, PORT.x1, PORT.z0, PORT.z1); dC = Math.min(dC, dP); cover = Math.max(cover, 1 - dP / 60);
+  const dP = rd(x, z, PORT.x0, PORT.x1, PORT.z0, PORT.z1), dP2 = rd(x, z, PORT2.x0, PORT2.x1, PORT2.z0, PORT2.z1);
+   dC = Math.min(dC, dP, dP2); cover = Math.max(cover, 1 - dP / 60, 1 - dP2 / 60);
   const dM = rd(x, z, MRC.x0, MRC.x1, MRC.z0, MRC.z1); dC = Math.min(dC, dM); cover = Math.max(cover, 1 - dM / 90);   // মিনি রিচ সিটির সমতল ভূমি
   const h1 = nearPoly(HWY, x, z), h2 = nearPoly(PRD, x, z);
   cover = Math.max(cover, 1 - h1.d / 330, 1 - h2.d / 150);
@@ -1318,8 +1341,8 @@ function buildHighway() {
   rail.forEach((r, i) => { Q.setFromAxisAngle(UPV, r[3]); M.compose(new THREE.Vector3(r[0], r[1], r[2]), Q, new THREE.Vector3(1, 1, r[4])); im.setMatrixAt(i, M); });
   im.frustumCulled = false; scene.add(im);
 }
-function buildPort() {
-  const P = PORT, add = (w, h, d, x, y, z, color, name, solid = true) => {
+function buildPort(P = PORT) {
+  const add = (w, h, d, x, y, z, color, name, solid = true) => {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color, roughness: 0.8 }));
     m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; scene.add(m);
     if (solid) boxes.push({ minX: x - w / 2, maxX: x + w / 2, minZ: z - d / 2, maxZ: z + d / 2, h: y + h / 2, ...(name ? { name } : {}) });
@@ -1466,80 +1489,59 @@ function dressBuilding(ty, cx, cz, gs, w, d, h) {
   palm(-w / 2 - 2.2, -1, 1);
 }
 
-function addMRCGlassBuilding(cx, cz, style) {
-  const grp = new THREE.Group();
-  const w = style === 0 ? 17 : 15, d = style === 0 ? 15 : 18;
-  const floors = style === 0 ? 8 : 10, fh = style === 0 ? 4.0 : 3.6, totalH = floors * fh;
-  const coreMat = new THREE.MeshStandardMaterial({ color: style === 0 ? 0x303b49 : 0x263d4d, roughness: 0.58, metalness: 0.28 });
-  const glass = style === 0 ? glassReflMat : glassReflMatB;
-  const frame = new THREE.MeshStandardMaterial({ color: style === 0 ? 0xc8d5df : 0x9eb4c2, roughness: 0.35, metalness: 0.65 });
-  const windowGlow = new THREE.MeshStandardMaterial({ color: 0xffd99a, emissive: 0xffb84d, emissiveIntensity: 0, roughness: 0.35, metalness: 0.05 });
-  mrcWindowMats.push(windowGlow);
-  const core = new THREE.Mesh(new THREE.BoxGeometry(w, totalH, d), coreMat);
-  core.position.y = totalH / 2 + 0.2; core.castShadow = true; core.receiveShadow = true; grp.add(core);
-  // Floor-to-floor horizontal bands and vertical mullions.
-  for (let f = 1; f < floors; f++) {
-    const band = new THREE.Mesh(new THREE.BoxGeometry(w + 0.18, 0.16, d + 0.18), frame);
-    band.position.y = 0.2 + f * fh; grp.add(band);
-  }
-  for (const side of [-1, 1]) {
-    const z = side * (d / 2 + 0.035);
-    const pane = new THREE.Mesh(new THREE.PlaneGeometry(w - 0.35, totalH - 0.5), glass);
-    pane.position.set(0, totalH / 2 + 0.2, z); if (side < 0) pane.rotation.y = Math.PI; grp.add(pane);
-    for (let x = -w / 2 + 1.2; x < w / 2; x += 2.4) {
-      const mullion = new THREE.Mesh(new THREE.BoxGeometry(0.10, totalH, 0.12), frame);
-      mullion.position.set(x, totalH / 2 + 0.2, z + (side > 0 ? 0.04 : -0.04)); grp.add(mullion);
-    }
-    for (let f = 0; f < floors - 1; f++) {
-      for (let x = -w / 2 + 1.35; x < w / 2 - 0.5; x += 2.4) {
-        const win = new THREE.Mesh(new THREE.PlaneGeometry(1.75, fh * 0.62), windowGlow);
-        win.position.set(x, 0.2 + f * fh + fh * 0.52, z + (side > 0 ? 0.075 : -0.075));
-        if (side < 0) win.rotation.y = Math.PI;
-        grp.add(win);
-      }
-    }
-  }
-  // End-wall glazing and narrow corner fins make the two towers visibly distinct.
-  for (const side of [-1, 1]) {
-    const x = side * (w / 2 + 0.035);
-    const pane = new THREE.Mesh(new THREE.PlaneGeometry(d - 0.35, totalH - 0.5), glass);
-    pane.position.set(x, totalH / 2 + 0.2, 0); pane.rotation.y = side * Math.PI / 2; grp.add(pane);
-    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.18, totalH + 0.5, 0.18), frame);
-    fin.position.set(x, totalH / 2 + 0.2, 0); grp.add(fin);
-  }
-  // Transparent ground-floor lobby, double-height entrance and canopy.
-  const lobby = new THREE.Mesh(new THREE.BoxGeometry(w - 1.2, 3.5, 0.10), glass);
-  lobby.position.set(0, 1.95, d / 2 + 0.08); grp.add(lobby);
-  const entry = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.8, 0.16), new THREE.MeshStandardMaterial({ color: 0x173044, roughness: 0.18, metalness: 0.25, transparent: true, opacity: 0.72 }));
-  entry.position.set(0, 1.6, d / 2 + 0.18); grp.add(entry);
-  const canopy = new THREE.Mesh(new THREE.BoxGeometry(w * 0.58, 0.22, 2.0), frame);
-  canopy.position.set(0, 3.85, d / 2 + 0.9); canopy.castShadow = true; grp.add(canopy);
-  const base = new THREE.Mesh(new THREE.BoxGeometry(w + 1.4, 0.35, d + 1.4), new THREE.MeshStandardMaterial({ color: 0x7d8990, roughness: 0.8 }));
-  base.position.y = 0.18; grp.add(base);
-  if (style === 0) {
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(w * 0.58, 1.1, d * 0.58), coreMat); roof.position.set(0, totalH + 0.75, 0); grp.add(roof);
-    const crown = new THREE.Mesh(new THREE.BoxGeometry(w * 0.32, 0.22, d * 0.32), frame); crown.position.y = totalH + 1.4; grp.add(crown);
-  } else {
-    const crown = new THREE.Mesh(new THREE.BoxGeometry(w * 0.7, 0.65, d * 0.7), frame); crown.position.y = totalH + 0.5; grp.add(crown);
-    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.22, 4.5, 8), frame); mast.position.y = totalH + 3.0; grp.add(mast);
-  }
-  grp.position.set(cx, 0, cz); scene.add(grp);
-  boxes.push({ minX: cx - (w + 1.4) / 2, maxX: cx + (w + 1.4) / 2, minZ: cz - (d + 1.4) / 2, maxZ: cz + (d + 1.4) / 2, h: totalH + 5, name: style === 0 ? 'Glass Office Tower' : 'Glass Business Tower' });
-}
 
-function addMRCBungalow(cx, cz, gs) {
-  // Existing home facade, indoor door interaction and compound system are reused.
-  const w = 18.5, d = 16.0, h = 8.2;
-  const C = [1, 0, -1, 0][gs], S = [0, 1, 0, -1][gs];
-  const bx = cx - 2.5 * S, bz = cz - 2.5 * C, ry = Math.atan2(S, C);
-  const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), modMat('home'));
-  body.position.set(bx, h / 2, bz); body.rotation.y = ry; body.castShadow = true; body.receiveShadow = true; scene.add(body);
-  // Keep the collision AABB aligned with the rotated bungalow footprint.
-  const swapFootprint = gs % 2 === 1, halfX = (swapFootprint ? d : w) / 2, halfZ = (swapFootprint ? w : d) / 2;
-  boxes.push({ minX: bx - halfX, maxX: bx + halfX, minZ: bz - halfZ, maxZ: bz + halfZ, h, name: 'Modern Bungalow' });
-  dressBuilding('home', cx, cz, gs, w, d, h);
-  // Wider vehicle gate; the home door remains linked to the existing enter/interior system.
-  addCompound(cx, cz, gs, w, d, false, false, 'home', 3.6);
+function addMRCGlassBuilding(cx, cz, style = 0) {
+  const w = style ? 21 : 19, d = style ? 18 : 20, h = style ? 42 : 32;
+  const floors = style ? 10 : 7, floorH = h / floors;
+  const bodyMat = new THREE.MeshStandardMaterial({ color: style ? 0x243c50 : 0x526879, metalness: 0.72, roughness: 0.22 });
+  const glassMat = new THREE.MeshPhysicalMaterial({ color: style ? 0x8bb6c9 : 0x6f9eaf, metalness: 0.55, roughness: 0.16, transmission: 0.08, transparent: true, opacity: 0.72 });
+  const frameMat = new THREE.MeshStandardMaterial({ color: style ? 0x18232d : 0xc5d3dc, metalness: 0.75, roughness: 0.28 });
+  const add = (geo, mat, x, y, z, solid = false, sx = 0, sz = 0) => {
+    const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; scene.add(m);
+    if (solid) boxes.push({ minX: x - sx/2, maxX: x + sx/2, minZ: z - sz/2, maxZ: z + sz/2, h: y + geo.parameters.height/2, name: 'Glass Tower' });
+    return m;
+  };
+  // Structural core and glass curtain walls
+  add(new THREE.BoxGeometry(w, h, d), bodyMat, cx, h/2, cz);
+  const faceZ = cz + d/2 + 0.035, faceX = cx + w/2 + 0.035;
+  for (let f = 0; f < floors; f++) {
+    const y = floorH * (f + 0.5);
+    const winMat = new THREE.MeshStandardMaterial({ color: style ? 0xffd58a : 0xffe7b0, emissive: style ? 0xffa43a : 0xffcf70, emissiveIntensity: 0 });
+    wallMats.push(winMat);
+    // Front window bands are split around a wide ground-floor entrance
+    if (f === 0) {
+      add(new THREE.BoxGeometry(w*0.34, floorH*0.82, 0.08), glassMat, cx - w*0.33, y, faceZ);
+      add(new THREE.BoxGeometry(w*0.34, floorH*0.82, 0.08), glassMat, cx + w*0.33, y, faceZ);
+      add(new THREE.BoxGeometry(3.8, floorH*0.72, 0.07), glassMat, cx, y, faceZ + 0.015);
+    } else {
+      add(new THREE.BoxGeometry(w*0.9, floorH*0.76, 0.08), glassMat, cx, y, faceZ);
+    }
+    // Illuminated interior window strips, controlled by the existing day/night cycle
+    const ww = f === 0 ? w*0.29 : w*0.78;
+    add(new THREE.BoxGeometry(ww, floorH*0.52, 0.035), winMat, cx + (f===0 ? -w*0.33 : 0), y, faceZ + 0.055);
+    if (style) add(new THREE.BoxGeometry(0.08, floorH*0.8, 0.08), frameMat, faceX, y, cz);
+    add(new THREE.BoxGeometry(w+0.18, 0.18, d+0.18), frameMat, cx, f*floorH, cz);
+  }
+  // Side glass wall and vertical mullions
+  add(new THREE.BoxGeometry(0.08, h*0.94, d*0.86), glassMat, faceX, h/2, cz);
+  for (let k=-2;k<=2;k++) add(new THREE.BoxGeometry(0.12,h,0.12), frameMat, cx+k*w/4, h/2, faceZ);
+  // Ground-floor open lobby and sliding entrance leaves set aside from the walking path
+  add(new THREE.BoxGeometry(0.16, 3.2, 0.18), frameMat, cx-2.25, 1.6, faceZ+0.1);
+  add(new THREE.BoxGeometry(0.16, 3.2, 0.18), frameMat, cx+2.25, 1.6, faceZ+0.1);
+  add(new THREE.BoxGeometry(1.05, 2.8, 0.06), glassMat, cx-1.55, 1.4, faceZ+0.13);
+  add(new THREE.BoxGeometry(1.05, 2.8, 0.06), glassMat, cx+1.55, 1.4, faceZ+0.13);
+  // Collision walls leave the 3.8m entrance completely open
+  boxes.push({ minX:cx-w/2, maxX:cx+w/2, minZ:cz-d/2, maxZ:cz+d/2-1.5, h:h, name:'Glass Tower' });
+  boxes.push({ minX:cx-w/2, maxX:cx-2.0, minZ:cz+d/2-1.5, maxZ:cz+d/2+0.25, h:3.2, name:'Glass Tower' });
+  boxes.push({ minX:cx+2.0, maxX:cx+w/2, minZ:cz+d/2-1.5, maxZ:cz+d/2+0.25, h:3.2, name:'Glass Tower' });
+  // Roof crown differs between the two glass buildings
+  if (style) {
+    add(new THREE.BoxGeometry(w+1.4, 1.1, d+1.4), frameMat, cx, h+0.55, cz);
+    add(new THREE.BoxGeometry(w*0.55, 2.2, d*0.55), glassMat, cx, h+2.2, cz);
+  } else {
+    add(new THREE.BoxGeometry(w+1.0, 0.65, d+1.0), frameMat, cx, h+0.32, cz);
+    add(new THREE.BoxGeometry(0.5, 3.5, 0.5), frameMat, cx, h+2.2, cz);
+  }
 }
 
 function buildMRC() {
@@ -1553,24 +1555,22 @@ function buildMRC() {
   };
   for (const z of MRC.zs) road(W, ROAD_W, MRC.cx, z, 0.02, roadTexH, W / 8, 1);
   for (const x of MRC.xs) road(ROAD_W, D, x, MRC.cz, 0.03, roadTexV, 1, D / 8);
-  road(MRC.linkX1 - MRC.linkX0, ROAD_W, (MRC.linkX0 + MRC.linkX1) / 2, MRC.linkZ, 0.025, roadTexH, (MRC.linkX1 - MRC.linkX0) / 8, 1);   // বন্দর ↔ শহর
+  road(MRC.linkX1 - MRC.linkX0, ROAD_W, (MRC.linkX0 + MRC.linkX1) / 2, MRC.linkZ, 0.025, roadTexH, (MRC.linkX1 - MRC.linkX0) / 8, 1);   // দক্ষিণ বন্দর ↔ মিনি শহর
+  road(ROAD_W, 80, 0, -260, 0.025, roadTexV, 1, 10); // উত্তর বন্দর ↔ প্রধান শহর
   const parkAt = (i, j) => (i === 0 && j === 3) || (i === 4 && j === 0);
-  for (let i = 0; i < MRC.xs.length - 1; i++) for (let j = 0; j < MRC.zs.length - 1; j++) addSidewalk(MRC.xs[i] + 20, MRC.zs[j] + 20, parkAt(i, j));
-  // নির্দিষ্ট প্লট বিন্যাস: ২টি পুরোনো টাওয়ার, ২টি নতুন কাচের ভবন,
-  // Apartment Block-এর নিজস্ব GLB এবং ৪টি প্রবেশযোগ্য বাংলো; বাকি প্লট খালি থাকবে।
+  for (let i = 0; i < MRC.xs.length - 1; i++) for (let j = 0; j < MRC.zs.length - 1; j++) addSidewalk(MRC.xs[i] + 25, MRC.zs[j] + 25, parkAt(i, j));
+  // দুটি Burj-ধাঁচের টাওয়ার, দুটি আলাদা কাচের ভবন, পাঁচটি GLB বাড়ি এবং বাকি প্লটে বাংলো
   const towerAt = (i, j) => (i === 0 && j === 0) || (i === 4 && j === 3);
   const glassAt = (i, j) => (i === 2 && j === 0) || (i === 2 && j === 3);
-  const bungalowAt = (i, j) => (i === 0 && j === 1) || (i === 3 && j === 1) || (i === 1 && j === 2) || (i === 3 && j === 2);
+  const modelLots = new Set(MRC_BUILDINGS.map(b => b.bx + ',' + b.bz));
   for (let i = 0; i < MRC.xs.length - 1; i++) {
     for (let j = 0; j < MRC.zs.length - 1; j++) {
       if (parkAt(i, j)) continue;
-      // Custom GLB plot: do not spawn any procedural house/building underneath it.
-      if (MRC_BUILDINGS.some(b => b.bx === i && b.bz === j)) continue;
-      const cx = MRC.xs[i] + 20, cz = MRC.zs[j] + 20;
-      if (towerAt(i, j)) addSkyscraper(cx, cz, 0, 9.5, 85 + Math.random() * 45);
-      else if (glassAt(i, j)) addMRCGlassBuilding(cx, cz, j === 0 ? 0 : 1);
-      else if (bungalowAt(i, j)) addMRCBungalow(cx, cz, Math.floor(Math.random() * 4));
-      // All remaining plots intentionally stay empty for future development.
+      const cx = MRC.xs[i] + 25, cz = MRC.zs[j] + 25;
+      if (towerAt(i, j)) addSkyscraper(cx, cz, 0, 10.5, 95 + Math.random() * 25);
+      else if (glassAt(i, j)) addMRCGlassBuilding(cx, cz, j === 3 ? 1 : 0);
+      else if (modelLots.has(i + ',' + j)) continue;
+      else addPalaceCompound(cx, cz, Math.floor(Math.random() * 4));
     }
   }
   // প্রবেশদ্বার-তোরণ: বন্দর থেকে আসা সড়কের ওপর "MINI RICH CITY" সাইনবোর্ড
@@ -1596,7 +1596,7 @@ function buildMRC() {
 // মিনি রিচ সিটির বিল্ডিং: models/FILE.glb (Draco হলেও চলবে); ফাইল না পেলে একটা সাধারণ ইটের বাক্স দেখাবে
 function loadMRCBuildings() {
   for (const def of MRC_BUILDINGS) {
-    const sc = def.s || 1, ry = def.ry || 0, cx = MRC.xs[def.bx] + 20 + (def.dx || 0), cz = MRC.zs[def.bz] + 20 + (def.dz || 0), top = 0.15;
+    const sc = def.s || 1, ry = def.ry || 0, cx = MRC.xs[def.bx] + 25 + (def.dx || 0), cz = MRC.zs[def.bz] + 25 + (def.dz || 0), top = 0.15;
     const q = Math.abs(Math.sin(ry)) > 0.7, hw = (q ? def.d : def.w) * sc / 2, hd = (q ? def.w : def.d) * sc / 2;
     boxes.push({ minX: cx - hw, maxX: cx + hw, minZ: cz - hd, maxZ: cz + hd, h: top + def.h * sc, name: def.name });
     const urls = ['models/' + def.file + '.glb', def.file + '.glb'], why = [];   // আগে models/ ফোল্ডার, না পেলে index.html-এর পাশের ফোল্ডার
@@ -1638,7 +1638,7 @@ function buildWorld() {
       v.rotation.x = -Math.PI / 2; v.position.set(C.ox + i * SPACING, 0.03, C.cz); v.receiveShadow = true; scene.add(v);
     }
   });
-  buildHighway(); buildPort(); buildMRC(); buildVegetation();
+  buildHighway(); buildPort(PORT); buildPort(PORT2); buildMRC(); buildVegetation();
   for (const CY of CITIES) {
   let ci = 0; const nb = Math.round(CY.nx * CY.nz * 2 / 3), SPC = { [Math.floor(nb * 0.2)]: 'cloth', [Math.floor(nb * 0.4)]: 'car', [Math.floor(nb * 0.6)]: 'med', [Math.floor(nb * 0.8)]: 'bank' };
   for (let kx = CY.kx0; kx < CY.kx0 + CY.nx; kx++) {
